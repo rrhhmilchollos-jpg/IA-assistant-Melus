@@ -22,9 +22,13 @@ def ensure_timezone(dt: datetime) -> datetime:
     return dt
 
 async def get_authenticated_user(request: Request, db: AsyncIOMotorDatabase):
-    """Extract and validate session token from cookies or Authorization header"""
+    """Extract and validate session token from cookies, custom header, or Authorization header"""
     # Try to get token from cookie first
     session_token = request.cookies.get("session_token")
+    
+    # Fallback to X-Session-Token header (for frontend localStorage auth)
+    if not session_token:
+        session_token = request.headers.get("X-Session-Token")
     
     # Fallback to Authorization header
     if not session_token:
