@@ -138,18 +138,18 @@ const CreditModal = ({ isOpen, onClose }) => {
                 }`}
               >
                 <div className={`w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center ${
-                  premium ? 'bg-gradient-to-br from-yellow-500 to-orange-500' : 'bg-gray-700'
+                  premium ? 'bg-gradient-to-br from-yellow-400 to-orange-500' : 'bg-gray-700'
                 }`}>
                   <Coins className="text-white" size={24} />
                 </div>
                 
                 {pkg.bonus > 0 && (
                   <div className="text-gray-500 line-through text-xs mb-1">
-                    {pkg.base_credits} créditos
+                    {pkg.base_credits.toLocaleString()} créditos
                   </div>
                 )}
                 
-                <div className={`font-bold mb-2 ${premium ? 'text-yellow-400' : 'text-white'}`}>
+                <div className={`font-bold mb-2 text-base ${premium ? 'text-yellow-400' : 'text-white'}`}>
                   {pkg.credits.toLocaleString()} créditos
                 </div>
                 
