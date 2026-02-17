@@ -11,6 +11,27 @@ const apiClient = axios.create({
   },
 });
 
+// Add request interceptor to include session token
+apiClient.interceptors.request.use((config) => {
+  const sessionToken = localStorage.getItem('session_token');
+  if (sessionToken) {
+    config.headers['X-Session-Token'] = sessionToken;
+  }
+  return config;
+});
+
+// Helper to save session token
+export const saveSessionToken = (token) => {
+  if (token) {
+    localStorage.setItem('session_token', token);
+  }
+};
+
+// Helper to clear session token
+export const clearSessionToken = () => {
+  localStorage.removeItem('session_token');
+};
+
 // Auth API
 export const authAPI = {
   register: async (email, password, name) => {
