@@ -396,30 +396,62 @@ const AgentConsole = ({ onProjectCreated }) => {
                 <CheckCircle className="w-5 h-5" />
                 Proyecto Generado: {project.name}
               </h3>
-              <button
-                onClick={async () => {
-                  try {
-                    const blob = await deployAPI.downloadZip(project.project_id);
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${project.name.replace(/\s+/g, '_')}.zip`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                  } catch (error) {
-                    console.error('Download failed:', error);
-                    alert('Error al descargar el proyecto');
-                  }
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-                data-testid="download-project-btn"
-              >
-                <Download className="w-4 h-4" />
-                Descargar Código
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const blob = await deployAPI.downloadZip(project.project_id);
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${project.name.replace(/\s+/g, '_')}.zip`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(url);
+                    } catch (error) {
+                      console.error('Download failed:', error);
+                      alert('Error al descargar el proyecto');
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                  data-testid="download-project-btn"
+                >
+                  <Download className="w-4 h-4" />
+                  Descargar ZIP
+                </button>
+              </div>
             </div>
+            
+            {/* GitHub Integration */}
+            <div className="mb-4">
+              <GitHubIntegration 
+                projectId={project.project_id}
+                onPushSuccess={(result) => {
+                  setProject(prev => ({
+                    ...prev,
+                    github_url: result.repo_url
+                  }));
+                }}
+              />
+            </div>
+            
+            {project.github_url && (
+              <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Github className="w-5 h-5 text-green-400" />
+                  <span className="text-green-400">Subido a GitHub</span>
+                </div>
+                <a 
+                  href={project.github_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:text-purple-300 underline"
+                >
+                  Ver repositorio
+                </a>
+              </div>
+            )}
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.entries(project.results || {}).map(([agent, result]) => (
