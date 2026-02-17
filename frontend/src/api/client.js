@@ -13,6 +13,23 @@ const apiClient = axios.create({
 
 // Auth API
 export const authAPI = {
+  register: async (email, password, name) => {
+    const response = await apiClient.post('/auth/register', { 
+      email, 
+      password, 
+      name 
+    });
+    return response.data;
+  },
+  
+  login: async (email, password) => {
+    const response = await apiClient.post('/auth/login', { 
+      email, 
+      password 
+    });
+    return response.data;
+  },
+  
   createSession: async (sessionId) => {
     const response = await apiClient.post('/auth/session', { session_id: sessionId });
     return response.data;
