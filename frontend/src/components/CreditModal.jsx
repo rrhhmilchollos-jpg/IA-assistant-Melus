@@ -160,7 +160,7 @@ const CreditModal = ({ isOpen, onClose }) => {
                 <Button
                   className={`w-full ${
                     premium
-                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white'
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold'
                       : 'bg-gray-700 hover:bg-gray-600 text-white'
                   }`}
                   onClick={() => handlePurchase(pkg.package_id)}
