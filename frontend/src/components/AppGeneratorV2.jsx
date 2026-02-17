@@ -260,6 +260,17 @@ const AppGeneratorV2 = () => {
       setFiles(data.files);
       updateCredits(data.credits_remaining);
       
+      // Save workspace ID to localStorage for persistence
+      localStorage.setItem('melus_workspace_id', data.workspace_id);
+      
+      // Add success log
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'success',
+        message: `¡App generada! ${Object.keys(data.files).length} archivos creados`,
+        timestamp: new Date().toISOString()
+      }]);
+      
     } catch (error) {
       console.error('Generation error:', error);
       setLogs(prev => [...prev, {
