@@ -1,30 +1,55 @@
 # Credit packages configuration
 CREDIT_PACKAGES = {
-    "starter": {
-        "name": "Starter",
-        "credits": 100000,
-        "price": 5.00,
-        "popular": False
+    "package_100": {
+        "name": "100 créditos",
+        "credits": 100,
+        "price": 20.00,
+        "popular": False,
+        "bonus": 0
     },
-    "basic": {
-        "name": "Básico",
-        "credits": 500000,
-        "price": 10.00,
-        "popular": True
+    "package_250": {
+        "name": "250 créditos",
+        "credits": 250,
+        "price": 50.00,
+        "popular": False,
+        "bonus": 0
     },
-    "pro": {
-        "name": "Pro",
-        "credits": 2000000,
-        "price": 29.00,
-        "popular": False
+    "package_500": {
+        "name": "500 créditos",
+        "credits": 500,
+        "price": 100.00,
+        "popular": True,
+        "bonus": 0
     },
-    "unlimited": {
-        "name": "Unlimited",
-        "credits": 10000000,
-        "price": 99.00,
-        "popular": False
+    "package_3000": {
+        "name": "3000 créditos",
+        "credits": 3000,
+        "price": 500.00,
+        "popular": False,
+        "bonus": 500,
+        "base_credits": 2500
+    },
+    "package_6000": {
+        "name": "6000 créditos",
+        "credits": 6000,
+        "price": 1000.00,
+        "popular": False,
+        "bonus": 1000,
+        "base_credits": 5000
+    }
+}
+
+# Promo codes
+PROMO_CODES = {
+    "VALENTINE20": {
+        "discount": 0.20,  # 20% off
+        "min_amount": 100.00,  # Minimum $100
+        "active": True
     }
 }
 
 # Free credits for new users
-FREE_CREDITS = 10000
+FREE_CREDITS = 10
+
+# Credit to dollar ratio
+CREDITS_PER_DOLLAR = 5  # 5 credits = $1
