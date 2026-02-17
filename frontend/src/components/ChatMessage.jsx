@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Bot, User, Edit2, RefreshCw, Check, X, Copy, RotateCcw, ChevronRight, Terminal } from 'lucide-react';
+import { Bot, User, Edit2, RefreshCw, Check, X, Copy, RotateCcw, ChevronRight, Terminal, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { messagesAPI } from '../api/client';
+import { messagesAPI, advancedAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const ChatMessage = ({ message, onMessageUpdated }) => {
@@ -10,7 +10,9 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isRollingBack, setIsRollingBack] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [copied, setCopied] = useState(false);
   
   const handleEdit = async () => {
     if (!editContent.trim()) return;
@@ -54,8 +56,31 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
     }
   };
 
+  const handleRollback = async () => {
+    setIsRollingBack(true);
+    try {
+      const result = await advancedAPI.rollback(message.message_id);
+      toast({
+        title: "Rollback completado",
+        description: `Se eliminaron ${result.messages_deleted} mensajes posteriores`
+      });
+      onMessageUpdated();
+    } catch (error) {
+      console.error('Failed to rollback:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo realizar el rollback",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRollingBack(false);
+    }
+  };
+
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
     toast({
       title: "Copiado",
       description: "Contenido copiado al portapapeles"
@@ -63,9 +88,12 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
   };
 
   // Check if content looks like a command/code block
-  const isCodeBlock = message.content.startsWith('$') || 
+  const isCodeBlock = message.content.includes('```') ||
+                      message.content.startsWith('$') || 
                       message.content.startsWith('sudo') ||
-                      message.content.includes('cd /app');
+                      message.content.includes('cd /app') ||
+                      message.content.includes('npm ') ||
+                      message.content.includes('pip ');
 
   // Format timestamp
   const formatTime = (timestamp) => {
@@ -78,14 +106,55 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
       hour12: true
     });
   };
+
+  // Render code blocks with syntax highlighting style
+  const renderContent = (content) => {
+    if (!content.includes('```')) {
+      return <span className="whitespace-pre-wrap">{content}</span>;
+    }
+
+    const parts = content.split(/(```[\s\S]*?```)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('```')) {
+        const match = part.match(/```(\w+)?\n?([\s\S]*?)```/);
+        if (match) {
+          const lang = match[1] || 'code';
+          const code = match[2];
+          return (
+            <div key={index} className="my-3 rounded-lg overflow-hidden bg-[#1a3a2a] border border-green-900/50">
+              <div className="flex items-center justify-between px-3 py-1.5 bg-green-900/30 text-xs text-green-400">
+                <span className="flex items-center gap-2">
+                  <Terminal size={12} />
+                  {lang.toUpperCase()}
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(code);
+                    toast({ title: "Código copiado" });
+                  }}
+                  className="hover:text-white"
+                >
+                  <Copy size={12} />
+                </button>
+              </div>
+              <pre className="p-3 text-sm font-mono text-green-300 overflow-x-auto">
+                {code}
+              </pre>
+            </div>
+          );
+        }
+      }
+      return <span key={index} className="whitespace-pre-wrap">{part}</span>;
+    });
+  };
   
   return (
-    <div className={`group px-6 py-4 ${isUser ? '' : ''}`} data-testid={`message-${message.message_id}`}>
+    <div className={`group px-6 py-4 hover:bg-gray-900/30 transition-colors`} data-testid={`message-${message.message_id}`}>
       <div className="max-w-4xl mx-auto">
         {/* Message Header with Icon */}
         <div className="flex items-start gap-3">
           {/* Status Icon */}
-          <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 ${
+          <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5 ${
             isUser 
               ? 'bg-blue-600' 
               : 'bg-purple-600'
@@ -158,16 +227,16 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
                 </div>
                 {isExpanded && (
                   <div className="px-4 py-3 border-t border-green-900/30 bg-[#0d1f15]">
-                    <pre className="text-green-300 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
-                      {message.content}
-                    </pre>
+                    <div className="text-green-300 text-sm">
+                      {renderContent(message.content)}
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
               /* Regular Text */
-              <div className="text-gray-300 whitespace-pre-wrap leading-relaxed text-sm">
-                {message.content}
+              <div className="text-gray-300 leading-relaxed text-sm">
+                {renderContent(message.content)}
               </div>
             )}
 
@@ -192,10 +261,15 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {/* Rollback logic */}}
+                      onClick={handleRollback}
+                      disabled={isRollingBack}
                       className="text-gray-400 hover:text-white hover:bg-gray-700 h-7 px-2 text-xs"
                     >
-                      <RotateCcw size={12} className="mr-1" />
+                      {isRollingBack ? (
+                        <Loader2 size={12} className="animate-spin mr-1" />
+                      ) : (
+                        <RotateCcw size={12} className="mr-1" />
+                      )}
                       Rollback
                     </Button>
                     <Button
@@ -204,7 +278,11 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
                       onClick={handleCopy}
                       className="text-gray-400 hover:text-white hover:bg-gray-700 h-7 px-2 text-xs"
                     >
-                      <Copy size={12} className="mr-1" />
+                      {copied ? (
+                        <Check size={12} className="text-green-400 mr-1" />
+                      ) : (
+                        <Copy size={12} className="mr-1" />
+                      )}
                       Copy
                     </Button>
                   </>
