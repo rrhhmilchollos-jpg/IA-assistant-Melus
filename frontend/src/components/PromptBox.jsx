@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Send, Paperclip, Save, Sparkles, Mic, Square, Zap, X, FileText, Image, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Paperclip, Sparkles, Mic, Square, Zap, X, FileText, Image, Loader2, Github } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { attachmentsAPI, conversationsAPI, voiceAPI } from '../api/client';
+import { attachmentsAPI, conversationsAPI, voiceAPI, githubAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const PromptBox = ({ 
@@ -19,15 +19,33 @@ const PromptBox = ({
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isSavingToGithub, setIsSavingToGithub] = useState(false);
   const [ultraMode, setUltraMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [githubStatus, setGithubStatus] = useState(null);
+  const [showGithubModal, setShowGithubModal] = useState(false);
+  const [repoName, setRepoName] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [budget] = useState(10000);
   const [usedBudget] = useState(0);
   
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+
+  useEffect(() => {
+    checkGithubStatus();
+  }, []);
+
+  const checkGithubStatus = async () => {
+    try {
+      const status = await githubAPI.getStatus();
+      setGithubStatus(status);
+    } catch (error) {
+      console.error('Failed to check GitHub status:', error);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
