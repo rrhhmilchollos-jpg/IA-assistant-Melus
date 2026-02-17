@@ -156,6 +156,22 @@ async def logout(request: Request, response: Response):
     
     return {"message": "Logged out successfully"}
 
+# ==================== AI Models Endpoint ====================
+
+@api_router.get("/models", response_model=List[AIModel])
+async def get_available_models():
+    """Get available AI models"""
+    models = []
+    for model_id, data in AI_MODELS.items():
+        models.append(AIModel(
+            model_id=model_id,
+            name=data["name"],
+            provider=data["provider"],
+            description=data["description"],
+            popular=data["popular"]
+        ))
+    return models
+
 # ==================== Conversation Endpoints ====================
 
 @api_router.get("/conversations", response_model=List[ConversationListItem])
