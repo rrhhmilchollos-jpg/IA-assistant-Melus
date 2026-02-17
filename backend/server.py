@@ -314,23 +314,31 @@ async def get_conversations(request: Request):
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
-    conversations = await db.conversations.find(
-        {"user_id": user_id},
-        {"_id": 0}
-    ).sort("updated_at", -1).to_list(100)
+    # Use aggregation pipeline to get conversations with message counts in a single query
+    pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$lookup": {
+            "from": "messages",
+            "localField": "conversation_id",
+            "foreignField": "conversation_id",
+            "as": "messages_list"
+        }},
+        {"$addFields": {"message_count": {"$size": "$messages_list"}}},
+        {"$project": {"messages_list": 0, "_id": 0}},
+        {"$sort": {"updated_at": -1}},
+        {"$limit": 100}
+    ]
     
-    # Get message count for each conversation
+    conversations = await db.conversations.aggregate(pipeline).to_list(100)
+    
     result = []
     for conv in conversations:
-        message_count = await db.messages.count_documents({
-            "conversation_id": conv["conversation_id"]
-        })
         result.append(ConversationListItem(
             conversation_id=conv["conversation_id"],
             title=conv["title"],
             model=conv.get("model", DEFAULT_MODEL),
             updated_at=conv["updated_at"],
-            message_count=message_count,
+            message_count=conv.get("message_count", 0),
             forked_from=conv.get("forked_from")
         ))
     
