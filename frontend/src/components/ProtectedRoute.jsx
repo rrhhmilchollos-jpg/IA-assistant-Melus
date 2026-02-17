@@ -16,21 +16,22 @@ const ProtectedRoute = ({ children }) => {
         return;
       }
 
-      // Check authentication status
-      if (isAuthenticated === null) {
-        await checkAuth();
-      }
+      // Always check authentication status
+      await checkAuth();
       setChecking(false);
     };
 
     verifyAuth();
-  }, [isAuthenticated, checkAuth, location.state]);
+  }, [checkAuth, location.state]);
 
   // Show loading while checking authentication
-  if (checking || isLoading || isAuthenticated === null) {
+  if (checking || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
       </div>
     );
   }
