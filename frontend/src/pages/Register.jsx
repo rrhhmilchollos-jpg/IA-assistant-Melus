@@ -90,7 +90,7 @@ const Register = () => {
               Completa el formulario para registrarte
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} data-testid="register-form">
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre</Label>
@@ -104,6 +104,7 @@ const Register = () => {
                     onChange={(e) => setName(e.target.value)}
                     className="pl-10"
                     required
+                    data-testid="register-name-input"
                   />
                 </div>
               </div>
@@ -119,6 +120,7 @@ const Register = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     required
+                    data-testid="register-email-input"
                   />
                 </div>
               </div>
@@ -134,6 +136,7 @@ const Register = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
                     required
+                    data-testid="register-password-input"
                   />
                 </div>
               </div>
@@ -149,6 +152,7 @@ const Register = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10"
                     required
+                    data-testid="register-confirm-password-input"
                   />
                 </div>
               </div>
@@ -158,6 +162,7 @@ const Register = () => {
                 type="submit"
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 disabled={isLoading}
+                data-testid="register-submit-button"
               >
                 {isLoading ? (
                   <>
@@ -170,7 +175,7 @@ const Register = () => {
               </Button>
               <div className="text-center text-sm text-gray-600">
                 ¿Ya tienes cuenta?{' '}
-                <Link to="/login" className="text-purple-600 hover:text-purple-700 font-semibold">
+                <Link to="/login" className="text-purple-600 hover:text-purple-700 font-semibold" data-testid="login-link">
                   Inicia sesión aquí
                 </Link>
               </div>
