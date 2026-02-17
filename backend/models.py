@@ -11,6 +11,7 @@ class User(BaseModel):
     picture: str
     credits: int = 10000  # Free credits for new users
     credits_used: int = 0
+    is_admin: bool = False
     created_at: datetime
     updated_at: datetime
 
