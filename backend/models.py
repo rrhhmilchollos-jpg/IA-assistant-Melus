@@ -34,17 +34,23 @@ class Conversation(BaseModel):
     conversation_id: str
     user_id: str
     title: str
+    model: str = "gpt-4o"
+    forked_from: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
 class ConversationListItem(BaseModel):
     conversation_id: str
     title: str
+    model: str
     updated_at: datetime
     message_count: int
+    forked_from: Optional[str] = None
 
 class ConversationCreate(BaseModel):
     title: str = "Nueva Conversación"
+    model: str = "gpt-4o"
+    fork_from: Optional[str] = None
 
 # Message Models
 class Message(BaseModel):
