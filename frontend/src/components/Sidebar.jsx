@@ -1,15 +1,25 @@
 import React from 'react';
-import { PlusCircle, MessageSquare, Trash2, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { PlusCircle, MessageSquare, Trash2, Sparkles, Zap, CreditCard, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ 
   conversations, 
   currentConversationId, 
   onSelectConversation, 
   onNewConversation,
-  onDeleteConversation 
+  onDeleteConversation,
+  userCredits
 }) => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
   return (
     <div className="w-80 bg-gray-900 text-white flex flex-col h-screen">
       {/* Header */}
