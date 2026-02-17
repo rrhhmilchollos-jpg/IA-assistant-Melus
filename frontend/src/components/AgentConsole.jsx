@@ -81,15 +81,17 @@ const AgentConsole = ({ onProjectCreated }) => {
   };
 
   const handleGenerateApp = async () => {
-    if (!appDescription.trim() || !appName.trim()) return;
+    if (!appDescription.trim()) return;
 
+    const projectName = appName.trim() || 'Mi Aplicación';
+    
     setIsGenerating(true);
     setAgentLogs([]);
     setProject(null);
 
     const totalEstimated = Object.values(agentCosts).reduce((a, b) => a + b, 0);
     
-    addLog('system', `Iniciando generación de "${appName}"...`, 'info');
+    addLog('system', `Iniciando generación de "${projectName}"...`, 'info');
     addLog('system', `Créditos estimados: ${totalEstimated}`, 'info');
 
     try {
