@@ -1,5 +1,20 @@
 # Assistant Melus - Changelog
 
+## [2.1.0] - 2026-02-17
+
+### Verified
+- **Sistema completo funcionando sin errores**
+  - Dashboard con chat: ✅ Operativo
+  - Generador de aplicaciones: ✅ Operativo
+  - Panel de administración: ✅ Operativo
+  - APIs de autenticación: ✅ Operativo
+  - APIs de admin: ✅ Operativo
+
+### Note
+- **Integración GitHub**: Backend completamente implementado. Pendiente configurar `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET` en el `.env` del backend para activar OAuth.
+
+---
+
 ## [2.0.0] - 2026-02-17
 
 ### Added
