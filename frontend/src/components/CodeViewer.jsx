@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Copy, Check, Code, ChevronDown, ChevronRight, Terminal } from 'lucide-react';
 import { Button } from './ui/button';
-import { advancedAPI } from '../api/client';
+import { conversationsAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const CodeViewer = ({ conversationId, isOpen, onClose }) => {
@@ -19,7 +19,7 @@ const CodeViewer = ({ conversationId, isOpen, onClose }) => {
   const loadCode = async () => {
     setLoading(true);
     try {
-      const result = await advancedAPI.getCode(conversationId);
+      const result = await conversationsAPI.getCode(conversationId);
       setCodeBlocks(result.code_blocks);
       // Expand all by default
       const expanded = {};
