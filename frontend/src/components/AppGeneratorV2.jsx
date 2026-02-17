@@ -609,6 +609,12 @@ createRoot(document.getElementById('root')).render(<App />);`
       <div className="border-b border-purple-500/20 bg-[#0d0d1a]">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <button
+              onClick={handleNewProject}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft size={18} />
+            </button>
             <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
               App Generator
             </h1>
@@ -619,6 +625,12 @@ createRoot(document.getElementById('root')).render(<App />);`
             )}
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleNewProject}
+              className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              + Nuevo
+            </button>
             <span className="text-sm text-gray-400">
               Créditos: <span className="text-purple-400 font-medium">{user?.credits || 0}</span>
             </span>
