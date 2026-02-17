@@ -35,6 +35,63 @@ const Header = ({
   const [isCodeViewerOpen, setIsCodeViewerOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isRedeploying, setIsRedeploying] = useState(false);
+  const [githubStatus, setGithubStatus] = useState(null);
+
+  useEffect(() => {
+    checkGithubStatus();
+  }, []);
+
+  const checkGithubStatus = async () => {
+    try {
+      const status = await githubAPI.getStatus();
+      setGithubStatus(status);
+    } catch (error) {
+      console.error('Failed to check GitHub status:', error);
+    }
+  };
+
+  const handleGithubConnect = async () => {
+    try {
+      const result = await githubAPI.login();
+      if (result.auth_url) {
+        window.location.href = result.auth_url;
+      }
+    } catch (error) {
+      toast({
+        title: "GitHub",
+        description: error.response?.data?.detail || "Necesitas configurar las credenciales de GitHub OAuth",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePushToGithub = async () => {
+    if (!currentConversationId) {
+      toast({
+        title: "Error",
+        description: "Selecciona una conversación primero",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const result = await githubAPI.pushConversation(currentConversationId);
+      toast({
+        title: "¡Subido a GitHub!",
+        description: `${result.files_pushed} archivos subidos`
+      });
+      if (result.repo_url) {
+        window.open(result.repo_url, '_blank');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "No se pudo subir a GitHub",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
