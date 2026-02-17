@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, CreditCard, User, LogOut, Settings, Receipt } from 'lucide-react';
+import { 
+  Home, Plus, Zap, Code, Eye, RotateCcw, 
+  User, LogOut, Settings, Receipt, ChevronDown,
+  X
+} from 'lucide-react';
 import { Button } from './ui/button';
 import {
   DropdownMenu,
@@ -13,7 +17,13 @@ import {
 import CreditModal from './CreditModal';
 import TransactionHistory from './TransactionHistory';
 
-const Header = () => {
+const Header = ({ 
+  conversations = [], 
+  currentConversationId, 
+  onSelectConversation,
+  onNewConversation,
+  onCloseConversation
+}) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
@@ -24,75 +34,157 @@ const Header = () => {
     navigate('/login');
   };
 
+  // Get active tabs (last 5 conversations)
+  const activeTabs = conversations.slice(0, 5);
+
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo and Title */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">M</span>
+      <header className="bg-[#1a1a2e] border-b border-gray-800" data-testid="main-header">
+        <div className="flex items-center justify-between h-14 px-4">
+          {/* Left side - Logo and Tabs */}
+          <div className="flex items-center gap-1">
+            {/* Home Button */}
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+              data-testid="home-button"
+            >
+              <Home size={18} />
+              <span className="text-sm font-medium">Home</span>
+            </button>
+
+            {/* Project Tabs */}
+            <div className="flex items-center ml-2">
+              {activeTabs.map((conv, index) => (
+                <div 
+                  key={conv.conversation_id}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-colors ${
+                    conv.conversation_id === currentConversationId
+                      ? 'bg-gray-700 text-white'
+                      : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                  }`}
+                  onClick={() => onSelectConversation(conv.conversation_id)}
+                  data-testid={`tab-${index}`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${
+                    conv.conversation_id === currentConversationId 
+                      ? 'bg-green-500' 
+                      : 'bg-gray-600'
+                  }`} />
+                  <span className="max-w-[120px] truncate">
+                    {conv.title || 'Sin título'}
+                  </span>
+                  {conv.conversation_id === currentConversationId && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCloseConversation && onCloseConversation(conv.conversation_id);
+                      }}
+                      className="ml-1 p-0.5 hover:bg-gray-600 rounded"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* New Tab Button */}
+              <button 
+                onClick={onNewConversation}
+                className="flex items-center justify-center w-8 h-8 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors ml-1"
+                data-testid="new-tab-button"
+              >
+                <Plus size={18} />
+              </button>
             </div>
-            <h1 className="text-xl font-bold text-gray-900">Assistant Melus</h1>
           </div>
 
-          {/* Right side - Credits and User */}
-          <div className="flex items-center gap-4">
+          {/* Right side - Credits and Actions */}
+          <div className="flex items-center gap-3">
             {/* Credits Display */}
             <button
               onClick={() => setIsCreditModalOpen(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg px-4 py-2 hover:from-purple-100 hover:to-pink-100 transition-all"
+              className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-full px-4 py-1.5 hover:from-yellow-500/30 hover:to-yellow-600/30 transition-all"
+              data-testid="credits-button"
             >
-              <Zap size={18} className="text-yellow-500" />
-              <div className="flex flex-col items-start">
-                <span className="text-xs text-gray-600 font-medium">Créditos</span>
-                <span className="text-lg font-bold text-purple-900">
-                  {user?.credits?.toLocaleString() || 0}
-                </span>
-              </div>
-              <CreditCard size={16} className="text-purple-600 ml-2" />
+              <Zap size={16} className="text-yellow-400" />
+              <span className="text-yellow-400 font-bold">
+                {user?.credits?.toLocaleString() || 0}
+              </span>
             </button>
+
+            {/* Buy Credits Button */}
+            <Button
+              onClick={() => setIsCreditModalOpen(true)}
+              className="bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-1.5 h-auto text-sm font-medium"
+              data-testid="buy-credits-button"
+            >
+              Comprar créditos
+            </Button>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1 ml-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+              >
+                <Code size={16} className="mr-2" />
+                Code
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+              >
+                <Eye size={16} className="mr-2" />
+                Preview
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg"
+              >
+                <RotateCcw size={16} className="mr-2" />
+                Redeploy
+              </Button>
+            </div>
 
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors">
-                  {user?.picture ? (
-                    <img 
-                      src={user.picture} 
-                      alt={user.name}
-                      className="w-8 h-8 rounded-full border-2 border-purple-200"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                      <User size={16} className="text-white" />
-                    </div>
-                  )}
-                  <div className="text-left hidden md:block">
-                    <div className="text-sm font-semibold text-gray-900">
-                      {user?.name || 'Usuario'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {user?.email || ''}
-                    </div>
-                  </div>
+                <button className="flex items-center justify-center w-9 h-9 rounded-full bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition-colors ml-2">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => setIsCreditModalOpen(true)}>
-                  <CreditCard className="mr-2 h-4 w-4" />
+              <DropdownMenuContent align="end" className="w-56 bg-[#1a1a2e] border-gray-700 text-gray-200">
+                <div className="px-3 py-2 border-b border-gray-700">
+                  <div className="font-medium">{user?.name || 'Usuario'}</div>
+                  <div className="text-xs text-gray-400">{user?.email || ''}</div>
+                </div>
+                <DropdownMenuItem 
+                  onClick={() => setIsCreditModalOpen(true)}
+                  className="text-gray-200 focus:bg-gray-700 focus:text-white"
+                >
+                  <Zap className="mr-2 h-4 w-4 text-yellow-400" />
                   Comprar Créditos
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsTransactionHistoryOpen(true)}>
+                <DropdownMenuItem 
+                  onClick={() => setIsTransactionHistoryOpen(true)}
+                  className="text-gray-200 focus:bg-gray-700 focus:text-white"
+                >
                   <Receipt className="mr-2 h-4 w-4" />
                   Historial de Compras
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuItem className="text-gray-200 focus:bg-gray-700 focus:text-white">
                   <Settings className="mr-2 h-4 w-4" />
                   Configuración
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                <DropdownMenuItem 
+                  onClick={handleLogout} 
+                  className="text-red-400 focus:bg-gray-700 focus:text-red-300"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Cerrar Sesión
                 </DropdownMenuItem>
