@@ -120,7 +120,7 @@ const PromptBox = ({
 
     setIsSummarizing(true);
     try {
-      const result = await advancedAPI.summarize(conversationId);
+      const result = await conversationsAPI.summarize(conversationId);
       toast({
         title: "Resumen generado",
         description: `Usados ${result.tokens_used} créditos`
