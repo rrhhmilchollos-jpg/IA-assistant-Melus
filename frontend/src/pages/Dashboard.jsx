@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
 import ChatArea from '../components/ChatArea';
+import PromptBox from '../components/PromptBox';
+import ProjectsTable from '../components/ProjectsTable';
 import { conversationsAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 import { Toaster } from '../components/ui/sonner';
+import { Button } from '../components/ui/button';
+import { PlusCircle, LayoutGrid, MessageSquare } from 'lucide-react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -13,6 +23,8 @@ const Dashboard = () => {
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o');
+  const [view, setView] = useState('workspace'); // 'workspace' or 'chat'
 
   useEffect(() => {
     loadConversations();
@@ -33,15 +45,16 @@ const Dashboard = () => {
     }
   };
 
-  const handleNewConversation = async (model = 'gpt-4o') => {
+  const handleNewConversation = async () => {
     try {
-      const newConv = await conversationsAPI.create('Nueva Conversación', model);
+      const newConv = await conversationsAPI.create('Nueva Conversación', selectedModel);
       setConversations([newConv, ...conversations]);
       setCurrentConversationId(newConv.conversation_id);
+      setView('chat');
       
       toast({
         title: "Nueva conversación creada",
-        description: `Usando modelo ${model}`
+        description: `Usando modelo ${selectedModel}`
       });
     } catch (error) {
       console.error('Failed to create conversation:', error);
@@ -55,6 +68,7 @@ const Dashboard = () => {
 
   const handleSelectConversation = (conversationId) => {
     setCurrentConversationId(conversationId);
+    setView('chat');
   };
 
   const handleDeleteConversation = async (conversationId) => {
@@ -81,6 +95,41 @@ const Dashboard = () => {
     }
   };
 
+  const handleForkConversation = async (conversationId) => {
+    try {
+      await conversationsAPI.fork(conversationId);
+      await loadConversations();
+      toast({
+        title: "Conversación bifurcada",
+        description: "Se ha creado una copia de la conversación"
+      });
+    } catch (error) {
+      console.error('Failed to fork:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo bifurcar la conversación",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExportConversation = async (conversationId) => {
+    try {
+      await conversationsAPI.exportConversation(conversationId);
+      toast({
+        title: "Conversación exportada",
+        description: "El archivo se ha descargado correctamente"
+      });
+    } catch (error) {
+      console.error('Failed to export:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo exportar la conversación",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSendMessage = async (content) => {
     if (!currentConversationId || isSending) return;
 
@@ -88,13 +137,8 @@ const Dashboard = () => {
     
     try {
       const response = await conversationsAPI.sendMessage(currentConversationId, content);
-      
-      // Update credits
       updateCredits(response.credits_remaining);
-      
-      // Reload conversations to update timestamps and titles
       await loadConversations();
-      
     } catch (error) {
       console.error('Failed to send message:', error);
       
@@ -102,11 +146,7 @@ const Dashboard = () => {
         toast({
           title: "Créditos insuficientes",
           description: "Necesitas comprar más créditos para continuar",
-          variant: "destructive",
-          action: {
-            label: "Comprar Créditos",
-            onClick: () => {} // Modal will open from sidebar
-          }
+          variant: "destructive"
         });
       } else {
         toast({
@@ -121,21 +161,101 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onSelectConversation={handleSelectConversation}
-        onNewConversation={handleNewConversation}
-        onDeleteConversation={handleDeleteConversation}
-        onConversationsUpdated={loadConversations}
-        userCredits={user?.credits || 0}
-      />
-      <ChatArea
-        conversationId={currentConversationId}
-        onSendMessage={handleSendMessage}
-        isLoading={isSending}
-      />
+    <div className="flex flex-col h-screen bg-gray-50">
+      <Header />
+      
+      <div className="flex-1 overflow-hidden">
+        <Tabs value={view} onValueChange={setView} className="h-full flex flex-col">
+          {/* Tab Navigation */}
+          <div className="bg-white border-b border-gray-200 px-6">
+            <div className="max-w-7xl mx-auto">
+              <TabsList className="bg-transparent border-0">
+                <TabsTrigger value="workspace" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                  <LayoutGrid size={16} className="mr-2" />
+                  Workspace
+                </TabsTrigger>
+                <TabsTrigger value="chat" className="data-[state=active]:border-b-2 data-[state=active]:border-purple-600">
+                  <MessageSquare size={16} className="mr-2" />
+                  Chat
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
+
+          {/* Workspace View */}
+          <TabsContent value="workspace" className="flex-1 overflow-auto m-0">
+            <div className="max-w-7xl mx-auto p-6">
+              {/* Action Bar */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Tus Conversaciones</h2>
+                  <p className="text-gray-600 mt-1">
+                    {conversations.length} conversaciones totales
+                  </p>
+                </div>
+                <Button
+                  onClick={handleNewConversation}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <PlusCircle size={18} className="mr-2" />
+                  Nueva Conversación
+                </Button>
+              </div>
+
+              {/* Projects Table */}
+              <ProjectsTable
+                conversations={conversations}
+                currentConversationId={currentConversationId}
+                onSelectConversation={handleSelectConversation}
+                onDeleteConversation={handleDeleteConversation}
+                onForkConversation={handleForkConversation}
+                onExportConversation={handleExportConversation}
+              />
+            </div>
+          </TabsContent>
+
+          {/* Chat View */}
+          <TabsContent value="chat" className="flex-1 flex flex-col m-0">
+            {currentConversationId ? (
+              <>
+                <div className="flex-1 overflow-hidden">
+                  <ChatArea
+                    conversationId={currentConversationId}
+                    onSendMessage={handleSendMessage}
+                    isLoading={isSending}
+                  />
+                </div>
+                <PromptBox
+                  onSendMessage={handleSendMessage}
+                  disabled={isSending}
+                  selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
+                />
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No hay conversación seleccionada
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Selecciona una conversación del workspace o crea una nueva
+                  </p>
+                  <Button
+                    onClick={handleNewConversation}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    <PlusCircle size={18} className="mr-2" />
+                    Nueva Conversación
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+
       <Toaster />
     </div>
   );
