@@ -33,10 +33,28 @@ import {
   X,
   Maximize2,
   Minimize2,
-  Bug
+  Bug,
+  ShoppingCart,
+  FileText,
+  LayoutDashboard,
+  Rocket,
+  CheckSquare,
+  User,
+  Sparkles,
+  ArrowLeft
 } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
+
+// Template icons mapping
+const TEMPLATE_ICONS = {
+  ecommerce: ShoppingCart,
+  blog: FileText,
+  dashboard: LayoutDashboard,
+  landing: Rocket,
+  taskmanager: CheckSquare,
+  portfolio: User
+};
 
 // Agent icons mapping
 const AGENT_ICONS = {
