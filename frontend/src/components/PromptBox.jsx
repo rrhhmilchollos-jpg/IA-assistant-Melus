@@ -52,24 +52,33 @@ const PromptBox = ({
     
     for (const file of files) {
       try {
-        const result = await attachmentsAPI.upload(file, conversationId);
-        setAttachments(prev => [...prev, {
-          id: result.attachment_id,
-          name: file.name,
-          type: file.type,
-          size: result.file_size
-        }]);
-        toast({
-          title: "Archivo adjuntado",
-          description: file.name
-        });
+        // Read file as base64
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const result = await attachmentsAPI.upload(reader.result, file.name, file.type, conversationId);
+            setAttachments(prev => [...prev, {
+              id: result.attachment_id,
+              name: file.name,
+              type: file.type,
+              size: result.file_size
+            }]);
+            toast({
+              title: "Archivo adjuntado",
+              description: file.name
+            });
+          } catch (error) {
+            console.error('Upload error:', error);
+            toast({
+              title: "Error al subir archivo",
+              description: error.response?.data?.detail || "No se pudo subir el archivo",
+              variant: "destructive"
+            });
+          }
+        };
+        reader.readAsDataURL(file);
       } catch (error) {
-        console.error('Upload error:', error);
-        toast({
-          title: "Error al subir archivo",
-          description: error.response?.data?.detail || "No se pudo subir el archivo",
-          variant: "destructive"
-        });
+        console.error('File read error:', error);
       }
     }
     
