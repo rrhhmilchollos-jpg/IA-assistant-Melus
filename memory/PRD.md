@@ -74,6 +74,14 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Historial de deployments
 - Estado de deployments
 
+### 10. Integración con GitHub ✅
+- Conectar cuenta de GitHub via OAuth
+- Crear repositorios desde la app
+- Subir proyectos generados a GitHub (100 créditos)
+- Subir código de conversaciones a GitHub (50 créditos)
+- Listar repositorios del usuario
+- Soporte para repos públicos y privados
+
 ## Arquitectura Técnica
 
 ### Backend (Refactorizado)
@@ -91,6 +99,7 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - `/api/conversations` - Chat
 - `/api/voice` - Transcripción de voz
 - `/api/deploy` - Despliegue
+- `/api/github` - Integración GitHub
 
 ### Frontend
 - Framework: React
@@ -102,6 +111,7 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - OpenAI GPT-4o (via Emergent LLM Key)
 - OpenAI Whisper (via Emergent LLM Key)
 - Stripe Payments
+- GitHub API (requiere OAuth credentials)
 
 ## Costos de Créditos
 | Acción | Créditos |
@@ -115,6 +125,18 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 | Agente Deploy | 200 |
 | Transcripción voz | 25 |
 | Redeploy | 50 |
+| Push proyecto a GitHub | 100 |
+| Push código a GitHub | 50 |
+
+## Configuración de GitHub
+Para habilitar la integración con GitHub, añadir al `.env` del backend:
+```
+GITHUB_CLIENT_ID=tu_client_id
+GITHUB_CLIENT_SECRET=tu_client_secret
+```
+
+Obtener credenciales en: https://github.com/settings/applications/new
+- Callback URL: https://tu-dominio/api/github/auth/callback
 
 ## Credenciales de Prueba
 - **Admin**: rrhh.milchollos@gmail.com / 19862210Des
