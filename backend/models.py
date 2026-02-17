@@ -77,9 +77,13 @@ class CreditPackage(BaseModel):
     price: float
     currency: str = "usd"
     popular: bool = False
+    bonus: int = 0
+    base_credits: Optional[int] = None
 
 class CheckoutRequest(BaseModel):
-    package_id: str
+    package_id: Optional[str] = None
+    custom_amount: Optional[float] = None
+    promo_code: Optional[str] = None
     origin_url: str
 
 # Payment Models
