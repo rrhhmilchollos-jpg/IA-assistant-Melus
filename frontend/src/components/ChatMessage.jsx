@@ -24,7 +24,7 @@ const ChatMessage = ({ message }) => {
           {message.content}
         </div>
         <div className="text-xs text-gray-500">
-          {message.timestamp.toLocaleTimeString('es-ES', { 
+          {new Date(message.timestamp).toLocaleTimeString('es-ES', { 
             hour: '2-digit', 
             minute: '2-digit' 
           })}
