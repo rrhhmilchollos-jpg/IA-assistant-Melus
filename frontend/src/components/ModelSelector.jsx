@@ -34,27 +34,27 @@ const ModelSelector = ({ value, onChange, disabled = false }) => {
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="w-full bg-white border-gray-300 text-gray-900 hover:bg-gray-50">
+      <SelectTrigger className="w-auto bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 rounded-lg">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-purple-500" />
+          <Sparkles size={16} className="text-purple-400" />
           <SelectValue placeholder="Selecciona un modelo" />
         </div>
       </SelectTrigger>
-      <SelectContent className="bg-white border-gray-200">
+      <SelectContent className="bg-gray-800 border-gray-700">
         {models.map((model) => (
           <SelectItem 
             key={model.model_id} 
             value={model.model_id}
-            className="hover:bg-gray-100"
+            className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700 focus:text-white"
           >
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-900">{model.name}</span>
+                <span className="font-medium">{model.name}</span>
                 {model.popular && (
-                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Popular</span>
+                  <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">Popular</span>
                 )}
               </div>
-              <span className="text-xs text-gray-500">{model.description}</span>
+              <span className="text-xs text-gray-400">{model.description}</span>
             </div>
           </SelectItem>
         ))}
