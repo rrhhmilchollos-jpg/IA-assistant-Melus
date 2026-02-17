@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import ChatArea from '../components/ChatArea';
 import PromptBox from '../components/PromptBox';
-import { conversationsAPI } from '../api/client';
+import { conversationsAPI, attachmentsAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 import { Toaster } from '../components/ui/sonner';
 
@@ -84,7 +84,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleSendMessage = async (content) => {
+  const handleSendMessage = async (content, attachments = []) => {
     if (!currentConversationId || isSending) return;
 
     setIsSending(true);
@@ -95,7 +95,12 @@ const Dashboard = () => {
     }
     
     try {
-      const response = await conversationsAPI.sendMessage(currentConversationId, content);
+      // Include attachment IDs in the message if any
+      const messageContent = attachments.length > 0
+        ? `${content}\n\n[Archivos adjuntos: ${attachments.map(a => a.name).join(', ')}]`
+        : content;
+
+      const response = await conversationsAPI.sendMessage(currentConversationId, messageContent);
       updateCredits(response.credits_remaining);
       
       // Reload messages in ChatArea to show the AI response
@@ -130,6 +135,25 @@ const Dashboard = () => {
     }
   };
 
+  const handleSummarized = (summary) => {
+    // Show summary in a toast or modal
+    toast({
+      title: "Resumen de la conversación",
+      description: summary.substring(0, 100) + "..."
+    });
+  };
+
+  const handleSaved = (saved) => {
+    // Update the conversation in the list
+    setConversations(convs => 
+      convs.map(c => 
+        c.conversation_id === currentConversationId 
+          ? { ...c, saved } 
+          : c
+      )
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-[#0d0d1a]" data-testid="dashboard-page">
       <Header 
@@ -153,6 +177,9 @@ const Dashboard = () => {
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
           isAgentRunning={isSending}
+          conversationId={currentConversationId}
+          onSummarized={handleSummarized}
+          onSaved={handleSaved}
         />
       </div>
 
