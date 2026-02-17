@@ -75,12 +75,12 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Estado de deployments
 
 ### 10. Integración con GitHub ✅
+- Botón "Connect GitHub" / "Save to GitHub" en la barra de acciones del chat
 - Conectar cuenta de GitHub via OAuth
-- Crear repositorios desde la app
-- Subir proyectos generados a GitHub (100 créditos)
+- Modal para crear repositorios desde la app
 - Subir código de conversaciones a GitHub (50 créditos)
-- Listar repositorios del usuario
 - Soporte para repos públicos y privados
+- Ubicado junto a los botones Summarize y Ultra
 
 ## Arquitectura Técnica
 
