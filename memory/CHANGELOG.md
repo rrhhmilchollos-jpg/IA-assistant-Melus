@@ -23,16 +23,29 @@
 - WebSocket para actualizaciones en tiempo real
 - Persistencia en localStorage y MongoDB
 
+### Added - Templates Predefinidos
+- **6 Templates**: E-Commerce, Blog, Dashboard, Landing, Task Manager, Portfolio
+- Galería visual de selección
+- Generación con un clic
+- Costos estimados por template
+
+### Added - Descarga ZIP
+- Exportar proyecto completo como ZIP
+- Incluye README.md generado
+- Estructura de carpetas organizada
+
 ### Changed - App Generator
 - Nueva UI con panel dividido (consola + preview)
 - Barra de estado de agentes
 - Logs en tiempo real durante generación
 - Botón Auto-fix para corrección de errores
+- Botón "+ Nuevo" para crear nuevo proyecto
 
 ### Technical
 - Nuevas rutas: `/api/agents/v2`, `/api/workspace`
 - Nueva dependencia: @codesandbox/sandpack-react
 - WebSocket server para logs en tiempo real
+- Templates en `/backend/templates/app_templates.py`
 
 ---
 
