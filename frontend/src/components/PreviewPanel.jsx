@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ExternalLink, RefreshCw, Clock, MessageSquare, Zap, Bookmark, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
-import { conversationsAPI } from '../api/client';
+import { conversationsAPI, deployAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const PreviewPanel = ({ conversationId, isOpen, onClose }) => {
@@ -35,15 +35,17 @@ const PreviewPanel = ({ conversationId, isOpen, onClose }) => {
   const handleRedeploy = async () => {
     setRedeploying(true);
     try {
+      const result = await deployAPI.redeploy(null, conversationId);
       toast({
-        title: "Redeploy iniciado",
-        description: "Los cambios se están aplicando"
+        title: "Redeploy completado",
+        description: `Créditos usados: ${result.credits_used}`
       });
+      loadPreview(); // Refresh preview data
     } catch (error) {
       console.error('Redeploy error:', error);
       toast({
         title: "Error",
-        description: "No se pudo iniciar el redeploy",
+        description: error.response?.data?.detail || "No se pudo iniciar el redeploy",
         variant: "destructive"
       });
     } finally {
