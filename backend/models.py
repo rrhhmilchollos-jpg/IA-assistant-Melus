@@ -22,12 +22,26 @@ class UserSession(BaseModel):
     created_at: datetime
 
 # Auth Models
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    name: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 class SessionRequest(BaseModel):
     session_id: str
 
 class SessionResponse(BaseModel):
     user: User
     session_token: str
+
+class LoginResponse(BaseModel):
+    user: User
+    session_token: str
+    message: str
 
 # Conversation Models
 class Conversation(BaseModel):
