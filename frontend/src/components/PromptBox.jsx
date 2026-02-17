@@ -21,6 +21,7 @@ const PromptBox = ({
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [ultraMode, setUltraMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [budget] = useState(10000);
   const [usedBudget] = useState(0);
   
