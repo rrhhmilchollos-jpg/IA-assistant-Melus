@@ -183,19 +183,20 @@ const Dashboard = () => {
           </div>
 
           {/* Workspace View */}
-          <TabsContent value="workspace" className="flex-1 overflow-auto m-0">
+          <TabsContent value="workspace" className="flex-1 overflow-auto m-0" data-testid="workspace-tab">
             <div className="max-w-7xl mx-auto p-6">
               {/* Action Bar */}
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Tus Conversaciones</h2>
-                  <p className="text-gray-600 mt-1">
+                  <h2 className="text-2xl font-bold text-gray-900" data-testid="conversations-title">Tus Conversaciones</h2>
+                  <p className="text-gray-600 mt-1" data-testid="conversations-count">
                     {conversations.length} conversaciones totales
                   </p>
                 </div>
                 <Button
                   onClick={handleNewConversation}
                   className="bg-purple-600 hover:bg-purple-700"
+                  data-testid="new-conversation-button"
                 >
                   <PlusCircle size={18} className="mr-2" />
                   Nueva Conversación
@@ -215,7 +216,7 @@ const Dashboard = () => {
           </TabsContent>
 
           {/* Chat View */}
-          <TabsContent value="chat" className="flex-1 flex flex-col m-0">
+          <TabsContent value="chat" className="flex-1 flex flex-col m-0" data-testid="chat-tab">
             {currentConversationId ? (
               <>
                 <div className="flex-1 overflow-hidden">
