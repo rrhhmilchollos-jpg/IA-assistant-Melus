@@ -44,7 +44,7 @@ const Sidebar = ({
         {/* Credits Display */}
         <div 
           className="bg-gray-800 rounded-lg p-3 cursor-pointer hover:bg-gray-750 transition-colors"
-          onClick={() => navigate('/pricing')}
+          onClick={() => setIsCreditModalOpen(true)}
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm text-gray-400">Créditos</span>
@@ -128,6 +128,12 @@ const Sidebar = ({
         </Button>
         <p className="text-xs text-gray-400 mt-3">Assistant Melus v1.0</p>
       </div>
+      
+      {/* Credit Modal */}
+      <CreditModal 
+        isOpen={isCreditModalOpen} 
+        onClose={() => setIsCreditModalOpen(false)} 
+      />
     </div>
   );
 };
