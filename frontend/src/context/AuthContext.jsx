@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
+    setIsLoading(false);
   };
 
   const logout = async () => {
