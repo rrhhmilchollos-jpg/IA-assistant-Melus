@@ -3,36 +3,10 @@ import ChatMessage from './ChatMessage';
 import { Loader2 } from 'lucide-react';
 import { conversationsAPI } from '../api/client';
 
-const ChatArea = forwardRef(({ conversationId, isLoading }, ref) => {
+const ChatArea = forwardRef(function ChatArea({ conversationId, isLoading }, ref) {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
-
-  // Expose loadMessages to parent component
-  useImperativeHandle(ref, () => ({
-    loadMessages,
-    addTempMessage: (content) => {
-      const tempUserMessage = {
-        message_id: `temp-${Date.now()}`,
-        role: 'user',
-        content: content,
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, tempUserMessage]);
-    }
-  }));
-
-  useEffect(() => {
-    if (conversationId) {
-      loadMessages();
-    } else {
-      setMessages([]);
-    }
-  }, [conversationId]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const loadMessages = async () => {
     if (!conversationId) return;
@@ -48,12 +22,39 @@ const ChatArea = forwardRef(({ conversationId, isLoading }, ref) => {
     }
   };
 
+  const addTempMessage = (content) => {
+    const tempUserMessage = {
+      message_id: `temp-${Date.now()}`,
+      role: 'user',
+      content: content,
+      timestamp: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, tempUserMessage]);
+  };
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    loadMessages,
+    addTempMessage
+  }));
+
+  useEffect(() => {
+    if (conversationId) {
+      loadMessages();
+    } else {
+      setMessages([]);
+    }
+  }, [conversationId]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
   
   const handleMessageUpdated = () => {
-    // Reload messages when a message is edited or regenerated
     loadMessages();
   };
 
@@ -81,7 +82,6 @@ const ChatArea = forwardRef(({ conversationId, isLoading }, ref) => {
 
   return (
     <div className="flex-1 flex flex-col h-full" data-testid="chat-area">
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           {messages.map((message) => (
@@ -109,6 +109,6 @@ const ChatArea = forwardRef(({ conversationId, isLoading }, ref) => {
       </div>
     </div>
   );
-};
+});
 
 export default ChatArea;
