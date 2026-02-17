@@ -79,7 +79,7 @@ PROMO_CODES = {
 }
 
 # Free credits for new users
-FREE_CREDITS = 10
+FREE_CREDITS = 1000
 
 # Credit to dollar ratio
 CREDITS_PER_DOLLAR = 5  # 5 credits = $1
