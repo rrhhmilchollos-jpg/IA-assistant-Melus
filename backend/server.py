@@ -342,6 +342,10 @@ async def send_message(request: Request, conversation_id: str, message_create: M
             {"_id": 0}
         ).sort("timestamp", 1).limit(20).to_list(20)
         
+        # Get model from conversation
+        model = conv.get("model", DEFAULT_MODEL)
+        model_config = AI_MODELS.get(model, AI_MODELS[DEFAULT_MODEL])
+        
         # Initialize LLM Chat
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
@@ -349,17 +353,15 @@ async def send_message(request: Request, conversation_id: str, message_create: M
             system_message="¡Hola! Soy Assistant Melus, tu asistente de inteligencia artificial. Estoy aquí para ayudarte con cualquier pregunta o tarea que necesites. Puedo ayudarte con: responder preguntas sobre cualquier tema, ayudarte con programación y código, escribir y editar textos, analizar información, resolver problemas, y mucho más. Soy amigable, servicial y siempre respondo en español a menos que me pidas lo contrario."
         )
         
-        # Use GPT-4o model
-        chat.with_model("openai", "gpt-4o")
+        # Use selected model
+        chat.with_model(model_config["provider"], model)
         
         # Send message and get response
         user_msg = UserMessage(text=message_create.content)
         ai_response = await chat.send_message(user_msg)
         
-        # Calculate tokens used (rough estimation based on response length)
-        # In production, you should get this from the OpenAI response metadata
-        tokens_used = len(message_create.content.split()) * 1.3 + len(ai_response.split()) * 1.3
-        tokens_used = int(tokens_used)
+        # Calculate tokens used
+        tokens_used = int((len(message_create.content) + len(ai_response)) / 4 * 1.3)
         
         # Save assistant message
         assistant_message_data = {
@@ -368,6 +370,7 @@ async def send_message(request: Request, conversation_id: str, message_create: M
             "user_id": user_id,
             "role": "assistant",
             "content": ai_response,
+            "model": model,
             "tokens_used": tokens_used,
             "timestamp": utc_now()
         }
