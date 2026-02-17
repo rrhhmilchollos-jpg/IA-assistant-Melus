@@ -408,6 +408,128 @@ async def send_message(request: Request, conversation_id: str, message_create: M
         logger.error(f"AI response error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate AI response: {str(e)}")
 
+@api_router.put("/messages/{message_id}", response_model=Message)
+async def edit_message(request: Request, message_id: str, message_edit: MessageEdit):
+    """Edit a user message"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Find the message
+    message = await db.messages.find_one({
+        "message_id": message_id,
+        "user_id": user_id,
+        "role": "user"
+    }, {"_id": 0})
+    
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Store original content if not already edited
+    original_content = message.get("original_content", message["content"])
+    
+    # Update message
+    await db.messages.update_one(
+        {"message_id": message_id},
+        {
+            "$set": {
+                "content": message_edit.content,
+                "edited": True,
+                "original_content": original_content,
+                "timestamp": utc_now()
+            }
+        }
+    )
+    
+    # Get updated message
+    updated_message = await db.messages.find_one({"message_id": message_id}, {"_id": 0})
+    return Message(**updated_message)
+
+@api_router.post("/messages/{message_id}/regenerate", response_model=Message)
+async def regenerate_message(request: Request, message_id: str):
+    """Regenerate an assistant message"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Find the message
+    message = await db.messages.find_one({
+        "message_id": message_id,
+        "user_id": user_id,
+        "role": "assistant"
+    }, {"_id": 0})
+    
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    conversation_id = message["conversation_id"]
+    
+    # Get conversation
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id
+    }, {"_id": 0})
+    
+    # Check credits
+    if user_doc["credits"] < 100:
+        raise HTTPException(status_code=402, detail="Insufficient credits")
+    
+    # Get previous messages for context
+    previous_messages = await db.messages.find({
+        "conversation_id": conversation_id,
+        "timestamp": {"$lt": message["timestamp"]}
+    }, {"_id": 0}).sort("timestamp", 1).to_list(20)
+    
+    try:
+        # Initialize LLM Chat
+        model = conv.get("model", DEFAULT_MODEL)
+        model_config = AI_MODELS.get(model, AI_MODELS[DEFAULT_MODEL])
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=conversation_id,
+            system_message="¡Hola! Soy Assistant Melus, tu asistente de inteligencia artificial. Estoy aquí para ayudarte con cualquier pregunta o tarea que necesites. Puedo ayudarte con: responder preguntas sobre cualquier tema, ayudarte con programación y código, escribir y editar textos, analizar información, resolver problemas, y mucho más. Soy amigable, servicial y siempre respondo en español a menos que me pidas lo contrario."
+        )
+        
+        chat.with_model(model_config["provider"], model)
+        
+        # Get the user message that this is responding to
+        user_msg = previous_messages[-1] if previous_messages else None
+        if not user_msg or user_msg["role"] != "user":
+            raise HTTPException(status_code=400, detail="Cannot find user message to regenerate response")
+        
+        user_message = UserMessage(text=user_msg["content"])
+        ai_response = await chat.send_message(user_message)
+        
+        # Calculate tokens
+        tokens_used = int((len(user_msg["content"]) + len(ai_response)) / 4 * 1.3)
+        
+        # Update message
+        await db.messages.update_one(
+            {"message_id": message_id},
+            {
+                "$set": {
+                    "content": ai_response,
+                    "tokens_used": tokens_used,
+                    "timestamp": utc_now()
+                }
+            }
+        )
+        
+        # Deduct credits
+        await db.users.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {"credits": user_doc["credits"] - tokens_used},
+                "$inc": {"credits_used": tokens_used}
+            }
+        )
+        
+        # Get updated message
+        updated_message = await db.messages.find_one({"message_id": message_id}, {"_id": 0})
+        return Message(**updated_message)
+        
+    except Exception as e:
+        logger.error(f"Regenerate error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to regenerate: {str(e)}")
+
 # ==================== Credits & Payment Endpoints ====================
 
 @api_router.get("/credits", response_model=CreditBalance)
