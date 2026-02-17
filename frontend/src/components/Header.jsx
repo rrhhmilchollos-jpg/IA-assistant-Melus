@@ -18,7 +18,7 @@ import CreditModal from './CreditModal';
 import TransactionHistory from './TransactionHistory';
 import CodeViewer from './CodeViewer';
 import PreviewPanel from './PreviewPanel';
-import { conversationsAPI } from '../api/client';
+import { conversationsAPI, deployAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const Header = ({ 
