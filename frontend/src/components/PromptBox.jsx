@@ -509,6 +509,88 @@ const PromptBox = ({
           </div>
         </div>
       </div>
+
+      {/* GitHub Modal */}
+      {showGithubModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => setShowGithubModal(false)}>
+          <div 
+            className="bg-[#1a1a2e] rounded-xl p-6 w-full max-w-md border border-purple-500/30 mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Github className="w-5 h-5 text-purple-400" />
+                Guardar en GitHub
+              </h3>
+              <button onClick={() => setShowGithubModal(false)} className="text-gray-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Nombre del repositorio</label>
+                <input
+                  type="text"
+                  value={repoName}
+                  onChange={(e) => setRepoName(e.target.value)}
+                  placeholder="mi-proyecto"
+                  className="w-full bg-[#0d0d1a] border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-purple-500 outline-none"
+                  data-testid="github-repo-name-input"
+                />
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setIsPrivate(false)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                    !isPrivate 
+                      ? 'border-green-500 bg-green-500/20 text-green-400' 
+                      : 'border-gray-700 text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  <span className="text-sm">Público</span>
+                </button>
+                <button
+                  onClick={() => setIsPrivate(true)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                    isPrivate 
+                      ? 'border-yellow-500 bg-yellow-500/20 text-yellow-400' 
+                      : 'border-gray-700 text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  <span className="text-sm">Privado</span>
+                </button>
+              </div>
+
+              <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <p className="text-sm text-yellow-400">
+                  Costo: 50 créditos
+                </p>
+              </div>
+
+              <Button
+                onClick={handleConfirmGithubPush}
+                disabled={isSavingToGithub || !repoName.trim()}
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+                data-testid="confirm-github-push-btn"
+              >
+                {isSavingToGithub ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Subiendo...
+                  </>
+                ) : (
+                  <>
+                    <Github className="w-4 h-4 mr-2" />
+                    Guardar en GitHub
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
