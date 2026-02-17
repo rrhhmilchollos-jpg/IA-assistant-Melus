@@ -89,7 +89,7 @@ const ChatArea = ({ conversationId, onSendMessage, isLoading }) => {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen">
+    <div className="flex-1 flex flex-col h-full" data-testid="chat-area">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
@@ -116,9 +116,6 @@ const ChatArea = ({ conversationId, onSendMessage, isLoading }) => {
           <div ref={messagesEndRef} />
         </div>
       </div>
-
-      {/* Input Area */}
-      <ChatInput onSendMessage={handleSendMessage} disabled={isLoading} />
     </div>
   );
 };
