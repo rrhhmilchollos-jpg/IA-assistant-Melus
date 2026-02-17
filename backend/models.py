@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 import uuid
 
@@ -9,9 +9,10 @@ class User(BaseModel):
     email: str
     name: str
     picture: str
-    credits: int = 10000  # Free credits for new users
+    credits: int = 10000
     credits_used: int = 0
     is_admin: bool = False
+    subscription_tier: str = "free"
     created_at: datetime
     updated_at: datetime
 
@@ -103,6 +104,7 @@ class AIModel(BaseModel):
 class CreditBalance(BaseModel):
     credits: int
     credits_used: int
+    subscription_tier: str = "free"
 
 class CreditPackage(BaseModel):
     package_id: str
@@ -142,4 +144,53 @@ class TransactionHistory(BaseModel):
     amount: float
     credits: int
     status: str
+    transaction_type: str = "credit_purchase"
     created_at: datetime
+
+# Subscription Models
+class SubscriptionPlan(BaseModel):
+    plan_id: str
+    name: str
+    price: float
+    credits_per_month: int
+    features: List[str]
+    popular: bool = False
+    stripe_price_id: Optional[str] = None
+
+class SubscriptionResponse(BaseModel):
+    subscription_id: str
+    plan_id: str
+    status: str
+    credits_per_month: int
+    current_period_end: Optional[datetime] = None
+
+# Project Models
+class ProjectCreate(BaseModel):
+    name: str
+    description: str
+
+class ProjectResponse(BaseModel):
+    project_id: str
+    user_id: str
+    name: str
+    description: str
+    status: str
+    agent_results: List[Dict[str, Any]] = []
+    files: List[Dict[str, Any]] = []
+    total_credits_used: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+# Agent Models
+class AgentTask(BaseModel):
+    agent_type: str
+    task: str
+    context: Optional[Dict[str, Any]] = None
+    project_id: Optional[str] = None
+
+class AgentResponse(BaseModel):
+    agent: str
+    task: str
+    result: Dict[str, Any]
+    credits_used: int
+    timestamp: str
