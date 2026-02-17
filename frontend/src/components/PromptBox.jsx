@@ -189,18 +189,24 @@ const PromptBox = ({
         const reader = new FileReader();
         reader.onloadend = async () => {
           try {
-            // Voice transcription placeholder
-            toast({
-              title: "Transcripción",
-              description: "Funcionalidad de voz en desarrollo"
-            });
+            setIsTranscribing(true);
+            const result = await voiceAPI.transcribe(reader.result, 'es');
+            if (result.text) {
+              setMessage(prev => prev + (prev ? ' ' : '') + result.text);
+              toast({
+                title: "Transcripción completada",
+                description: `Créditos usados: ${result.credits_used}`
+              });
+            }
           } catch (error) {
             console.error('Transcription error:', error);
             toast({
               title: "Error de transcripción",
-              description: "No se pudo transcribir el audio",
+              description: error.response?.data?.detail || "No se pudo transcribir el audio",
               variant: "destructive"
             });
+          } finally {
+            setIsTranscribing(false);
           }
         };
         reader.readAsDataURL(audioBlob);
