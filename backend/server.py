@@ -253,8 +253,6 @@ async def create_conversation(request: Request, conv_create: ConversationCreate)
     return Conversation(**conversation)
         "updated_at": utc_now()
     }
-    
-    await db.conversations.insert_one(conversation)
     return Conversation(**conversation)
 
 @api_router.delete("/conversations/{conversation_id}")
