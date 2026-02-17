@@ -351,4 +351,49 @@ export const deployAPI = {
   }
 };
 
+// GitHub API
+export const githubAPI = {
+  login: async () => {
+    const response = await api.get('/api/github/auth/login');
+    return response.data;
+  },
+  getStatus: async () => {
+    const response = await api.get('/api/github/status');
+    return response.data;
+  },
+  disconnect: async () => {
+    const response = await api.post('/api/github/disconnect');
+    return response.data;
+  },
+  listRepos: async () => {
+    const response = await api.get('/api/github/repos');
+    return response.data;
+  },
+  createRepo: async (name, description, isPrivate = false) => {
+    const response = await api.post('/api/github/repos/create', {
+      name,
+      description,
+      private: isPrivate
+    });
+    return response.data;
+  },
+  pushProject: async (projectId, repoName = null, createNew = true, isPrivate = false) => {
+    const response = await api.post('/api/github/push-project', {
+      project_id: projectId,
+      repo_name: repoName,
+      create_new: createNew,
+      private: isPrivate
+    });
+    return response.data;
+  },
+  pushConversation: async (conversationId, repoName = null, isPrivate = false) => {
+    const response = await api.post('/api/github/push-conversation', {
+      conversation_id: conversationId,
+      repo_name: repoName,
+      private: isPrivate
+    });
+    return response.data;
+  }
+};
+
 export default api;
