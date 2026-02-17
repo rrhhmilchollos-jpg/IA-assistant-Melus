@@ -17,8 +17,10 @@ import {
   Copy,
   ChevronDown,
   ChevronRight,
-  Zap
+  Zap,
+  Github
 } from 'lucide-react';
+import GitHubIntegration from './GitHubIntegration';
 
 const AGENT_ICONS = {
   orchestrator: Cpu,
