@@ -694,3 +694,322 @@ async def get_costs():
         "costs": AGENT_COSTS,
         "total": sum(AGENT_COSTS.values())
     }
+
+
+@router.get("/templates")
+async def list_templates():
+    """Get all available app templates"""
+    return {
+        "templates": get_all_templates()
+    }
+
+
+@router.get("/templates/{template_id}")
+async def get_template_details(template_id: str):
+    """Get a specific template details"""
+    template = get_template(template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return {"id": template_id, **template}
+
+
+@router.post("/generate-from-template")
+async def generate_from_template(request: Request):
+    """Generate an app from a predefined template"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    template_id = body.get("template_id")
+    app_name = body.get("name", "My App")
+    
+    template = get_template(template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Use template's prompt for generation
+    description = template["prompt"]
+    
+    # Calculate cost
+    total_cost = template.get("estimated_credits", 500)
+    if user_doc["credits"] < total_cost:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Need {total_cost} credits, you have {user_doc['credits']}"
+        )
+    
+    # Call the main generate function logic (reuse)
+    # For now, just call the generate endpoint internally
+    body["description"] = description
+    body["name"] = app_name
+    
+    # Create workspace
+    from routes.workspace import get_connection_manager
+    manager = get_connection_manager()
+    
+    workspace_id = generate_id("ws")
+    workspace = {
+        "workspace_id": workspace_id,
+        "user_id": user_id,
+        "name": app_name,
+        "description": f"Generated from template: {template['name']}",
+        "template": template_id,
+        "files": {},
+        "versions": [],
+        "current_version": 0,
+        "status": "generating",
+        "build_logs": [],
+        "created_at": utc_now(),
+        "updated_at": utc_now()
+    }
+    await db.workspaces.insert_one(workspace)
+    
+    # Start generation (reuse the logic)
+    # This is a simplified version - in production you'd call the full generate function
+    total_credits_used = 0
+    all_files = {}
+    
+    try:
+        # Log start
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "info",
+                "message": f"Generating from template: {template['name']}",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # STEP 1: Skip classifier (we know the type from template)
+        classification = {
+            "app_type": template_id,
+            "complexity": "medium",
+            "requires_auth": False,
+            "requires_database": False,
+            "main_features": template.get("features", []),
+            "summary": template.get("description", "")
+        }
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "classifier",
+                "type": "success",
+                "message": f"Using template: {template['name']}",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # STEP 2: Architect
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "architect",
+                "type": "working",
+                "message": "Designing architecture...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        architect_result = await run_agent_v2(
+            "architect",
+            f"Design architecture for: {description}",
+            {"classification": classification, "template": template_id},
+            db,
+            workspace_id
+        )
+        total_credits_used += architect_result["credits_used"]
+        architecture = architect_result["result"]
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "architect",
+                "type": "success",
+                "message": f"Architecture designed",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # STEP 3: Frontend
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "frontend",
+                "type": "working",
+                "message": "Generating React components...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        frontend_result = await run_agent_v2(
+            "frontend",
+            description,
+            {"classification": classification, "architecture": architecture, "app_name": app_name},
+            db,
+            workspace_id
+        )
+        total_credits_used += frontend_result["credits_used"]
+        
+        frontend_files = frontend_result["result"].get("files", {})
+        all_files.update(frontend_files)
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "frontend",
+                "type": "success",
+                "message": f"Generated {len(frontend_files)} files",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # Add base files
+        base_files = {
+            "package.json": json.dumps({
+                "name": app_name.lower().replace(" ", "-"),
+                "private": True,
+                "version": "0.0.1",
+                "dependencies": {
+                    "react": "^18.2.0",
+                    "react-dom": "^18.2.0",
+                    "react-router-dom": "^6.20.0"
+                }
+            }, indent=2),
+            "public/index.html": f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{app_name}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900">
+    <div id="root"></div>
+</body>
+</html>""",
+            "src/index.js": """import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);"""
+        }
+        
+        for path, content in base_files.items():
+            if path not in all_files:
+                all_files[path] = content
+        
+        # Update workspace
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {
+                "$set": {
+                    "files": all_files,
+                    "status": "completed",
+                    "current_version": 1,
+                    "updated_at": utc_now()
+                },
+                "$push": {
+                    "versions": {
+                        "version": 1,
+                        "files": all_files,
+                        "created_at": utc_now(),
+                        "message": f"Generated from template: {template['name']}"
+                    }
+                }
+            }
+        )
+        
+        # Deduct credits
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"credits": -total_credits_used, "credits_used": total_credits_used}}
+        )
+        
+        await manager.broadcast(workspace_id, {
+            "type": "generation_complete",
+            "files": all_files,
+            "workspace_id": workspace_id,
+            "credits_used": total_credits_used
+        })
+        
+        return {
+            "workspace_id": workspace_id,
+            "files": all_files,
+            "template": template_id,
+            "credits_used": total_credits_used,
+            "credits_remaining": user_doc["credits"] - total_credits_used
+        }
+        
+    except Exception as e:
+        logger.error(f"Template generation failed: {e}")
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {"$set": {"status": "failed", "error": str(e)}}
+        )
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/download/{workspace_id}")
+async def download_project_zip(request: Request, workspace_id: str):
+    """Download workspace as ZIP file"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    files = workspace.get("files", {})
+    app_name = workspace.get("name", "app").lower().replace(" ", "-")
+    
+    # Create ZIP in memory
+    zip_buffer = io.BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for file_path, content in files.items():
+            # Normalize path
+            normalized_path = file_path.lstrip('/')
+            full_path = f"{app_name}/{normalized_path}"
+            zip_file.writestr(full_path, content)
+        
+        # Add README
+        readme_content = f"""# {workspace.get('name', 'Generated App')}
+
+{workspace.get('description', 'Generated with Assistant Melus')}
+
+## Getting Started
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Run development server:
+   ```bash
+   npm start
+   ```
+
+## Generated by Assistant Melus
+
+This project was automatically generated using AI agents.
+"""
+        zip_file.writestr(f"{app_name}/README.md", readme_content)
+    
+    zip_buffer.seek(0)
+    
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename={app_name}.zip"
+        }
+    )
+
