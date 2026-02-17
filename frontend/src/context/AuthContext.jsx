@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
+    setIsLoading(true);
     try {
       const userData = await authAPI.getCurrentUser();
       setUser(userData);
