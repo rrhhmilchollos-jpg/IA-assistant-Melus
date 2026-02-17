@@ -1,15 +1,19 @@
 """Enhanced Multi-Agent System with Real Code Generation for Assistant Melus"""
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from typing import List, Optional, Dict, Any
 import logging
 import os
 import json
 import re
 import asyncio
+import io
+import zipfile
 from datetime import datetime
 
 from utils import generate_id, utc_now, get_authenticated_user
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from templates.app_templates import get_template, get_all_templates, TEMPLATES
 
 logger = logging.getLogger(__name__)
 
