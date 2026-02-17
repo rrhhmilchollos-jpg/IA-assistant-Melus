@@ -391,13 +391,23 @@ const PromptBox = ({
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={disabled || !conversationId}
-                onClick={handleSave}
-                className="text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg h-8 px-3"
-                data-testid="save-button"
+                disabled={disabled || !conversationId || isSavingToGithub}
+                onClick={handleSaveToGithub}
+                className={`rounded-lg h-8 px-3 ${
+                  githubStatus?.connected 
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    : 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/20'
+                }`}
+                data-testid="save-github-button"
               >
-                <Save size={16} className="mr-1.5" />
-                <span className="text-xs">Save</span>
+                {isSavingToGithub ? (
+                  <Loader2 size={16} className="mr-1.5 animate-spin" />
+                ) : (
+                  <Github size={16} className="mr-1.5" />
+                )}
+                <span className="text-xs">
+                  {githubStatus?.connected ? 'Save to GitHub' : 'Connect GitHub'}
+                </span>
               </Button>
               
               <Button
