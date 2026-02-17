@@ -59,7 +59,7 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
   const handleRollback = async () => {
     setIsRollingBack(true);
     try {
-      const result = await advancedAPI.rollback(message.message_id);
+      const result = await messagesAPI.rollback(message.message_id);
       toast({
         title: "Rollback completado",
         description: `Se eliminaron ${result.messages_deleted} mensajes posteriores`
