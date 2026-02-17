@@ -1,13 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import ChatMessage from './ChatMessage';
-import ChatInput from './ChatInput';
 import { Loader2 } from 'lucide-react';
 import { conversationsAPI } from '../api/client';
 
-const ChatArea = ({ conversationId, onSendMessage, isLoading }) => {
+const ChatArea = forwardRef(({ conversationId, isLoading }, ref) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Expose loadMessages to parent component
+  useImperativeHandle(ref, () => ({
+    loadMessages,
+    addTempMessage: (content) => {
+      const tempUserMessage = {
+        message_id: `temp-${Date.now()}`,
+        role: 'user',
+        content: content,
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, tempUserMessage]);
+    }
+  }));
 
   useEffect(() => {
     if (conversationId) {
@@ -37,28 +50,6 @@ const ChatArea = ({ conversationId, onSendMessage, isLoading }) => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleSendMessage = async (content) => {
-    if (!conversationId || isLoading) return;
-
-    // Optimistically add user message to UI
-    const tempUserMessage = {
-      message_id: `temp-${Date.now()}`,
-      role: 'user',
-      content: content,
-      timestamp: new Date().toISOString()
-    };
-    setMessages(prev => [...prev, tempUserMessage]);
-
-    try {
-      await onSendMessage(content);
-      // Reload messages to get the real messages from server
-      await loadMessages();
-    } catch (error) {
-      // Remove temp message on error
-      setMessages(prev => prev.filter(m => m.message_id !== tempUserMessage.message_id));
-    }
   };
   
   const handleMessageUpdated = () => {
