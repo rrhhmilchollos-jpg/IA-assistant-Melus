@@ -180,10 +180,11 @@ const PromptBox = ({
         const reader = new FileReader();
         reader.onloadend = async () => {
           try {
-            const result = await advancedAPI.transcribe(reader.result);
-            if (result.text) {
-              setMessage(prev => prev + result.text);
-            }
+            // Voice transcription placeholder
+            toast({
+              title: "Transcripción",
+              description: "Funcionalidad de voz en desarrollo"
+            });
           } catch (error) {
             console.error('Transcription error:', error);
             toast({
