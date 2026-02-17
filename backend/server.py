@@ -541,6 +541,29 @@ async def get_credits(request: Request):
         credits_used=user_doc["credits_used"]
     )
 
+@api_router.get("/credits/transactions", response_model=List[TransactionHistory])
+async def get_transaction_history(request: Request):
+    """Get user's transaction history"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    transactions = await db.payment_transactions.find(
+        {"user_id": user_id, "processed": True},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    result = []
+    for txn in transactions:
+        result.append(TransactionHistory(
+            transaction_id=txn["transaction_id"],
+            amount=txn["amount"],
+            credits=txn["credits"],
+            status=txn["status"],
+            created_at=txn["created_at"]
+        ))
+    
+    return result
+
 @api_router.get("/credits/packages", response_model=List[CreditPackage])
 async def get_credit_packages():
     """Get available credit packages"""
