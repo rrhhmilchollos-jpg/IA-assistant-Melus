@@ -34,27 +34,27 @@ const ModelSelector = ({ value, onChange, disabled = false }) => {
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-white">
+      <SelectTrigger className="w-full bg-white border-gray-300 text-gray-900 hover:bg-gray-50">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-purple-400" />
+          <Sparkles size={16} className="text-purple-500" />
           <SelectValue placeholder="Selecciona un modelo" />
         </div>
       </SelectTrigger>
-      <SelectContent className="bg-gray-800 border-gray-700">
+      <SelectContent className="bg-white border-gray-200">
         {models.map((model) => (
           <SelectItem 
             key={model.model_id} 
             value={model.model_id}
-            className="text-white hover:bg-gray-700"
+            className="hover:bg-gray-100"
           >
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-medium">{model.name}</span>
+                <span className="font-medium text-gray-900">{model.name}</span>
                 {model.popular && (
-                  <span className="text-xs bg-purple-600 px-2 py-0.5 rounded">Popular</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Popular</span>
                 )}
               </div>
-              <span className="text-xs text-gray-400">{model.description}</span>
+              <span className="text-xs text-gray-500">{model.description}</span>
             </div>
           </SelectItem>
         ))}
