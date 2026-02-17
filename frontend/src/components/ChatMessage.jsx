@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, User, Edit2, RefreshCw, Check, X } from 'lucide-react';
+import { Bot, User, Edit2, RefreshCw, Check, X, Copy, RotateCcw, ChevronRight, Terminal } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { messagesAPI } from '../api/client';
@@ -10,6 +10,7 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   const handleEdit = async () => {
     if (!editContent.trim()) return;
@@ -52,107 +53,186 @@ const ChatMessage = ({ message, onMessageUpdated }) => {
       setIsRegenerating(false);
     }
   };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message.content);
+    toast({
+      title: "Copiado",
+      description: "Contenido copiado al portapapeles"
+    });
+  };
+
+  // Check if content looks like a command/code block
+  const isCodeBlock = message.content.startsWith('$') || 
+                      message.content.startsWith('sudo') ||
+                      message.content.includes('cd /app');
+
+  // Format timestamp
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
   
   return (
-    <div className={`group flex gap-4 p-6 ${
-      isUser ? 'bg-transparent' : 'bg-gray-50'
-    }`}>
-      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-        isUser 
-          ? 'bg-blue-600 text-white' 
-          : 'bg-purple-600 text-white'
-      }`}>
-        {isUser ? <User size={18} /> : <Bot size={18} />}
-      </div>
-      
-      <div className="flex-1 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold text-sm text-gray-900">
-            {isUser ? 'Tú' : 'Assistant Melus'}
-            {message.edited && (
-              <span className="ml-2 text-xs text-gray-500 font-normal">(editado)</span>
+    <div className={`group px-6 py-4 ${isUser ? '' : ''}`} data-testid={`message-${message.message_id}`}>
+      <div className="max-w-4xl mx-auto">
+        {/* Message Header with Icon */}
+        <div className="flex items-start gap-3">
+          {/* Status Icon */}
+          <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 ${
+            isUser 
+              ? 'bg-blue-600' 
+              : 'bg-purple-600'
+          }`}>
+            {isUser ? (
+              <User size={14} className="text-white" />
+            ) : (
+              <Bot size={14} className="text-white" />
             )}
           </div>
-          
-          {/* Action buttons - shown on hover */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-            {isUser && !isEditing && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                className="h-8 px-2"
+
+          <div className="flex-1 min-w-0">
+            {/* Message Title */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-gray-200 font-medium text-sm">
+                {isUser ? 'You' : 'Assistant Melus'}
+              </span>
+              {message.edited && (
+                <span className="text-xs text-gray-500">(edited)</span>
+              )}
+            </div>
+
+            {/* Message Content */}
+            {isEditing ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="min-h-[100px] bg-gray-800 border-gray-700 text-white"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleEdit}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Check size={14} className="mr-1" />
+                    Save
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditContent(message.content);
+                    }}
+                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                  >
+                    <X size={14} className="mr-1" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : isCodeBlock && !isUser ? (
+              /* Code Block Style */
+              <div 
+                className="bg-[#1a3a2a] border border-green-900/50 rounded-lg overflow-hidden cursor-pointer hover:bg-[#1f4533] transition-colors"
+                onClick={() => setIsExpanded(!isExpanded)}
               >
-                <Edit2 size={14} />
-              </Button>
+                <div className="flex items-center justify-between px-4 py-2">
+                  <div className="flex items-center gap-2 text-green-400 font-mono text-sm">
+                    <Check size={14} className="text-green-500" />
+                    <Terminal size={14} />
+                    <span className="truncate">{message.content.substring(0, 60)}...</span>
+                  </div>
+                  <ChevronRight 
+                    size={18} 
+                    className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                  />
+                </div>
+                {isExpanded && (
+                  <div className="px-4 py-3 border-t border-green-900/30 bg-[#0d1f15]">
+                    <pre className="text-green-300 font-mono text-sm whitespace-pre-wrap overflow-x-auto">
+                      {message.content}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Regular Text */
+              <div className="text-gray-300 whitespace-pre-wrap leading-relaxed text-sm">
+                {message.content}
+              </div>
             )}
-            
-            {!isUser && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRegenerate}
-                disabled={isRegenerating}
-                className="h-8 px-2"
-              >
-                <RefreshCw size={14} className={isRegenerating ? 'animate-spin' : ''} />
-              </Button>
-            )}
-          </div>
-        </div>
-        
-        {isEditing ? (
-          <div className="space-y-2">
-            <Textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="min-h-[100px]"
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={handleEdit}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Check size={14} className="mr-1" />
-                Guardar
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditContent(message.content);
-                }}
-              >
-                <X size={14} className="mr-1" />
-                Cancelar
-              </Button>
+
+            {/* Message Footer */}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <span>{formatTime(message.timestamp)}</span>
+                {message.model && !isUser && (
+                  <span className="text-purple-400 font-medium">
+                    {message.model}
+                  </span>
+                )}
+                {message.tokens_used > 0 && !isUser && (
+                  <span>{message.tokens_used} tokens</span>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {!isUser && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {/* Rollback logic */}}
+                      className="text-gray-400 hover:text-white hover:bg-gray-700 h-7 px-2 text-xs"
+                    >
+                      <RotateCcw size={12} className="mr-1" />
+                      Rollback
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopy}
+                      className="text-gray-400 hover:text-white hover:bg-gray-700 h-7 px-2 text-xs"
+                    >
+                      <Copy size={12} className="mr-1" />
+                      Copy
+                    </Button>
+                  </>
+                )}
+                {isUser && !isEditing && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                    className="text-gray-400 hover:text-white hover:bg-gray-700 h-7 px-2"
+                  >
+                    <Edit2 size={12} />
+                  </Button>
+                )}
+                {!isUser && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRegenerate}
+                    disabled={isRegenerating}
+                    className="text-gray-400 hover:text-white hover:bg-gray-700 h-7 px-2"
+                  >
+                    <RefreshCw size={12} className={isRegenerating ? 'animate-spin' : ''} />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-            {message.content}
-          </div>
-        )}
-        
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          <span>
-            {new Date(message.timestamp).toLocaleTimeString('es-ES', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
-          </span>
-          {message.model && !isUser && (
-            <span className="text-purple-600 font-medium">
-              {message.model}
-            </span>
-          )}
-          {message.tokens_used > 0 && !isUser && (
-            <span className="text-gray-400">
-              {message.tokens_used} tokens
-            </span>
-          )}
         </div>
       </div>
     </div>
