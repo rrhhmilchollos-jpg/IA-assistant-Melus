@@ -361,18 +361,111 @@ const AppGeneratorV2 = () => {
     }
   };
 
-  const handleDownload = () => {
-    // Create a zip file with all files
-    const filesContent = JSON.stringify(files, null, 2);
-    const blob = new Blob([filesContent], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${appName || 'app'}-files.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // Generate from template
+  const handleGenerateFromTemplate = async (templateId) => {
+    const token = localStorage.getItem('session_token');
+    if (!token) {
+      alert('Sesión expirada. Por favor, inicia sesión de nuevo.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setShowTemplates(false);
+    setLogs([]);
+    setFiles({});
+    setPreviewError(null);
+    
+    const template = templates.find(t => t.id === templateId);
+    setSelectedTemplate(template);
+    
+    setLogs([{
+      agent: 'system',
+      type: 'info',
+      message: `Generando desde template: ${template?.name}...`,
+      timestamp: new Date().toISOString()
+    }]);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/agents/v2/generate-from-template`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          template_id: templateId,
+          name: template?.name || 'Mi App'
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Generation failed');
+      }
+
+      setWorkspaceId(data.workspace_id);
+      setFiles(data.files);
+      setAppName(template?.name || '');
+      updateCredits(data.credits_remaining);
+      localStorage.setItem('melus_workspace_id', data.workspace_id);
+      
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'success',
+        message: `¡App generada! ${Object.keys(data.files).length} archivos creados`,
+        timestamp: new Date().toISOString()
+      }]);
+      
+    } catch (error) {
+      console.error('Template generation error:', error);
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'error',
+        message: error.message,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Download as ZIP
+  const handleDownload = async () => {
+    if (!workspaceId) return;
+    
+    const token = localStorage.getItem('session_token');
+    try {
+      const response = await fetch(`${API_BASE}/api/agents/v2/download/${workspaceId}`, {
+        headers: { 'X-Session-Token': token }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${appName || 'app'}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+    }
+  };
+
+  // Start new project
+  const handleNewProject = () => {
+    setShowTemplates(true);
+    setFiles({});
+    setLogs([]);
+    setWorkspaceId(null);
+    setAppName('');
+    setDescription('');
+    setSelectedTemplate(null);
+    localStorage.removeItem('melus_workspace_id');
   };
 
   // Convert files to Sandpack format
@@ -414,6 +507,101 @@ createRoot(document.getElementById('root')).render(<App />);`
     
     return sandpackFiles;
   };
+
+  // Template Selection View
+  if (showTemplates && !isGenerating && Object.keys(files).length === 0) {
+    return (
+      <div className="bg-[#0a0a12] min-h-screen text-white">
+        {/* Header */}
+        <div className="border-b border-purple-500/20 bg-[#0d0d1a]">
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Sparkles className="w-6 h-6 text-purple-400" />
+              <h1 className="text-xl font-bold">Crear Nueva App</h1>
+            </div>
+            <span className="text-sm text-gray-400">
+              Créditos: <span className="text-purple-400 font-medium">{user?.credits || 0}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Templates Grid */}
+        <div className="max-w-6xl mx-auto px-6 py-10">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-3">Elige una plantilla</h2>
+            <p className="text-gray-400">Selecciona un tipo de app y genera código completo con un clic</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {templates.map((template) => {
+              const Icon = TEMPLATE_ICONS[template.id] || Code;
+              return (
+                <div
+                  key={template.id}
+                  onClick={() => handleGenerateFromTemplate(template.id)}
+                  className="group cursor-pointer bg-[#1a1a2e] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/50 hover:bg-[#1f1f3a] transition-all"
+                >
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${template.color} flex items-center justify-center mb-4`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2 group-hover:text-purple-400 transition-colors">
+                    {template.name}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    {template.description}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {template.features?.slice(0, 3).map((feature, idx) => (
+                      <span key={idx} className="text-xs bg-white/5 px-2 py-1 rounded text-gray-300">
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-purple-400">~{template.estimated_credits} créditos</span>
+                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors">
+                      Generar →
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Custom App Section */}
+          <div className="border-t border-purple-500/20 pt-10">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-semibold mb-2">¿Tienes algo específico en mente?</h3>
+              <p className="text-gray-400 text-sm">Describe tu app y nuestros agentes la construirán</p>
+            </div>
+            <div className="max-w-2xl mx-auto">
+              <input
+                type="text"
+                value={appName}
+                onChange={(e) => setAppName(e.target.value)}
+                placeholder="Nombre de tu app"
+                className="w-full bg-[#1a1a2e] border border-purple-500/30 rounded-lg px-4 py-3 mb-3 focus:border-purple-500 outline-none"
+              />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe tu aplicación en detalle..."
+                className="w-full h-32 bg-[#1a1a2e] border border-purple-500/30 rounded-lg px-4 py-3 resize-none focus:border-purple-500 outline-none"
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={!description.trim()}
+                className="w-full mt-4 py-3 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+              >
+                <Play className="w-5 h-5" />
+                Generar App Personalizada
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-[#0a0a12] min-h-screen text-white ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
