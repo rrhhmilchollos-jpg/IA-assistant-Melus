@@ -55,6 +55,139 @@ logger = logging.getLogger(__name__)
 
 # ==================== Authentication Endpoints ====================
 
+@api_router.post("/auth/register", response_model=LoginResponse)
+async def register_user(user_register: UserRegister, response: Response):
+    """Register a new user with email and password"""
+    # Validate email format
+    if "@" not in user_register.email or "." not in user_register.email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    # Check if user already exists
+    existing_user = await db.users.find_one(
+        {"email": user_register.email},
+        {"_id": 0}
+    )
+    
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Validate password strength
+    if len(user_register.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Hash password
+    password_hash = bcrypt.hashpw(user_register.password.encode('utf-8'), bcrypt.gensalt())
+    
+    # Create new user
+    user_id = generate_id("user")
+    new_user = {
+        "user_id": user_id,
+        "email": user_register.email,
+        "name": user_register.name,
+        "password_hash": password_hash.decode('utf-8'),
+        "picture": f"https://ui-avatars.com/api/?name={user_register.name}&background=9333ea&color=fff",
+        "credits": FREE_CREDITS,
+        "credits_used": 0,
+        "created_at": utc_now(),
+        "updated_at": utc_now()
+    }
+    await db.users.insert_one(new_user)
+    
+    # Create session
+    session_token = generate_id("token")
+    session_id = generate_id("sess")
+    expires_at = utc_now() + timedelta(days=7)
+    
+    session_data = {
+        "session_id": session_id,
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": expires_at,
+        "created_at": utc_now()
+    }
+    await db.user_sessions.insert_one(session_data)
+    
+    # Set session cookie
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=7*24*60*60,
+        path="/"
+    )
+    
+    # Remove password_hash from response
+    del new_user["password_hash"]
+    user = User(**new_user)
+    
+    return LoginResponse(
+        user=user,
+        session_token=session_token,
+        message="User registered successfully"
+    )
+
+@api_router.post("/auth/login", response_model=LoginResponse)
+async def login_user(user_login: UserLogin, response: Response):
+    """Login with email and password"""
+    # Find user by email
+    user_doc = await db.users.find_one(
+        {"email": user_login.email},
+        {"_id": 0}
+    )
+    
+    if not user_doc:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Check if user has password_hash (not OAuth user)
+    if "password_hash" not in user_doc:
+        raise HTTPException(status_code=401, detail="Please use Google login for this account")
+    
+    # Verify password
+    password_valid = bcrypt.checkpw(
+        user_login.password.encode('utf-8'),
+        user_doc["password_hash"].encode('utf-8')
+    )
+    
+    if not password_valid:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Create session
+    session_token = generate_id("token")
+    session_id = generate_id("sess")
+    expires_at = utc_now() + timedelta(days=7)
+    
+    session_data = {
+        "session_id": session_id,
+        "user_id": user_doc["user_id"],
+        "session_token": session_token,
+        "expires_at": expires_at,
+        "created_at": utc_now()
+    }
+    await db.user_sessions.insert_one(session_data)
+    
+    # Set session cookie
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=7*24*60*60,
+        path="/"
+    )
+    
+    # Remove password_hash from response
+    del user_doc["password_hash"]
+    user = User(**user_doc)
+    
+    return LoginResponse(
+        user=user,
+        session_token=session_token,
+        message="Login successful"
+    )
+
 @api_router.post("/auth/session", response_model=SessionResponse)
 async def create_session(request: Request, session_request: SessionRequest):
     """Exchange session_id from OAuth for session_token"""
