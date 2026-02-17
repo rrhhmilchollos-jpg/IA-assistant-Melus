@@ -53,10 +53,13 @@ export const authAPI = {
   },
   logout: async () => {
     await api.post('/api/auth/logout');
-    localStorage.removeItem('session_token');
-    localStorage.removeItem('user');
+    clearSessionToken();
   },
   getMe: async () => {
+    const response = await api.get('/api/auth/me');
+    return response.data;
+  },
+  getCurrentUser: async () => {
     const response = await api.get('/api/auth/me');
     return response.data;
   },
