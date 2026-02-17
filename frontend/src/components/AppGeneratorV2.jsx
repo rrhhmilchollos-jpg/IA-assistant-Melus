@@ -615,13 +615,18 @@ createRoot(document.getElementById('root')).render(<App />);`
                 files={getSandpackFiles()}
                 customSetup={{
                   dependencies: {
-                    "react-router-dom": "^6.20.0"
+                    "react-router-dom": "^6.20.0",
+                    "prop-types": "^15.8.1",
+                    "lucide-react": "^0.294.0",
+                    "axios": "^1.6.0"
                   }
                 }}
                 options={{
                   externalResources: [
                     "https://cdn.tailwindcss.com"
-                  ]
+                  ],
+                  recompileMode: "delayed",
+                  recompileDelay: 500
                 }}
               >
                 <SandpackLayout style={{ height: '100%', border: 'none' }}>
