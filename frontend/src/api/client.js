@@ -8,6 +8,12 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Helper function to clear session
+export const clearSessionToken = () => {
+  localStorage.removeItem('session_token');
+  localStorage.removeItem('user');
+};
+
 // Request interceptor to add session token
 api.interceptors.request.use((config) => {
   const sessionToken = localStorage.getItem('session_token');
@@ -22,8 +28,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('session_token');
-      localStorage.removeItem('user');
+      clearSessionToken();
       window.location.href = '/login';
     }
     return Promise.reject(error);
