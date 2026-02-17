@@ -194,15 +194,17 @@ async def get_conversations(request: Request):
         result.append(ConversationListItem(
             conversation_id=conv["conversation_id"],
             title=conv["title"],
+            model=conv.get("model", DEFAULT_MODEL),
             updated_at=conv["updated_at"],
-            message_count=message_count
+            message_count=message_count,
+            forked_from=conv.get("forked_from")
         ))
     
     return result
 
 @api_router.post("/conversations", response_model=Conversation)
 async def create_conversation(request: Request, conv_create: ConversationCreate):
-    """Create new conversation"""
+    """Create new conversation or fork existing one"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -210,7 +212,45 @@ async def create_conversation(request: Request, conv_create: ConversationCreate)
         "conversation_id": generate_id("conv"),
         "user_id": user_id,
         "title": conv_create.title,
+        "model": conv_create.model or DEFAULT_MODEL,
+        "forked_from": conv_create.fork_from,
         "created_at": utc_now(),
+        "updated_at": utc_now()
+    }
+    
+    await db.conversations.insert_one(conversation)
+    
+    # If forking, copy messages from source conversation
+    if conv_create.fork_from:
+        source_conv = await db.conversations.find_one({
+            "conversation_id": conv_create.fork_from,
+            "user_id": user_id
+        })
+        
+        if source_conv:
+            # Copy all messages from source
+            source_messages = await db.messages.find({
+                "conversation_id": conv_create.fork_from
+            }, {"_id": 0}).to_list(1000)
+            
+            if source_messages:
+                forked_messages = []
+                for msg in source_messages:
+                    new_msg = msg.copy()
+                    new_msg["message_id"] = generate_id("msg")
+                    new_msg["conversation_id"] = conversation["conversation_id"]
+                    forked_messages.append(new_msg)
+                
+                await db.messages.insert_many(forked_messages)
+            
+            # Update title to indicate fork
+            conversation["title"] = f"Fork: {source_conv.get('title', 'Conversation')}"
+            await db.conversations.update_one(
+                {"conversation_id": conversation["conversation_id"]},
+                {"$set": {"title": conversation["title"]}}
+            )
+    
+    return Conversation(**conversation)
         "updated_at": utc_now()
     }
     
