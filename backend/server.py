@@ -18,7 +18,7 @@ from models import (
     CreditBalance, CreditPackage, CheckoutRequest,
     PaymentTransaction
 )
-from config import CREDIT_PACKAGES, FREE_CREDITS
+from config import CREDIT_PACKAGES, FREE_CREDITS, PROMO_CODES, CREDITS_PER_DOLLAR
 from utils import generate_id, utc_now, ensure_timezone, get_authenticated_user
 
 # Import integrations
