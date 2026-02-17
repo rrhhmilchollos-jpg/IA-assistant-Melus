@@ -1,5 +1,41 @@
 # Assistant Melus - Changelog
 
+## [3.0.0] - 2026-02-17 - MAJOR UPDATE: Live Preview System
+
+### Added - Sistema de Preview en Vivo
+- **Sandpack Integration**: CodeSandbox embebido para preview en tiempo real
+- **Explorador de archivos**: Vista de árbol de todos los archivos del proyecto
+- **Editor de código**: Syntax highlighting, múltiples pestañas
+- **Hot reload**: Actualización automática del preview al cambiar código
+
+### Added - Sistema de Agentes v2
+- **Classifier Agent**: Clasifica tipo de app (landing, SaaS, dashboard, etc.)
+- **Architect Agent**: Diseña estructura de archivos y dependencias
+- **Frontend Agent**: Genera React con React Router v6 (sintaxis correcta)
+- **Backend Agent**: Genera APIs Express/FastAPI
+- **Integrator Agent**: Conecta frontend y backend
+- **Debug Agent**: Corrige errores automáticamente
+
+### Added - Workspaces
+- Sistema de filesystem virtual
+- Versionado con snapshots
+- Rollback a versiones anteriores
+- WebSocket para actualizaciones en tiempo real
+- Persistencia en localStorage y MongoDB
+
+### Changed - App Generator
+- Nueva UI con panel dividido (consola + preview)
+- Barra de estado de agentes
+- Logs en tiempo real durante generación
+- Botón Auto-fix para corrección de errores
+
+### Technical
+- Nuevas rutas: `/api/agents/v2`, `/api/workspace`
+- Nueva dependencia: @codesandbox/sandpack-react
+- WebSocket server para logs en tiempo real
+
+---
+
 ## [2.1.0] - 2026-02-17
 
 ### Verified
