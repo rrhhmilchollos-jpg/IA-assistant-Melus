@@ -385,9 +385,6 @@ async def create_conversation(request: Request, conv_create: ConversationCreate)
             )
     
     return Conversation(**conversation)
-        "updated_at": utc_now()
-    }
-    return Conversation(**conversation)
 
 @api_router.delete("/conversations/{conversation_id}")
 async def delete_conversation(request: Request, conversation_id: str):
