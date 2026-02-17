@@ -238,8 +238,8 @@ const Dashboard = () => {
               <>
                 <div className="flex-1 overflow-hidden">
                   <ChatArea
+                    ref={chatAreaRef}
                     conversationId={currentConversationId}
-                    onSendMessage={handleSendMessage}
                     isLoading={isSending}
                   />
                 </div>
