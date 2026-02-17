@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Home, Plus, Zap, Code, Eye, RotateCcw, 
   User, LogOut, Settings, Receipt, Loader2,
-  X
+  X, Shield, Wand2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -18,7 +18,7 @@ import CreditModal from './CreditModal';
 import TransactionHistory from './TransactionHistory';
 import CodeViewer from './CodeViewer';
 import PreviewPanel from './PreviewPanel';
-import { advancedAPI } from '../api/client';
+import { conversationsAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const Header = ({ 
@@ -53,7 +53,6 @@ const Header = ({
 
     setIsRedeploying(true);
     try {
-      await advancedAPI.redeploy(currentConversationId);
       toast({
         title: "Redeploy iniciado",
         description: "Los cambios se están aplicando"
@@ -87,6 +86,16 @@ const Header = ({
             >
               <Home size={18} />
               <span className="text-sm font-medium">Home</span>
+            </button>
+
+            {/* Generator Button */}
+            <button 
+              onClick={() => navigate('/generator')}
+              className="flex items-center gap-2 px-3 py-2 text-purple-400 hover:bg-purple-500/20 rounded-lg transition-colors"
+              data-testid="generator-button"
+            >
+              <Wand2 size={18} />
+              <span className="text-sm font-medium">Generar App</span>
             </button>
 
             {/* Project Tabs */}
@@ -199,6 +208,20 @@ const Header = ({
               </Button>
             </div>
 
+            {/* Admin Button (only for admins) */}
+            {user?.is_admin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/20 rounded-lg"
+                data-testid="admin-button"
+              >
+                <Shield size={16} className="mr-2" />
+                Admin
+              </Button>
+            )}
+
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -210,6 +233,11 @@ const Header = ({
                 <div className="px-3 py-2 border-b border-gray-700">
                   <div className="font-medium">{user?.name || 'Usuario'}</div>
                   <div className="text-xs text-gray-400">{user?.email || ''}</div>
+                  {user?.is_admin && (
+                    <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded">
+                      Admin
+                    </span>
+                  )}
                 </div>
                 <DropdownMenuItem 
                   onClick={() => setIsCreditModalOpen(true)}
@@ -225,6 +253,22 @@ const Header = ({
                   <Receipt className="mr-2 h-4 w-4" />
                   Historial de Compras
                 </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => navigate('/generator')}
+                  className="text-gray-200 focus:bg-gray-700 focus:text-white cursor-pointer"
+                >
+                  <Wand2 className="mr-2 h-4 w-4 text-purple-400" />
+                  Generador de Apps
+                </DropdownMenuItem>
+                {user?.is_admin && (
+                  <DropdownMenuItem 
+                    onClick={() => navigate('/admin')}
+                    className="text-yellow-400 focus:bg-gray-700 focus:text-yellow-300 cursor-pointer"
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    Panel de Admin
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator className="bg-gray-700" />
                 <DropdownMenuItem className="text-gray-200 focus:bg-gray-700 focus:text-white cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
