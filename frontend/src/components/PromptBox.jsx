@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Send, Paperclip, Save, Sparkles, Mic, Square, Zap, X, FileText, Image, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { attachmentsAPI, advancedAPI } from '../api/client';
+import { attachmentsAPI, conversationsAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const PromptBox = ({ 
