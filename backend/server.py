@@ -42,22 +42,26 @@ from routes.auth import router as auth_router
 from routes.billing import router as billing_router
 from routes.admin import router as admin_router
 from routes.agents import router as agents_router
+from routes.agents_v2 import router as agents_v2_router
 from routes.projects import router as projects_router
 from routes.chat import router as chat_router
 from routes.voice import router as voice_router
 from routes.deploy import router as deploy_router
 from routes.github import router as github_router
+from routes.workspace import router as workspace_router
 
 # Include all routers with /api prefix
 app.include_router(auth_router, prefix="/api")
 app.include_router(billing_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(agents_router, prefix="/api")
+app.include_router(agents_v2_router, prefix="/api")
 app.include_router(projects_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(voice_router, prefix="/api")
 app.include_router(deploy_router, prefix="/api")
 app.include_router(github_router, prefix="/api")
+app.include_router(workspace_router, prefix="/api")
 
 # CORS middleware
 app.add_middleware(
