@@ -5,24 +5,30 @@ import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
-  const { isAuthenticated, isLoading, checkAuth } = useAuth();
+  const { isAuthenticated, isLoading, checkAuth, user } = useAuth();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const verifyAuth = async () => {
+      // Skip check if already authenticated (e.g., just registered/logged in)
+      if (isAuthenticated && user) {
+        setChecking(false);
+        return;
+      }
+      
       // Skip check if user data was passed from AuthCallback
       if (location.state?.user) {
         setChecking(false);
         return;
       }
 
-      // Always check authentication status
+      // Check authentication status only if not already authenticated
       await checkAuth();
       setChecking(false);
     };
 
     verifyAuth();
-  }, [checkAuth, location.state]);
+  }, [checkAuth, location.state, isAuthenticated, user]);
 
   // Show loading while checking authentication
   if (checking || isLoading) {
