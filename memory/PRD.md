@@ -142,5 +142,5 @@ Obtener credenciales en: https://github.com/settings/applications/new
 - **Admin**: rrhh.milchollos@gmail.com / 19862210Des
 
 ## URLs
-- Frontend: https://melus-preview-1.preview.emergentagent.com
-- API: https://melus-preview-1.preview.emergentagent.com/api
+- Frontend: https://melus-platform.preview.emergentagent.com
+- API: https://melus-platform.preview.emergentagent.com/api
