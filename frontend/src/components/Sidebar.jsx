@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlusCircle, MessageSquare, Trash2, Sparkles, Zap, CreditCard, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { useAuth } from '../context/AuthContext';
+import CreditModal from './CreditModal';
 
 const Sidebar = ({ 
   conversations, 
@@ -15,6 +16,7 @@ const Sidebar = ({
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
