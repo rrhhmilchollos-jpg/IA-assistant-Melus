@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bot, User, Edit2, RefreshCw, Check, X, Copy, RotateCcw, ChevronRight, Terminal, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { messagesAPI, advancedAPI } from '../api/client';
+import { messagesAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const ChatMessage = ({ message, onMessageUpdated }) => {
