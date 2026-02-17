@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 @api_router.post("/auth/session", response_model=SessionResponse)
 async def create_session(request: Request, session_request: SessionRequest):
-    ""Exchange session_id from OAuth for session_token""
+    """Exchange session_id from OAuth for session_token"""
     try:
         # Call Emergent Auth to get user data
         async with httpx.AsyncClient() as http_client:
@@ -134,13 +134,13 @@ async def create_session(request: Request, session_request: SessionRequest):
 
 @api_router.get("/auth/me")
 async def get_current_user(request: Request):
-    ""Get current authenticated user""
+    """Get current authenticated user"""
     user_doc = await get_authenticated_user(request, db)
     return User(**user_doc)
 
 @api_router.post("/auth/logout")
 async def logout(request: Request, response: Response):
-    ""Logout user""
+    """Logout user"""
     session_token = request.cookies.get("session_token")
     
     if session_token:
@@ -160,7 +160,7 @@ async def logout(request: Request, response: Response):
 
 @api_router.get("/conversations", response_model=List[ConversationListItem])
 async def get_conversations(request: Request):
-    ""Get all conversations for authenticated user""
+    """Get all conversations for authenticated user"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -186,7 +186,7 @@ async def get_conversations(request: Request):
 
 @api_router.post("/conversations", response_model=Conversation)
 async def create_conversation(request: Request, conv_create: ConversationCreate):
-    ""Create new conversation""
+    """Create new conversation"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -203,7 +203,7 @@ async def create_conversation(request: Request, conv_create: ConversationCreate)
 
 @api_router.delete("/conversations/{conversation_id}")
 async def delete_conversation(request: Request, conversation_id: str):
-    ""Delete a conversation and all its messages""
+    """Delete a conversation and all its messages"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -226,7 +226,7 @@ async def delete_conversation(request: Request, conversation_id: str):
 
 @api_router.get("/conversations/{conversation_id}/messages", response_model=List[Message])
 async def get_messages(request: Request, conversation_id: str):
-    ""Get all messages in a conversation""
+    """Get all messages in a conversation"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -248,7 +248,7 @@ async def get_messages(request: Request, conversation_id: str):
 
 @api_router.post("/conversations/{conversation_id}/messages", response_model=MessageResponse)
 async def send_message(request: Request, conversation_id: str, message_create: MessageCreate):
-    ""Send message and get AI response""
+    """Send message and get AI response"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -368,7 +368,7 @@ Soy amigable, servicial y siempre respondo en espa\u00f1ol a menos que me pidas 
 
 @api_router.get("/credits", response_model=CreditBalance)
 async def get_credits(request: Request):
-    ""Get user's credit balance""
+    """Get user's credit balance"""
     user_doc = await get_authenticated_user(request, db)
     return CreditBalance(
         credits=user_doc["credits"],
@@ -377,7 +377,7 @@ async def get_credits(request: Request):
 
 @api_router.get("/credits/packages", response_model=List[CreditPackage])
 async def get_credit_packages():
-    ""Get available credit packages""
+    """Get available credit packages"""
     packages = []
     for package_id, data in CREDIT_PACKAGES.items():
         packages.append(CreditPackage(
@@ -391,7 +391,7 @@ async def get_credit_packages():
 
 @api_router.post("/credits/checkout")
 async def create_checkout_session(request: Request, checkout_req: CheckoutRequest):
-    ""Create Stripe checkout session for purchasing credits""
+    """Create Stripe checkout session for purchasing credits"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -449,7 +449,7 @@ async def create_checkout_session(request: Request, checkout_req: CheckoutReques
 
 @api_router.get("/credits/checkout/status/{session_id}")
 async def get_checkout_status(request: Request, session_id: str):
-    ""Check payment status and add credits if paid""
+    """Check payment status and add credits if paid"""
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
@@ -525,7 +525,7 @@ async def get_checkout_status(request: Request, session_id: str):
 
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
-    ""Handle Stripe webhooks""
+    """Handle Stripe webhooks"""
     try:
         body = await request.body()
         signature = request.headers.get("Stripe-Signature")
