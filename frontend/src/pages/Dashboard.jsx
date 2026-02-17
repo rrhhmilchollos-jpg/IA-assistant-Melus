@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
@@ -20,6 +20,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, updateCredits } = useAuth();
+  const chatAreaRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [isSending, setIsSending] = useState(false);
