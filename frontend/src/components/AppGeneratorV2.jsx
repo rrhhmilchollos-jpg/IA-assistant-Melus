@@ -129,16 +129,38 @@ const AppGeneratorV2 = () => {
   const [previewError, setPreviewError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentAgent, setCurrentAgent] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [showTemplates, setShowTemplates] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const logsEndRef = useRef(null);
   const wsRef = useRef(null);
+
+  // Load templates on mount
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
 
   // Load last workspace from localStorage on mount
   useEffect(() => {
     const savedWorkspaceId = localStorage.getItem('melus_workspace_id');
     if (savedWorkspaceId) {
       loadWorkspace(savedWorkspaceId);
+      setShowTemplates(false);
     }
   }, []);
+
+  // Fetch available templates
+  const fetchTemplates = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/agents/v2/templates`);
+      if (response.ok) {
+        const data = await response.json();
+        setTemplates(data.templates || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch templates:', error);
+    }
+  };
 
   // Load workspace files from backend
   const loadWorkspace = async (wsId) => {
