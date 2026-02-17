@@ -60,9 +60,15 @@ class Message(BaseModel):
     role: str  # "user" or "assistant"
     content: str
     tokens_used: int = 0
+    model: str = "gpt-4o"
+    edited: bool = False
+    original_content: Optional[str] = None
     timestamp: datetime
 
 class MessageCreate(BaseModel):
+    content: str
+    
+class MessageEdit(BaseModel):
     content: str
 
 class MessageResponse(BaseModel):
@@ -70,6 +76,13 @@ class MessageResponse(BaseModel):
     assistant_message: Message
     tokens_used: int
     credits_remaining: int
+
+class AIModel(BaseModel):
+    model_id: str
+    name: str
+    provider: str
+    description: str
+    popular: bool
 
 # Credits Models
 class CreditBalance(BaseModel):
