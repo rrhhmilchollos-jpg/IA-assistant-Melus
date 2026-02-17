@@ -60,6 +60,11 @@ const ChatArea = ({ conversationId, onSendMessage, isLoading }) => {
       setMessages(prev => prev.filter(m => m.message_id !== tempUserMessage.message_id));
     }
   };
+  
+  const handleMessageUpdated = () => {
+    // Reload messages when a message is edited or regenerated
+    loadMessages();
+  };
 
   if (!conversationId) {
     return (
@@ -89,7 +94,11 @@ const ChatArea = ({ conversationId, onSendMessage, isLoading }) => {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           {messages.map((message) => (
-            <ChatMessage key={message.message_id} message={message} />
+            <ChatMessage 
+              key={message.message_id} 
+              message={message}
+              onMessageUpdated={handleMessageUpdated}
+            />
           ))}
           
           {isLoading && (
