@@ -53,15 +53,16 @@ const Header = ({
 
     setIsRedeploying(true);
     try {
+      const result = await deployAPI.redeploy(null, currentConversationId);
       toast({
-        title: "Redeploy iniciado",
-        description: "Los cambios se están aplicando"
+        title: "Redeploy completado",
+        description: `Créditos usados: ${result.credits_used}`
       });
     } catch (error) {
       console.error('Redeploy error:', error);
       toast({
         title: "Error",
-        description: "No se pudo iniciar el redeploy",
+        description: error.response?.data?.detail || "No se pudo iniciar el redeploy",
         variant: "destructive"
       });
     } finally {
