@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Home, Plus, Zap, Code, Eye, RotateCcw, 
   User, LogOut, Settings, Receipt, Loader2,
-  X, Shield, Wand2, Github
+  X, Shield, Wand2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -18,7 +18,7 @@ import CreditModal from './CreditModal';
 import TransactionHistory from './TransactionHistory';
 import CodeViewer from './CodeViewer';
 import PreviewPanel from './PreviewPanel';
-import { conversationsAPI, deployAPI, githubAPI } from '../api/client';
+import { conversationsAPI, deployAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const Header = ({ 
