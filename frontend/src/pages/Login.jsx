@@ -1,96 +1,128 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../api/client';
 import { Button } from '../components/ui/button';
-import { Sparkles, MessageSquare, Zap, Shield } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { Sparkles, Loader2, Mail, Lock } from 'lucide-react';
+import { toast } from '../hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    const redirectUrl = window.location.origin + '/auth/callback';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const response = await authAPI.login(email, password);
+      login(response.user);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Error de inicio de sesión",
+        description: error.response?.data?.detail || "Email o contraseña incorrectos",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Navigation */}
-      <nav className="p-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Sparkles size={20} className="text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-white">Assistant Melus</h1>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl">
+            <Sparkles size={32} className="text-white" />
           </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <div className="max-w-6xl mx-auto px-6 py-20">
-        <div className="text-center space-y-8">
-          <div className="inline-block">
-            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-              <Sparkles size={40} className="text-white" />
-            </div>
-          </div>
-          
-          <h1 className="text-6xl font-bold text-white leading-tight">
-            Tu Asistente de
-            <br />
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Inteligencia Artificial
-            </span>
-          </h1>
-          
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Potenciado por los modelos de IA más avanzados. Respuestas inteligentes, conversaciones naturales.
-          </p>
-
-          <div className="flex gap-4 justify-center mt-8">
-            <Button
-              onClick={handleLogin}
-              size="lg"
-              className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-6 text-lg font-semibold"
-            >
-              <img 
-                src="https://www.google.com/favicon.ico" 
-                alt="Google" 
-                className="w-5 h-5 mr-2"
-              />
-              Iniciar con Google
-            </Button>
-            <Button
-              onClick={() => navigate('/pricing')}
-              size="lg"
-              variant="outline"
-              className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-6 text-lg font-semibold"
-            >
-              Ver Precios
-            </Button>
-          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Assistant Melus</h1>
+          <p className="text-purple-200">Tu asistente de inteligencia artificial</p>
         </div>
 
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-8 mt-32">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <MessageSquare className="w-12 h-12 text-purple-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Conversaciones Inteligentes</h3>
-            <p className="text-gray-300">Chatea naturalmente con IA avanzada que entiende contexto y matices.</p>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <Zap className="w-12 h-12 text-purple-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Respuestas Instantáneas</h3>
-            <p className="text-gray-300">Obtiene respuestas rápidas y precisas a cualquier pregunta.</p>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-            <Shield className="w-12 h-12 text-purple-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Seguro y Privado</h3>
-            <p className="text-gray-300">Tus conversaciones están protegidas y son completamente privadas.</p>
-          </div>
-        </div>
+        {/* Login Card */}
+        <Card className="shadow-2xl">
+          <CardHeader>
+            <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+            <CardDescription>
+              Ingresa tus credenciales para acceder
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button
+                type="submit"
+                className="w-full bg-purple-600 hover:bg-purple-700"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Iniciando sesión...
+                  </>
+                ) : (
+                  'Iniciar Sesión'
+                )}
+              </Button>
+              <div className="text-center text-sm text-gray-600">
+                ¿No tienes cuenta?{' '}
+                <Link to="/register" className="text-purple-600 hover:text-purple-700 font-semibold">
+                  Regístrate aquí
+                </Link>
+              </div>
+            </CardFooter>
+          </form>
+        </Card>
       </div>
     </div>
   );
