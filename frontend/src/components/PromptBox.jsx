@@ -92,10 +92,10 @@ const PromptBox = ({
     }
 
     try {
-      const result = await advancedAPI.saveConversation(conversationId);
+      const result = await conversationsAPI.save(conversationId);
       toast({
         title: result.saved ? "Guardado" : "Removido de guardados",
-        description: result.message
+        description: result.saved ? "Conversación guardada" : "Conversación removida"
       });
       onSaved && onSaved(result.saved);
     } catch (error) {
