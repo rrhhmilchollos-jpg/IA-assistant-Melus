@@ -1,3 +1,33 @@
+# Available AI Models
+AI_MODELS = {
+    "gpt-4o": {
+        "name": "GPT-4o",
+        "provider": "openai",
+        "description": "Más rápido y económico",
+        "popular": True
+    },
+    "gpt-5.1": {
+        "name": "GPT-5.1",
+        "provider": "openai",
+        "description": "El más avanzado de OpenAI",
+        "popular": False
+    },
+    "claude-sonnet-4-5": {
+        "name": "Claude Sonnet 4.5",
+        "provider": "anthropic",
+        "description": "Excelente para análisis",
+        "popular": False
+    },
+    "gemini-2.5-pro": {
+        "name": "Gemini 2.5 Pro",
+        "provider": "gemini",
+        "description": "Potente modelo de Google",
+        "popular": False
+    }
+}
+
+DEFAULT_MODEL = "gpt-4o"
+
 # Credit packages configuration
 CREDIT_PACKAGES = {
     "package_100": {
