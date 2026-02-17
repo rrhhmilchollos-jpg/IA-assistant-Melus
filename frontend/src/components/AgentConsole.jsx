@@ -252,7 +252,7 @@ const AgentConsole = ({ onProjectCreated }) => {
             
             <button
               onClick={handleGenerateApp}
-              disabled={isGenerating || !appDescription.trim() || !appName.trim()}
+              disabled={isGenerating || !appDescription.trim()}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
                 isGenerating
                   ? 'bg-red-500/20 text-red-400 cursor-not-allowed'
