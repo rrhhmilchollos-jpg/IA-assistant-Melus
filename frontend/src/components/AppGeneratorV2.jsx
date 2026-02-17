@@ -114,6 +114,42 @@ const AppGeneratorV2 = () => {
   const logsEndRef = useRef(null);
   const wsRef = useRef(null);
 
+  // Load last workspace from localStorage on mount
+  useEffect(() => {
+    const savedWorkspaceId = localStorage.getItem('melus_workspace_id');
+    if (savedWorkspaceId) {
+      loadWorkspace(savedWorkspaceId);
+    }
+  }, []);
+
+  // Load workspace files from backend
+  const loadWorkspace = async (wsId) => {
+    const token = localStorage.getItem('session_token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/workspace/${wsId}`, {
+        headers: { 'X-Session-Token': token }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setWorkspaceId(wsId);
+        setFiles(data.files || {});
+        setAppName(data.name || '');
+        setDescription(data.description || '');
+        setLogs([{
+          agent: 'system',
+          type: 'info',
+          message: `Workspace cargado: ${data.name}`,
+          timestamp: new Date().toISOString()
+        }]);
+      }
+    } catch (error) {
+      console.error('Failed to load workspace:', error);
+    }
+  };
+
   // WebSocket connection for real-time updates
   useEffect(() => {
     if (workspaceId) {
