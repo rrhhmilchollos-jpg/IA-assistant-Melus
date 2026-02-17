@@ -310,4 +310,45 @@ export const adminAPI = {
   }
 };
 
+// Voice API
+export const voiceAPI = {
+  transcribe: async (audioData, language = 'es') => {
+    const response = await api.post('/api/voice/transcribe', {
+      audio_data: audioData,
+      language
+    });
+    return response.data;
+  }
+};
+
+// Deploy API
+export const deployAPI = {
+  prepare: async (projectId) => {
+    const response = await api.post('/api/deploy/prepare', { project_id: projectId });
+    return response.data;
+  },
+  downloadZip: async (projectId) => {
+    const response = await api.post('/api/deploy/download-zip', 
+      { project_id: projectId },
+      { responseType: 'blob' }
+    );
+    return response.data;
+  },
+  redeploy: async (projectId = null, conversationId = null) => {
+    const response = await api.post('/api/deploy/redeploy', {
+      project_id: projectId,
+      conversation_id: conversationId
+    });
+    return response.data;
+  },
+  getStatus: async (deploymentId) => {
+    const response = await api.get(`/api/deploy/status/${deploymentId}`);
+    return response.data;
+  },
+  getHistory: async () => {
+    const response = await api.get('/api/deploy/history');
+    return response.data;
+  }
+};
+
 export default api;
