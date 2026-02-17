@@ -150,7 +150,6 @@ const PromptBox = ({
 
     try {
       const newState = !ultraMode;
-      await advancedAPI.setUltraMode(conversationId, newState);
       setUltraMode(newState);
       toast({
         title: newState ? "Ultra Mode Activado" : "Ultra Mode Desactivado",
