@@ -5,7 +5,6 @@ import { authAPI } from '../api/client';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { Sparkles, Loader2, Mail, Lock } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
@@ -47,82 +46,87 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#0d0d1a] flex items-center justify-center p-6" data-testid="login-page">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl">
-            <Sparkles size={32} className="text-white" />
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-purple-500/25">
+            <Sparkles size={40} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Assistant Melus</h1>
-          <p className="text-purple-200">Tu asistente de inteligencia artificial</p>
+          <h1 className="text-4xl font-bold text-white mb-3">Assistant Melus</h1>
+          <p className="text-gray-400 text-lg">Tu asistente de inteligencia artificial</p>
         </div>
 
         {/* Login Card */}
-        <Card className="shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-            <CardDescription>
-              Ingresa tus credenciales para acceder
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+        <div className="bg-[#1a1a2e] rounded-2xl border border-gray-800 p-8 shadow-2xl">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">Iniciar Sesión</h2>
+            <p className="text-gray-400">Ingresa tus credenciales para acceder</p>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-5" data-testid="login-form">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500"
+                  required
+                  data-testid="login-email-input"
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">Contraseña</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500"
+                  required
+                  data-testid="login-password-input"
+                />
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button
-                type="submit"
-                className="w-full bg-purple-600 hover:bg-purple-700"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Iniciando sesión...
-                  </>
-                ) : (
-                  'Iniciar Sesión'
-                )}
-              </Button>
-              <div className="text-center text-sm text-gray-600">
-                ¿No tienes cuenta?{' '}
-                <Link to="/register" className="text-purple-600 hover:text-purple-700 font-semibold">
-                  Regístrate aquí
-                </Link>
-              </div>
-            </CardFooter>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium"
+              disabled={isLoading}
+              data-testid="login-submit-button"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Iniciando sesión...
+                </>
+              ) : (
+                'Iniciar Sesión'
+              )}
+            </Button>
           </form>
-        </Card>
+
+          <div className="mt-6 text-center text-gray-400">
+            ¿No tienes cuenta?{' '}
+            <Link 
+              to="/register" 
+              className="text-purple-400 hover:text-purple-300 font-semibold"
+              data-testid="register-link"
+            >
+              Regístrate aquí
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
