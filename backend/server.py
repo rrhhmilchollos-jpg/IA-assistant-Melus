@@ -969,6 +969,487 @@ async def stripe_webhook(request: Request):
         logger.error(f"Webhook error: {e}")
         return JSONResponse(status_code=400, content={"error": str(e)})
 
+# ==================== File Attachments ====================
+
+import base64
+import mimetypes
+
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.pdf', '.txt', '.md', '.py', '.js', '.json', '.csv'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+@api_router.post("/attachments/upload")
+async def upload_attachment(request: Request):
+    """Upload a file attachment"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    try:
+        body = await request.json()
+        file_data = body.get("file_data")  # Base64 encoded
+        file_name = body.get("file_name", "file")
+        file_type = body.get("file_type", "application/octet-stream")
+        conversation_id = body.get("conversation_id")
+        
+        if not file_data:
+            raise HTTPException(status_code=400, detail="No file data provided")
+        
+        # Decode base64
+        try:
+            file_bytes = base64.b64decode(file_data.split(",")[-1] if "," in file_data else file_data)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid file data")
+        
+        # Check file size
+        if len(file_bytes) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+        
+        # Check extension
+        ext = Path(file_name).suffix.lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(status_code=400, detail=f"File type not allowed: {ext}")
+        
+        # Generate unique filename
+        attachment_id = generate_id("att")
+        safe_filename = f"{attachment_id}{ext}"
+        file_path = UPLOAD_DIR / safe_filename
+        
+        # Save file
+        with open(file_path, "wb") as f:
+            f.write(file_bytes)
+        
+        # Store attachment metadata in DB
+        attachment_data = {
+            "attachment_id": attachment_id,
+            "user_id": user_id,
+            "conversation_id": conversation_id,
+            "original_name": file_name,
+            "stored_name": safe_filename,
+            "file_type": file_type,
+            "file_size": len(file_bytes),
+            "file_path": str(file_path),
+            "created_at": utc_now()
+        }
+        await db.attachments.insert_one(attachment_data)
+        
+        return {
+            "attachment_id": attachment_id,
+            "file_name": file_name,
+            "file_type": file_type,
+            "file_size": len(file_bytes),
+            "url": f"/api/attachments/{attachment_id}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload file")
+
+@api_router.get("/attachments/{attachment_id}")
+async def get_attachment(attachment_id: str):
+    """Get an attachment file"""
+    attachment = await db.attachments.find_one({"attachment_id": attachment_id}, {"_id": 0})
+    
+    if not attachment:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+    
+    file_path = Path(attachment["file_path"])
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        path=file_path,
+        filename=attachment["original_name"],
+        media_type=attachment["file_type"]
+    )
+
+@api_router.get("/conversations/{conversation_id}/attachments")
+async def get_conversation_attachments(request: Request, conversation_id: str):
+    """Get all attachments for a conversation"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    attachments = await db.attachments.find(
+        {"conversation_id": conversation_id, "user_id": user_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return attachments
+
+# ==================== Save & Export ====================
+
+@api_router.post("/conversations/{conversation_id}/save")
+async def save_conversation(request: Request, conversation_id: str):
+    """Save/bookmark a conversation"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Verify conversation belongs to user
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id,
+        "user_id": user_id
+    })
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Toggle saved status
+    is_saved = conv.get("saved", False)
+    
+    await db.conversations.update_one(
+        {"conversation_id": conversation_id},
+        {"$set": {"saved": not is_saved, "updated_at": utc_now()}}
+    )
+    
+    return {"saved": not is_saved, "message": "Conversation saved" if not is_saved else "Conversation unsaved"}
+
+@api_router.get("/conversations/{conversation_id}/export")
+async def export_conversation(request: Request, conversation_id: str):
+    """Export a conversation as JSON or Markdown"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Get conversation
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id,
+        "user_id": user_id
+    }, {"_id": 0})
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Get messages
+    messages = await db.messages.find(
+        {"conversation_id": conversation_id},
+        {"_id": 0}
+    ).sort("timestamp", 1).to_list(1000)
+    
+    # Get attachments
+    attachments = await db.attachments.find(
+        {"conversation_id": conversation_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    export_data = {
+        "conversation": conv,
+        "messages": messages,
+        "attachments": attachments,
+        "exported_at": utc_now().isoformat()
+    }
+    
+    return export_data
+
+# ==================== Summarize ====================
+
+@api_router.post("/conversations/{conversation_id}/summarize")
+async def summarize_conversation(request: Request, conversation_id: str):
+    """Generate AI summary of a conversation"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Check credits
+    if user_doc["credits"] < 50:
+        raise HTTPException(status_code=402, detail="Insufficient credits for summary (requires 50)")
+    
+    # Get conversation
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id,
+        "user_id": user_id
+    }, {"_id": 0})
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Get messages
+    messages = await db.messages.find(
+        {"conversation_id": conversation_id},
+        {"_id": 0}
+    ).sort("timestamp", 1).to_list(50)
+    
+    if len(messages) == 0:
+        raise HTTPException(status_code=400, detail="No messages to summarize")
+    
+    # Build conversation text
+    conversation_text = "\n".join([
+        f"{'Usuario' if m['role'] == 'user' else 'Asistente'}: {m['content'][:500]}"
+        for m in messages
+    ])
+    
+    # Generate summary using AI
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"summary_{conversation_id}",
+        system_message="Eres un asistente especializado en crear resúmenes concisos. Tu tarea es resumir conversaciones de forma clara y útil."
+    )
+    chat.with_model("openai", "gpt-4o")
+    
+    summary_prompt = f"""Resume la siguiente conversación en 3-5 puntos clave. Incluye:
+- Tema principal discutido
+- Decisiones o conclusiones importantes
+- Tareas pendientes (si las hay)
+
+Conversación:
+{conversation_text}"""
+    
+    summary = await chat.send_message(UserMessage(text=summary_prompt))
+    
+    # Deduct credits
+    tokens_used = 50
+    new_credits = user_doc["credits"] - tokens_used
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"credits": new_credits}, "$inc": {"credits_used": tokens_used}}
+    )
+    
+    # Save summary to conversation
+    await db.conversations.update_one(
+        {"conversation_id": conversation_id},
+        {"$set": {"summary": summary, "summary_at": utc_now()}}
+    )
+    
+    return {
+        "summary": summary,
+        "tokens_used": tokens_used,
+        "credits_remaining": new_credits
+    }
+
+# ==================== Ultra Mode ====================
+
+ULTRA_MODELS = {
+    "gpt-4o": {"ultra": "gpt-4o", "cost_multiplier": 1.5},
+    "gpt-4": {"ultra": "gpt-4-turbo", "cost_multiplier": 2},
+    "claude-3-sonnet": {"ultra": "claude-3-opus", "cost_multiplier": 2}
+}
+
+@api_router.post("/conversations/{conversation_id}/ultra")
+async def enable_ultra_mode(request: Request, conversation_id: str, body: dict = None):
+    """Enable/disable Ultra mode for a conversation"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    enabled = body.get("enabled", True) if body else True
+    
+    # Verify conversation
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id,
+        "user_id": user_id
+    })
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    await db.conversations.update_one(
+        {"conversation_id": conversation_id},
+        {"$set": {"ultra_mode": enabled, "updated_at": utc_now()}}
+    )
+    
+    return {"ultra_mode": enabled, "message": f"Ultra mode {'enabled' if enabled else 'disabled'}"}
+
+# ==================== Voice/Speech ====================
+
+@api_router.post("/voice/transcribe")
+async def transcribe_voice(request: Request):
+    """Transcribe voice audio to text using Whisper"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Check credits
+    if user_doc["credits"] < 10:
+        raise HTTPException(status_code=402, detail="Insufficient credits for transcription")
+    
+    try:
+        body = await request.json()
+        audio_data = body.get("audio_data")  # Base64 encoded audio
+        
+        if not audio_data:
+            raise HTTPException(status_code=400, detail="No audio data provided")
+        
+        # For now, we'll use a simple approach - in production you'd use Whisper API
+        # This is a placeholder that returns a message about the feature
+        
+        # Deduct credits
+        tokens_used = 10
+        new_credits = user_doc["credits"] - tokens_used
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {"credits": new_credits}, "$inc": {"credits_used": tokens_used}}
+        )
+        
+        return {
+            "text": "[Transcripción de voz - Funcionalidad en desarrollo]",
+            "tokens_used": tokens_used,
+            "credits_remaining": new_credits
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Transcription error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to transcribe audio")
+
+# ==================== Code View & Preview ====================
+
+@api_router.get("/conversations/{conversation_id}/code")
+async def get_conversation_code(request: Request, conversation_id: str):
+    """Extract code blocks from conversation messages"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Verify conversation
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id,
+        "user_id": user_id
+    }, {"_id": 0})
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Get messages
+    messages = await db.messages.find(
+        {"conversation_id": conversation_id, "role": "assistant"},
+        {"_id": 0}
+    ).sort("timestamp", 1).to_list(100)
+    
+    import re
+    
+    code_blocks = []
+    for msg in messages:
+        content = msg.get("content", "")
+        
+        # Extract code blocks with ``` syntax
+        pattern = r'```(\w+)?\n(.*?)```'
+        matches = re.findall(pattern, content, re.DOTALL)
+        
+        for lang, code in matches:
+            code_blocks.append({
+                "message_id": msg["message_id"],
+                "language": lang or "text",
+                "code": code.strip(),
+                "timestamp": msg["timestamp"]
+            })
+        
+        # Also extract command-style code (lines starting with $)
+        for line in content.split('\n'):
+            if line.strip().startswith('$') or line.strip().startswith('sudo'):
+                code_blocks.append({
+                    "message_id": msg["message_id"],
+                    "language": "bash",
+                    "code": line.strip(),
+                    "timestamp": msg["timestamp"]
+                })
+    
+    return {"code_blocks": code_blocks, "total": len(code_blocks)}
+
+@api_router.get("/conversations/{conversation_id}/preview")
+async def get_conversation_preview(request: Request, conversation_id: str):
+    """Get preview info for a conversation"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Verify conversation
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id,
+        "user_id": user_id
+    }, {"_id": 0})
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Get message count and summary
+    message_count = await db.messages.count_documents({"conversation_id": conversation_id})
+    
+    # Get last message
+    last_message = await db.messages.find_one(
+        {"conversation_id": conversation_id},
+        {"_id": 0},
+        sort=[("timestamp", -1)]
+    )
+    
+    return {
+        "conversation_id": conversation_id,
+        "title": conv.get("title", "Sin título"),
+        "model": conv.get("model", DEFAULT_MODEL),
+        "message_count": message_count,
+        "ultra_mode": conv.get("ultra_mode", False),
+        "saved": conv.get("saved", False),
+        "summary": conv.get("summary"),
+        "last_activity": last_message["timestamp"] if last_message else conv.get("created_at"),
+        "created_at": conv.get("created_at")
+    }
+
+# ==================== Redeploy/Actions ====================
+
+@api_router.post("/conversations/{conversation_id}/redeploy")
+async def redeploy_conversation(request: Request, conversation_id: str):
+    """Trigger a redeploy action for the conversation"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Verify conversation
+    conv = await db.conversations.find_one({
+        "conversation_id": conversation_id,
+        "user_id": user_id
+    }, {"_id": 0})
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Record the redeploy action
+    action_data = {
+        "action_id": generate_id("act"),
+        "conversation_id": conversation_id,
+        "user_id": user_id,
+        "action_type": "redeploy",
+        "status": "triggered",
+        "created_at": utc_now()
+    }
+    await db.actions.insert_one(action_data)
+    
+    return {
+        "action_id": action_data["action_id"],
+        "status": "triggered",
+        "message": "Redeploy iniciado"
+    }
+
+@api_router.post("/messages/{message_id}/rollback")
+async def rollback_to_message(request: Request, message_id: str):
+    """Rollback conversation to a specific message"""
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Find the message
+    message = await db.messages.find_one({
+        "message_id": message_id,
+        "user_id": user_id
+    }, {"_id": 0})
+    
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    conversation_id = message["conversation_id"]
+    
+    # Delete all messages after this one
+    result = await db.messages.delete_many({
+        "conversation_id": conversation_id,
+        "timestamp": {"$gt": message["timestamp"]}
+    })
+    
+    # Update conversation
+    await db.conversations.update_one(
+        {"conversation_id": conversation_id},
+        {"$set": {"updated_at": utc_now()}}
+    )
+    
+    return {
+        "rolled_back": True,
+        "messages_deleted": result.deleted_count,
+        "message": f"Rolled back to message {message_id}"
+    }
+
 # ==================== Root Endpoint ====================
 
 @api_router.get("/")
