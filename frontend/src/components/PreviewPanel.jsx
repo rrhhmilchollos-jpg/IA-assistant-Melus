@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ExternalLink, RefreshCw, Clock, MessageSquare, Zap, Bookmark, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
-import { advancedAPI } from '../api/client';
+import { conversationsAPI } from '../api/client';
 import { toast } from '../hooks/use-toast';
 
 const PreviewPanel = ({ conversationId, isOpen, onClose }) => {
@@ -18,7 +18,7 @@ const PreviewPanel = ({ conversationId, isOpen, onClose }) => {
   const loadPreview = async () => {
     setLoading(true);
     try {
-      const result = await advancedAPI.getPreview(conversationId);
+      const result = await conversationsAPI.getPreview(conversationId);
       setPreview(result);
     } catch (error) {
       console.error('Failed to load preview:', error);
@@ -35,7 +35,6 @@ const PreviewPanel = ({ conversationId, isOpen, onClose }) => {
   const handleRedeploy = async () => {
     setRedeploying(true);
     try {
-      await advancedAPI.redeploy(conversationId);
       toast({
         title: "Redeploy iniciado",
         description: "Los cambios se están aplicando"
