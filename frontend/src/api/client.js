@@ -205,4 +205,95 @@ export const creditsAPI = {
   },
 };
 
+// Attachments API
+export const attachmentsAPI = {
+  upload: async (file, conversationId) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const response = await apiClient.post('/attachments/upload', {
+            file_data: reader.result,
+            file_name: file.name,
+            file_type: file.type,
+            conversation_id: conversationId
+          });
+          resolve(response.data);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
+  
+  get: async (attachmentId) => {
+    const response = await apiClient.get(`/attachments/${attachmentId}`);
+    return response.data;
+  },
+  
+  getForConversation: async (conversationId) => {
+    const response = await apiClient.get(`/conversations/${conversationId}/attachments`);
+    return response.data;
+  },
+};
+
+// Advanced Features API
+export const advancedAPI = {
+  // Save/Bookmark conversation
+  saveConversation: async (conversationId) => {
+    const response = await apiClient.post(`/conversations/${conversationId}/save`);
+    return response.data;
+  },
+  
+  // Export conversation
+  exportConversation: async (conversationId) => {
+    const response = await apiClient.get(`/conversations/${conversationId}/export`);
+    return response.data;
+  },
+  
+  // Summarize conversation
+  summarize: async (conversationId) => {
+    const response = await apiClient.post(`/conversations/${conversationId}/summarize`);
+    return response.data;
+  },
+  
+  // Ultra mode
+  setUltraMode: async (conversationId, enabled) => {
+    const response = await apiClient.post(`/conversations/${conversationId}/ultra`, { enabled });
+    return response.data;
+  },
+  
+  // Get code blocks
+  getCode: async (conversationId) => {
+    const response = await apiClient.get(`/conversations/${conversationId}/code`);
+    return response.data;
+  },
+  
+  // Get preview info
+  getPreview: async (conversationId) => {
+    const response = await apiClient.get(`/conversations/${conversationId}/preview`);
+    return response.data;
+  },
+  
+  // Redeploy
+  redeploy: async (conversationId) => {
+    const response = await apiClient.post(`/conversations/${conversationId}/redeploy`);
+    return response.data;
+  },
+  
+  // Rollback to message
+  rollback: async (messageId) => {
+    const response = await apiClient.post(`/messages/${messageId}/rollback`);
+    return response.data;
+  },
+  
+  // Voice transcription
+  transcribe: async (audioData) => {
+    const response = await apiClient.post('/voice/transcribe', { audio_data: audioData });
+    return response.data;
+  },
+};
+
 export default apiClient;
