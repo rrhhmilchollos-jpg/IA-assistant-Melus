@@ -1,10 +1,10 @@
 # Assistant Melus - Product Requirements Document
 
 ## Resumen
-Assistant Melus es un clon completo de Emergent.sh, una plataforma de generación de aplicaciones impulsada por IA con arquitectura multi-agente.
+Assistant Melus es un clon completo de Emergent.sh, una plataforma de generación de aplicaciones impulsada por IA con arquitectura multi-agente y preview en vivo.
 
 ## Problema que Resuelve
-Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en lenguaje natural y obtener código generado automáticamente por agentes especializados de IA.
+Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en lenguaje natural y obtener código generado automáticamente por agentes especializados de IA, con preview en tiempo real.
 
 ## Usuarios Objetivo
 - Desarrolladores que necesitan prototipar rápidamente
@@ -32,15 +32,34 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Plan Pro ($29.99 - 5000 créditos/mes)
 - Plan Enterprise ($99.99 - 25000 créditos/mes)
 
-### 4. Arquitectura Multi-Agente ✅
-- **Agente Orquestador**: Analiza requisitos y coordina (50 créditos)
-- **Agente de Diseño**: UI/UX, wireframes, modelos de datos (100 créditos)
-- **Agente Frontend**: Código React/Vue/Svelte (150 créditos)
-- **Agente Backend**: APIs FastAPI/Express (150 créditos)
-- **Agente Database**: Esquemas SQL/NoSQL (100 créditos)
-- **Agente Deploy**: Dockerfiles, CI/CD (200 créditos)
+### 4. Arquitectura Multi-Agente v2 ✅ [NUEVO]
+Sistema de agentes mejorado con generación de código estructurado:
 
-### 5. Chat con IA ✅
+- **Classifier Agent** (25 créditos): Analiza tipo de app, complejidad, requisitos
+- **Architect Agent** (50 créditos): Define estructura de archivos y dependencias
+- **Frontend Agent** (150 créditos): Genera React/Tailwind con sintaxis correcta v6
+- **Backend Agent** (150 créditos): Genera APIs Express/FastAPI
+- **Integrator Agent** (75 créditos): Conecta frontend con backend
+- **Debug Agent** (50 créditos): Corrige errores automáticamente
+
+### 5. Preview en Vivo con Sandpack ✅ [NUEVO]
+- Iframe con CodeSandbox integrado
+- Hot reload en tiempo real
+- Compilación de React en el navegador
+- Sin necesidad de contenedores Docker
+- Explorador de archivos visual
+- Editor de código con syntax highlighting
+- Múltiples pestañas de archivos
+
+### 6. Sistema de Workspaces ✅ [NUEVO]
+- Filesystem virtual por proyecto
+- Versionado con snapshots
+- Rollback a versiones anteriores
+- WebSocket para actualizaciones en tiempo real
+- Persistencia en MongoDB
+- Recuperación de workspace al recargar
+
+### 7. Chat con IA ✅
 - Conversación en tiempo real con GPT-4o
 - Múltiples modelos disponibles
 - Fork de conversaciones
@@ -49,7 +68,7 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Resumen de conversaciones
 - Extracción de bloques de código
 
-### 6. Panel de Administración ✅
+### 8. Panel de Administración ✅
 - Dashboard con métricas en tiempo real
 - Gestión de usuarios
 - Historial de transacciones
@@ -57,24 +76,26 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Estado del sistema
 - Configuración de costos de agentes
 
-### 7. Generador de Aplicaciones ✅
-- Consola de agentes en tiempo real
-- Indicadores de progreso por agente
-- Logs detallados de ejecución
-- Descarga de código generado en ZIP
+### 9. Generador de Aplicaciones v2 ✅ [MEJORADO]
+- Consola de agentes en tiempo real con logs
+- Preview en vivo mientras se genera
+- Explorador de archivos integrado
+- Editor de código con syntax highlighting
+- Descarga de proyecto
+- Auto-fix de errores con Debug Agent
 
-### 8. Entrada de Voz (Whisper) ✅
+### 10. Entrada de Voz (Whisper) ✅
 - Transcripción de audio a texto con OpenAI Whisper
 - Soporte para español e inglés
 - Costo: 25 créditos por transcripción
 
-### 9. Sistema de Despliegue ✅
+### 11. Sistema de Despliegue ✅
 - Redeploy de proyectos (50 créditos)
 - Descarga de código en ZIP
 - Historial de deployments
 - Estado de deployments
 
-### 10. Integración con GitHub ✅
+### 12. Integración con GitHub ✅
 - Botón "Connect GitHub" / "Save to GitHub" en la barra de acciones del chat
 - Conectar cuenta de GitHub via OAuth
 - Modal para crear repositorios desde la app
@@ -89,12 +110,15 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Base de datos: MongoDB
 - Autenticación: JWT con X-Session-Token
 - Pagos: Stripe
+- WebSocket: Para logs en tiempo real
 
 **Rutas modulares:**
 - `/api/auth` - Autenticación
 - `/api/credits` - Créditos y facturación
 - `/api/admin` - Panel de administración
-- `/api/agents` - Sistema multi-agente
+- `/api/agents` - Sistema multi-agente original
+- `/api/agents/v2` - Sistema multi-agente mejorado [NUEVO]
+- `/api/workspace` - Gestión de workspaces [NUEVO]
 - `/api/projects` - Gestión de proyectos
 - `/api/conversations` - Chat
 - `/api/voice` - Transcripción de voz
@@ -106,27 +130,31 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Styling: TailwindCSS
 - Componentes: shadcn/ui
 - Estado: React Context
+- Preview: @codesandbox/sandpack-react [NUEVO]
 
 ### Integraciones EN PRODUCCIÓN
 - OpenAI GPT-4o (via Emergent LLM Key)
 - OpenAI Whisper (via Emergent LLM Key)
 - Stripe Payments
 - GitHub API (requiere OAuth credentials)
+- CodeSandbox Sandpack [NUEVO]
 
 ## Costos de Créditos
 | Acción | Créditos |
 |--------|----------|
 | Chat con IA | ~50 (variable) |
-| Agente Orquestador | 50 |
-| Agente Diseño | 100 |
-| Agente Frontend | 150 |
-| Agente Backend | 150 |
-| Agente Database | 100 |
-| Agente Deploy | 200 |
+| Classifier Agent | 25 |
+| Architect Agent | 50 |
+| Frontend Agent | 150 |
+| Backend Agent | 150 |
+| Integrator Agent | 75 |
+| Debug Agent | 50 |
 | Transcripción voz | 25 |
 | Redeploy | 50 |
 | Push proyecto a GitHub | 100 |
 | Push código a GitHub | 50 |
+
+**Generación completa de app: ~500 créditos**
 
 ## Configuración de GitHub
 Para habilitar la integración con GitHub, añadir al `.env` del backend:
@@ -144,3 +172,4 @@ Obtener credenciales en: https://github.com/settings/applications/new
 ## URLs
 - Frontend: https://melus-platform.preview.emergentagent.com
 - API: https://melus-platform.preview.emergentagent.com/api
+- Generador de Apps: https://melus-platform.preview.emergentagent.com/generator
