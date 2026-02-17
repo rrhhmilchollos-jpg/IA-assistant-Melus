@@ -12,7 +12,6 @@ const Dashboard = () => {
   const { user, updateCredits } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
@@ -34,15 +33,15 @@ const Dashboard = () => {
     }
   };
 
-  const handleNewConversation = async () => {
+  const handleNewConversation = async (model = 'gpt-4o') => {
     try {
-      const newConv = await conversationsAPI.create();
+      const newConv = await conversationsAPI.create('Nueva Conversación', model);
       setConversations([newConv, ...conversations]);
       setCurrentConversationId(newConv.conversation_id);
       
       toast({
         title: "Nueva conversación creada",
-        description: "Comienza a chatear con Assistant Melus"
+        description: `Usando modelo ${model}`
       });
     } catch (error) {
       console.error('Failed to create conversation:', error);
@@ -106,13 +105,13 @@ const Dashboard = () => {
           variant: "destructive",
           action: {
             label: "Comprar Créditos",
-            onClick: () => navigate('/pricing')
+            onClick: () => {} // Modal will open from sidebar
           }
         });
       } else {
         toast({
           title: "Error",
-          description: "No se pudo enviar el mensaje",
+          description: error.response?.data?.detail || "No se pudo enviar el mensaje",
           variant: "destructive"
         });
       }
@@ -129,6 +128,7 @@ const Dashboard = () => {
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
         onDeleteConversation={handleDeleteConversation}
+        onConversationsUpdated={loadConversations}
         userCredits={user?.credits || 0}
       />
       <ChatArea
