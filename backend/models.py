@@ -1,0 +1,98 @@
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import datetime
+import uuid
+
+# User Models
+class User(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    picture: str
+    credits: int = 10000  # Free credits for new users
+    credits_used: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+class UserSession(BaseModel):
+    session_id: str
+    user_id: str
+    session_token: str
+    expires_at: datetime
+    created_at: datetime
+
+# Auth Models
+class SessionRequest(BaseModel):
+    session_id: str
+
+class SessionResponse(BaseModel):
+    user: User
+    session_token: str
+
+# Conversation Models
+class Conversation(BaseModel):
+    conversation_id: str
+    user_id: str
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+class ConversationListItem(BaseModel):
+    conversation_id: str
+    title: str
+    updated_at: datetime
+    message_count: int
+
+class ConversationCreate(BaseModel):
+    title: str = "Nueva Conversación"
+
+# Message Models
+class Message(BaseModel):
+    message_id: str
+    conversation_id: str
+    user_id: str
+    role: str  # "user" or "assistant"
+    content: str
+    tokens_used: int = 0
+    timestamp: datetime
+
+class MessageCreate(BaseModel):
+    content: str
+
+class MessageResponse(BaseModel):
+    user_message: Message
+    assistant_message: Message
+    tokens_used: int
+    credits_remaining: int
+
+# Credits Models
+class CreditBalance(BaseModel):
+    credits: int
+    credits_used: int
+
+class CreditPackage(BaseModel):
+    package_id: str
+    name: str
+    credits: int
+    price: float
+    currency: str = "usd"
+    popular: bool = False
+
+class CheckoutRequest(BaseModel):
+    package_id: str
+    origin_url: str
+
+# Payment Models
+class PaymentTransaction(BaseModel):
+    transaction_id: str
+    user_id: str
+    stripe_session_id: str
+    package_id: str
+    amount: float
+    currency: str
+    credits: int
+    status: str  # "pending", "completed", "failed"
+    payment_status: str  # "unpaid", "paid"
+    processed: bool = False
+    created_at: datetime
+    updated_at: datetime
