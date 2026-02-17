@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Home, Plus, Zap, Code, Eye, RotateCcw, 
-  User, LogOut, Settings, Receipt, ChevronDown,
+  User, LogOut, Settings, Receipt, Loader2,
   X
 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -16,6 +16,10 @@ import {
 } from './ui/dropdown-menu';
 import CreditModal from './CreditModal';
 import TransactionHistory from './TransactionHistory';
+import CodeViewer from './CodeViewer';
+import PreviewPanel from './PreviewPanel';
+import { advancedAPI } from '../api/client';
+import { toast } from '../hooks/use-toast';
 
 const Header = ({ 
   conversations = [], 
@@ -28,10 +32,42 @@ const Header = ({
   const { user, logout } = useAuth();
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [isTransactionHistoryOpen, setIsTransactionHistoryOpen] = useState(false);
+  const [isCodeViewerOpen, setIsCodeViewerOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isRedeploying, setIsRedeploying] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+  };
+
+  const handleRedeploy = async () => {
+    if (!currentConversationId) {
+      toast({
+        title: "Error",
+        description: "Selecciona una conversación primero",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsRedeploying(true);
+    try {
+      await advancedAPI.redeploy(currentConversationId);
+      toast({
+        title: "Redeploy iniciado",
+        description: "Los cambios se están aplicando"
+      });
+    } catch (error) {
+      console.error('Redeploy error:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo iniciar el redeploy",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRedeploying(false);
+    }
   };
 
   // Get active tabs (last 5 conversations)
@@ -127,7 +163,10 @@ const Header = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => setIsCodeViewerOpen(true)}
+                disabled={!currentConversationId}
                 className="text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+                data-testid="code-button"
               >
                 <Code size={16} className="mr-2" />
                 Code
@@ -135,7 +174,10 @@ const Header = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => setIsPreviewOpen(true)}
+                disabled={!currentConversationId}
                 className="text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+                data-testid="preview-button"
               >
                 <Eye size={16} className="mr-2" />
                 Preview
@@ -143,9 +185,16 @@ const Header = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={handleRedeploy}
+                disabled={isRedeploying || !currentConversationId}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg"
+                data-testid="redeploy-button"
               >
-                <RotateCcw size={16} className="mr-2" />
+                {isRedeploying ? (
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                ) : (
+                  <RotateCcw size={16} className="mr-2" />
+                )}
                 Redeploy
               </Button>
             </div>
@@ -164,26 +213,26 @@ const Header = ({
                 </div>
                 <DropdownMenuItem 
                   onClick={() => setIsCreditModalOpen(true)}
-                  className="text-gray-200 focus:bg-gray-700 focus:text-white"
+                  className="text-gray-200 focus:bg-gray-700 focus:text-white cursor-pointer"
                 >
                   <Zap className="mr-2 h-4 w-4 text-yellow-400" />
                   Comprar Créditos
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setIsTransactionHistoryOpen(true)}
-                  className="text-gray-200 focus:bg-gray-700 focus:text-white"
+                  className="text-gray-200 focus:bg-gray-700 focus:text-white cursor-pointer"
                 >
                   <Receipt className="mr-2 h-4 w-4" />
                   Historial de Compras
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="text-gray-200 focus:bg-gray-700 focus:text-white">
+                <DropdownMenuItem className="text-gray-200 focus:bg-gray-700 focus:text-white cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   Configuración
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={handleLogout} 
-                  className="text-red-400 focus:bg-gray-700 focus:text-red-300"
+                  className="text-red-400 focus:bg-gray-700 focus:text-red-300 cursor-pointer"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Cerrar Sesión
@@ -202,6 +251,16 @@ const Header = ({
       <TransactionHistory
         isOpen={isTransactionHistoryOpen}
         onClose={() => setIsTransactionHistoryOpen(false)}
+      />
+      <CodeViewer
+        conversationId={currentConversationId}
+        isOpen={isCodeViewerOpen}
+        onClose={() => setIsCodeViewerOpen(false)}
+      />
+      <PreviewPanel
+        conversationId={currentConversationId}
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
       />
     </>
   );
