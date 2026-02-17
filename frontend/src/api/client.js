@@ -1,18 +1,15 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const apiClient = axios.create({
-  baseURL: API,
+// Create axios instance
+const api = axios.create({
+  baseURL: API_URL,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
-// Add request interceptor to include session token
-apiClient.interceptors.request.use((config) => {
+// Request interceptor to add session token
+api.interceptors.request.use((config) => {
   const sessionToken = localStorage.getItem('session_token');
   if (sessionToken) {
     config.headers['X-Session-Token'] = sessionToken;
@@ -20,280 +17,289 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Helper to save session token
-export const saveSessionToken = (token) => {
-  if (token) {
-    localStorage.setItem('session_token', token);
+// Response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
   }
-};
-
-// Helper to clear session token
-export const clearSessionToken = () => {
-  localStorage.removeItem('session_token');
-};
+);
 
 // Auth API
 export const authAPI = {
   register: async (email, password, name) => {
-    const response = await apiClient.post('/auth/register', { 
-      email, 
-      password, 
-      name 
-    });
-    // Save session token for future requests
+    const response = await api.post('/api/auth/register', { email, password, name });
     if (response.data.session_token) {
-      saveSessionToken(response.data.session_token);
+      localStorage.setItem('session_token', response.data.session_token);
     }
     return response.data;
   },
-  
   login: async (email, password) => {
-    const response = await apiClient.post('/auth/login', { 
-      email, 
-      password 
-    });
-    // Save session token for future requests
+    const response = await api.post('/api/auth/login', { email, password });
     if (response.data.session_token) {
-      saveSessionToken(response.data.session_token);
+      localStorage.setItem('session_token', response.data.session_token);
     }
     return response.data;
   },
-  
-  createSession: async (sessionId) => {
-    const response = await apiClient.post('/auth/session', { session_id: sessionId });
-    // Save session token for future requests
-    if (response.data.session_token) {
-      saveSessionToken(response.data.session_token);
-    }
-    return response.data;
-  },
-  
-  getCurrentUser: async () => {
-    const response = await apiClient.get('/auth/me');
-    return response.data;
-  },
-  
   logout: async () => {
-    clearSessionToken();
-    const response = await apiClient.post('/auth/logout');
+    await api.post('/api/auth/logout');
+    localStorage.removeItem('session_token');
+    localStorage.removeItem('user');
+  },
+  getMe: async () => {
+    const response = await api.get('/api/auth/me');
     return response.data;
   },
-};
-
-// Models API
-export const modelsAPI = {
-  getAll: async () => {
-    const response = await apiClient.get('/models');
+  createSession: async (sessionId) => {
+    const response = await api.post('/api/auth/session', { session_id: sessionId });
+    if (response.data.session_token) {
+      localStorage.setItem('session_token', response.data.session_token);
+    }
     return response.data;
-  },
+  }
 };
 
 // Conversations API
 export const conversationsAPI = {
   getAll: async () => {
-    const response = await apiClient.get('/conversations');
+    const response = await api.get('/api/conversations');
     return response.data;
   },
-  
-  create: async (title = 'Nueva Conversación', model = 'gpt-4o', forkFrom = null) => {
-    const response = await apiClient.post('/conversations', { 
-      title,
-      model,
-      fork_from: forkFrom
-    });
+  create: async (title, model) => {
+    const response = await api.post('/api/conversations', { title, model });
     return response.data;
   },
-  
-  fork: async (conversationId) => {
-    const response = await apiClient.post('/conversations', {
-      title: 'Fork',
-      fork_from: conversationId
-    });
-    return response.data;
-  },
-  
   delete: async (conversationId) => {
-    const response = await apiClient.delete(`/conversations/${conversationId}`);
+    const response = await api.delete(`/api/conversations/${conversationId}`);
     return response.data;
   },
-  
   getMessages: async (conversationId) => {
-    const response = await apiClient.get(`/conversations/${conversationId}/messages`);
+    const response = await api.get(`/api/conversations/${conversationId}/messages`);
     return response.data;
   },
-  
   sendMessage: async (conversationId, content) => {
-    const response = await apiClient.post(`/conversations/${conversationId}/messages`, { content });
+    const response = await api.post(`/api/conversations/${conversationId}/messages`, { content });
     return response.data;
   },
-  
-  exportConversation: async (conversationId) => {
-    // Get messages and format for export
-    const messages = await conversationsAPI.getMessages(conversationId);
-    const formatted = messages.map(m => 
-      `${m.role === 'user' ? 'Usuario' : 'Assistant Melus'}: ${m.content}`
-    ).join('\n\n');
-    
-    // Create downloadable file
-    const blob = new Blob([formatted], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `conversation-${conversationId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  fork: async (conversationId) => {
+    const response = await api.post('/api/conversations', { fork_from: conversationId });
+    return response.data;
   },
+  summarize: async (conversationId) => {
+    const response = await api.post(`/api/conversations/${conversationId}/summarize`);
+    return response.data;
+  },
+  save: async (conversationId) => {
+    const response = await api.post(`/api/conversations/${conversationId}/save`);
+    return response.data;
+  },
+  getCode: async (conversationId) => {
+    const response = await api.get(`/api/conversations/${conversationId}/code`);
+    return response.data;
+  },
+  getPreview: async (conversationId) => {
+    const response = await api.get(`/api/conversations/${conversationId}/preview`);
+    return response.data;
+  }
 };
 
 // Messages API
 export const messagesAPI = {
   edit: async (messageId, content) => {
-    const response = await apiClient.put(`/messages/${messageId}`, { content });
+    const response = await api.put(`/api/messages/${messageId}`, { content });
     return response.data;
   },
-  
   regenerate: async (messageId) => {
-    const response = await apiClient.post(`/messages/${messageId}/regenerate`);
+    const response = await api.post(`/api/messages/${messageId}/regenerate`);
     return response.data;
   },
+  rollback: async (messageId) => {
+    const response = await api.post(`/api/messages/${messageId}/rollback`);
+    return response.data;
+  }
+};
+
+// Models API
+export const modelsAPI = {
+  getAll: async () => {
+    const response = await api.get('/api/models');
+    return response.data;
+  }
 };
 
 // Credits API
 export const creditsAPI = {
   getBalance: async () => {
-    const response = await apiClient.get('/credits');
+    const response = await api.get('/api/credits');
     return response.data;
   },
-  
-  getTransactions: async () => {
-    const response = await apiClient.get('/credits/transactions');
-    return response.data;
-  },
-  
   getPackages: async () => {
-    const response = await apiClient.get('/credits/packages');
+    const response = await api.get('/api/credits/packages');
     return response.data;
   },
-  
-  createCheckout: async (packageId = null, customAmount = null, promoCode = null) => {
-    const originUrl = window.location.origin;
-    const payload = {
-      origin_url: originUrl,
-    };
-    
-    if (packageId) {
-      payload.package_id = packageId;
-    }
-    
-    if (customAmount) {
-      payload.custom_amount = customAmount;
-    }
-    
-    if (promoCode) {
-      payload.promo_code = promoCode;
-    }
-    
-    const response = await apiClient.post('/credits/checkout', payload);
+  getSubscriptions: async () => {
+    const response = await api.get('/api/credits/subscriptions');
     return response.data;
   },
-  
-  getCheckoutStatus: async (sessionId) => {
-    const response = await apiClient.get(`/credits/checkout/status/${sessionId}`);
+  checkout: async (packageId, originUrl, promoCode = null, customAmount = null) => {
+    const response = await api.post('/api/credits/checkout', {
+      package_id: packageId,
+      custom_amount: customAmount,
+      promo_code: promoCode,
+      origin_url: originUrl
+    });
     return response.data;
   },
+  subscribe: async (planId, originUrl) => {
+    const response = await api.post('/api/credits/subscribe', {
+      plan_id: planId,
+      origin_url: originUrl
+    });
+    return response.data;
+  },
+  checkStatus: async (sessionId) => {
+    const response = await api.get(`/api/credits/checkout/status/${sessionId}`);
+    return response.data;
+  },
+  getTransactions: async () => {
+    const response = await api.get('/api/credits/transactions');
+    return response.data;
+  },
+  validatePromo: async (promoCode, amount) => {
+    const response = await api.post('/api/credits/validate-promo', { promo_code: promoCode, amount });
+    return response.data;
+  },
+  getUsage: async () => {
+    const response = await api.get('/api/credits/usage');
+    return response.data;
+  }
 };
 
 // Attachments API
 export const attachmentsAPI = {
-  upload: async (file, conversationId) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const response = await apiClient.post('/attachments/upload', {
-            file_data: reader.result,
-            file_name: file.name,
-            file_type: file.type,
-            conversation_id: conversationId
-          });
-          resolve(response.data);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+  upload: async (fileData, fileName, fileType, conversationId = null) => {
+    const response = await api.post('/api/attachments/upload', {
+      file_data: fileData,
+      file_name: fileName,
+      file_type: fileType,
+      conversation_id: conversationId
     });
+    return response.data;
   },
-  
   get: async (attachmentId) => {
-    const response = await apiClient.get(`/attachments/${attachmentId}`);
+    const response = await api.get(`/api/attachments/${attachmentId}`);
     return response.data;
-  },
-  
-  getForConversation: async (conversationId) => {
-    const response = await apiClient.get(`/conversations/${conversationId}/attachments`);
-    return response.data;
-  },
+  }
 };
 
-// Advanced Features API
-export const advancedAPI = {
-  // Save/Bookmark conversation
-  saveConversation: async (conversationId) => {
-    const response = await apiClient.post(`/conversations/${conversationId}/save`);
+// Projects API
+export const projectsAPI = {
+  getAll: async () => {
+    const response = await api.get('/api/projects');
     return response.data;
   },
-  
-  // Export conversation
-  exportConversation: async (conversationId) => {
-    const response = await apiClient.get(`/conversations/${conversationId}/export`);
+  create: async (name, description) => {
+    const response = await api.post('/api/projects', { name, description });
     return response.data;
   },
-  
-  // Summarize conversation
-  summarize: async (conversationId) => {
-    const response = await apiClient.post(`/conversations/${conversationId}/summarize`);
+  get: async (projectId) => {
+    const response = await api.get(`/api/projects/${projectId}`);
     return response.data;
   },
-  
-  // Ultra mode
-  setUltraMode: async (conversationId, enabled) => {
-    const response = await apiClient.post(`/conversations/${conversationId}/ultra`, { enabled });
+  update: async (projectId, data) => {
+    const response = await api.put(`/api/projects/${projectId}`, data);
     return response.data;
   },
-  
-  // Get code blocks
-  getCode: async (conversationId) => {
-    const response = await apiClient.get(`/conversations/${conversationId}/code`);
+  delete: async (projectId) => {
+    const response = await api.delete(`/api/projects/${projectId}`);
     return response.data;
   },
-  
-  // Get preview info
-  getPreview: async (conversationId) => {
-    const response = await apiClient.get(`/conversations/${conversationId}/preview`);
+  getFiles: async (projectId) => {
+    const response = await api.get(`/api/projects/${projectId}/files`);
     return response.data;
   },
-  
-  // Redeploy
-  redeploy: async (conversationId) => {
-    const response = await apiClient.post(`/conversations/${conversationId}/redeploy`);
+  download: async (projectId) => {
+    const response = await api.post(`/api/projects/${projectId}/download`);
     return response.data;
-  },
-  
-  // Rollback to message
-  rollback: async (messageId) => {
-    const response = await apiClient.post(`/messages/${messageId}/rollback`);
-    return response.data;
-  },
-  
-  // Voice transcription
-  transcribe: async (audioData) => {
-    const response = await apiClient.post('/voice/transcribe', { audio_data: audioData });
-    return response.data;
-  },
+  }
 };
 
-export default apiClient;
+// Agents API
+export const agentsAPI = {
+  analyze: async (description) => {
+    const response = await api.post('/api/agents/analyze', { description });
+    return response.data;
+  },
+  execute: async (agentType, task, context = {}, projectId = null) => {
+    const response = await api.post('/api/agents/execute', {
+      agent_type: agentType,
+      task,
+      context,
+      project_id: projectId
+    });
+    return response.data;
+  },
+  generateApp: async (name, description) => {
+    const response = await api.post('/api/agents/generate-app', { name, description });
+    return response.data;
+  },
+  getStatus: async (projectId) => {
+    const response = await api.get(`/api/agents/status/${projectId}`);
+    return response.data;
+  },
+  getCosts: async () => {
+    const response = await api.get('/api/agents/costs');
+    return response.data;
+  }
+};
+
+// Admin API
+export const adminAPI = {
+  getDashboard: async () => {
+    const response = await api.get('/api/admin/dashboard');
+    return response.data;
+  },
+  getUsers: async (limit = 50, skip = 0) => {
+    const response = await api.get(`/api/admin/users?limit=${limit}&skip=${skip}`);
+    return response.data;
+  },
+  updateUser: async (userId, data) => {
+    const response = await api.put(`/api/admin/users/${userId}`, data);
+    return response.data;
+  },
+  deleteUser: async (userId) => {
+    const response = await api.delete(`/api/admin/users/${userId}`);
+    return response.data;
+  },
+  getTransactions: async (limit = 100, skip = 0) => {
+    const response = await api.get(`/api/admin/transactions?limit=${limit}&skip=${skip}`);
+    return response.data;
+  },
+  getProjects: async (limit = 50, skip = 0) => {
+    const response = await api.get(`/api/admin/projects?limit=${limit}&skip=${skip}`);
+    return response.data;
+  },
+  getSystemHealth: async () => {
+    const response = await api.get('/api/admin/system-health');
+    return response.data;
+  },
+  getRevenueChart: async (days = 30) => {
+    const response = await api.get(`/api/admin/revenue/chart?days=${days}`);
+    return response.data;
+  },
+  getCreditCosts: async () => {
+    const response = await api.get('/api/admin/settings/credit-costs');
+    return response.data;
+  },
+  updateCreditCosts: async (costs) => {
+    const response = await api.post('/api/admin/settings/credit-costs', costs);
+    return response.data;
+  }
+};
+
+export default api;
