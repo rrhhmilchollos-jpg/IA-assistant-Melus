@@ -173,3 +173,19 @@ Obtener credenciales en: https://github.com/settings/applications/new
 - Frontend: https://melus-platform.preview.emergentagent.com
 - API: https://melus-platform.preview.emergentagent.com/api
 - Generador de Apps: https://melus-platform.preview.emergentagent.com/generator
+
+## Templates Predefinidos [NUEVO]
+| Template | Descripción | Créditos |
+|----------|-------------|----------|
+| E-Commerce Store | Tienda con catálogo, carrito, checkout | ~450 |
+| Blog Platform | Blog con artículos, categorías, comentarios | ~350 |
+| Admin Dashboard | Panel con métricas, gráficos, usuarios | ~500 |
+| Landing Page | Landing SaaS con hero, features, pricing | ~300 |
+| Task Manager | Gestión de tareas estilo Trello | ~400 |
+| Portfolio | Portfolio de desarrollador con proyectos | ~300 |
+
+## Funcionalidades Adicionales [NUEVO]
+- **Descarga ZIP**: Exportar proyecto completo como archivo ZIP
+- **Persistencia de Workspace**: El último proyecto se recupera automáticamente
+- **Selección de Templates**: Vista de galería para elegir tipo de app
+- **App Personalizada**: Opción de describir app custom si no hay template adecuado
