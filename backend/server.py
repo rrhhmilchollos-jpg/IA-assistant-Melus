@@ -375,9 +375,42 @@ async def get_credit_packages():
             name=data["name"],
             credits=data["credits"],
             price=data["price"],
-            popular=data["popular"]
+            popular=data["popular"],
+            bonus=data.get("bonus", 0),
+            base_credits=data.get("base_credits")
         ))
     return packages
+
+@api_router.post("/credits/validate-promo")
+async def validate_promo_code(request: Request, promo_data: dict):
+    """Validate promo code"""
+    promo_code = promo_data.get("promo_code", "").upper()
+    amount = promo_data.get("amount", 0)
+    
+    if promo_code not in PROMO_CODES:
+        raise HTTPException(status_code=400, detail="Invalid promo code")
+    
+    promo = PROMO_CODES[promo_code]
+    
+    if not promo["active"]:
+        raise HTTPException(status_code=400, detail="Promo code expired")
+    
+    if amount < promo["min_amount"]:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Promo code requires minimum ${promo['min_amount']} purchase"
+        )
+    
+    discount = amount * promo["discount"]
+    final_amount = amount - discount
+    
+    return {
+        "valid": True,
+        "discount": discount,
+        "discount_percent": promo["discount"] * 100,
+        "final_amount": final_amount,
+        "original_amount": amount
+    }
 
 @api_router.post("/credits/checkout")
 async def create_checkout_session(request: Request, checkout_req: CheckoutRequest):
@@ -385,11 +418,38 @@ async def create_checkout_session(request: Request, checkout_req: CheckoutReques
     user_doc = await get_authenticated_user(request, db)
     user_id = user_doc["user_id"]
     
-    # Validate package
-    if checkout_req.package_id not in CREDIT_PACKAGES:
-        raise HTTPException(status_code=400, detail="Invalid package")
+    # Determine if it's a package or custom amount
+    if checkout_req.package_id:
+        # Package purchase
+        if checkout_req.package_id not in CREDIT_PACKAGES:
+            raise HTTPException(status_code=400, detail="Invalid package")
+        
+        package_data = CREDIT_PACKAGES[checkout_req.package_id]
+        amount = package_data["price"]
+        credits = package_data["credits"]
+        package_id = checkout_req.package_id
+        
+    elif checkout_req.custom_amount:
+        # Custom amount purchase
+        amount = checkout_req.custom_amount
+        if amount < 1:
+            raise HTTPException(status_code=400, detail="Minimum amount is $1")
+        
+        credits = int(amount * CREDITS_PER_DOLLAR)
+        package_id = "custom"
+    else:
+        raise HTTPException(status_code=400, detail="Must provide package_id or custom_amount")
     
-    package_data = CREDIT_PACKAGES[checkout_req.package_id]
+    # Apply promo code if provided
+    discount = 0
+    promo_code = None
+    if checkout_req.promo_code:
+        promo_code = checkout_req.promo_code.upper()
+        if promo_code in PROMO_CODES:
+            promo = PROMO_CODES[promo_code]
+            if promo["active"] and amount >= promo["min_amount"]:
+                discount = amount * promo["discount"]
+                amount = amount - discount
     
     # Initialize Stripe checkout
     host_url = checkout_req.origin_url
@@ -405,14 +465,16 @@ async def create_checkout_session(request: Request, checkout_req: CheckoutReques
     
     # Create checkout session
     checkout_request = CheckoutSessionRequest(
-        amount=package_data["price"],
+        amount=amount,
         currency="usd",
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={
             "user_id": user_id,
-            "package_id": checkout_req.package_id,
-            "credits": str(package_data["credits"])
+            "package_id": package_id,
+            "credits": str(credits),
+            "promo_code": promo_code or "",
+            "discount": str(discount)
         }
     )
     
@@ -423,10 +485,12 @@ async def create_checkout_session(request: Request, checkout_req: CheckoutReques
         "transaction_id": generate_id("txn"),
         "user_id": user_id,
         "stripe_session_id": session.session_id,
-        "package_id": checkout_req.package_id,
-        "amount": package_data["price"],
+        "package_id": package_id,
+        "amount": amount,
         "currency": "usd",
-        "credits": package_data["credits"],
+        "credits": credits,
+        "promo_code": promo_code,
+        "discount": discount,
         "status": "pending",
         "payment_status": "unpaid",
         "processed": False,
