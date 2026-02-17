@@ -136,12 +136,28 @@ const Dashboard = () => {
 
     setIsSending(true);
     
+    // Optimistically add user message to UI
+    if (chatAreaRef.current) {
+      chatAreaRef.current.addTempMessage(content);
+    }
+    
     try {
       const response = await conversationsAPI.sendMessage(currentConversationId, content);
       updateCredits(response.credits_remaining);
+      
+      // Reload messages in ChatArea to show the AI response
+      if (chatAreaRef.current) {
+        await chatAreaRef.current.loadMessages();
+      }
+      
       await loadConversations();
     } catch (error) {
       console.error('Failed to send message:', error);
+      
+      // Reload messages to remove optimistic update
+      if (chatAreaRef.current) {
+        await chatAreaRef.current.loadMessages();
+      }
       
       if (error.response?.status === 402) {
         toast({
@@ -162,7 +178,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50" data-testid="dashboard-page">
       <Header />
       
       <div className="flex-1 overflow-hidden">
