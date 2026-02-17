@@ -29,6 +29,14 @@ export const authAPI = {
   },
 };
 
+// Models API
+export const modelsAPI = {
+  getAll: async () => {
+    const response = await apiClient.get('/models');
+    return response.data;
+  },
+};
+
 // Conversations API
 export const conversationsAPI = {
   getAll: async () => {
@@ -36,8 +44,20 @@ export const conversationsAPI = {
     return response.data;
   },
   
-  create: async (title = 'Nueva Conversación') => {
-    const response = await apiClient.post('/conversations', { title });
+  create: async (title = 'Nueva Conversación', model = 'gpt-4o', forkFrom = null) => {
+    const response = await apiClient.post('/conversations', { 
+      title,
+      model,
+      fork_from: forkFrom
+    });
+    return response.data;
+  },
+  
+  fork: async (conversationId) => {
+    const response = await apiClient.post('/conversations', {
+      title: 'Fork',
+      fork_from: conversationId
+    });
     return response.data;
   },
   
@@ -55,12 +75,49 @@ export const conversationsAPI = {
     const response = await apiClient.post(`/conversations/${conversationId}/messages`, { content });
     return response.data;
   },
+  
+  exportConversation: async (conversationId) => {
+    // Get messages and format for export
+    const messages = await conversationsAPI.getMessages(conversationId);
+    const formatted = messages.map(m => 
+      `${m.role === 'user' ? 'Usuario' : 'Assistant Melus'}: ${m.content}`
+    ).join('\n\n');
+    
+    // Create downloadable file
+    const blob = new Blob([formatted], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-${conversationId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+};
+
+// Messages API
+export const messagesAPI = {
+  edit: async (messageId, content) => {
+    const response = await apiClient.put(`/messages/${messageId}`, { content });
+    return response.data;
+  },
+  
+  regenerate: async (messageId) => {
+    const response = await apiClient.post(`/messages/${messageId}/regenerate`);
+    return response.data;
+  },
 };
 
 // Credits API
 export const creditsAPI = {
   getBalance: async () => {
     const response = await apiClient.get('/credits');
+    return response.data;
+  },
+  
+  getTransactions: async () => {
+    const response = await apiClient.get('/credits/transactions');
     return response.data;
   },
   
