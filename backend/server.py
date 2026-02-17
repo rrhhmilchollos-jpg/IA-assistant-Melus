@@ -10,9 +10,10 @@ from datetime import datetime, timezone, timedelta
 from typing import List
 import uuid
 import httpx
+import bcrypt
 
 from models import (
-    User, UserSession, SessionRequest, SessionResponse,
+    User, UserSession, UserRegister, UserLogin, SessionRequest, SessionResponse, LoginResponse,
     Conversation, ConversationListItem, ConversationCreate,
     Message, MessageCreate, MessageEdit, MessageResponse, AIModel,
     CreditBalance, CreditPackage, CheckoutRequest,
