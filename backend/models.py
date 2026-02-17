@@ -114,8 +114,17 @@ class PaymentTransaction(BaseModel):
     amount: float
     currency: str
     credits: int
+    promo_code: Optional[str] = None
+    discount: float = 0
     status: str  # "pending", "completed", "failed"
     payment_status: str  # "unpaid", "paid"
     processed: bool = False
     created_at: datetime
     updated_at: datetime
+
+class TransactionHistory(BaseModel):
+    transaction_id: str
+    amount: float
+    credits: int
+    status: str
+    created_at: datetime
