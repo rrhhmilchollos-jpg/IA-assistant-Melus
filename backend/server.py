@@ -78,6 +78,10 @@ async def register_user(user_register: UserRegister, response: Response):
     # Hash password
     password_hash = bcrypt.hashpw(user_register.password.encode('utf-8'), bcrypt.gensalt())
     
+    # Check if this is an admin email
+    ADMIN_EMAILS = ["rrhh.milchollos@gmail.com"]
+    is_admin = user_register.email.lower() in ADMIN_EMAILS
+    
     # Create new user
     user_id = generate_id("user")
     new_user = {
@@ -86,8 +90,9 @@ async def register_user(user_register: UserRegister, response: Response):
         "name": user_register.name,
         "password_hash": password_hash.decode('utf-8'),
         "picture": f"https://ui-avatars.com/api/?name={user_register.name}&background=9333ea&color=fff",
-        "credits": FREE_CREDITS,
+        "credits": 10000 if is_admin else FREE_CREDITS,  # Admin gets 10000 credits
         "credits_used": 0,
+        "is_admin": is_admin,
         "created_at": utc_now(),
         "updated_at": utc_now()
     }
