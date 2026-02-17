@@ -109,7 +109,7 @@ const PromptBox = ({
     setAttachments(prev => prev.filter(a => a.id !== id));
   };
 
-  const handleSave = async () => {
+  const handleSaveToGithub = async () => {
     if (!conversationId) {
       toast({
         title: "Error",
@@ -119,20 +119,63 @@ const PromptBox = ({
       return;
     }
 
-    try {
-      const result = await conversationsAPI.save(conversationId);
-      toast({
-        title: result.saved ? "Guardado" : "Removido de guardados",
-        description: result.saved ? "Conversación guardada" : "Conversación removida"
-      });
-      onSaved && onSaved(result.saved);
-    } catch (error) {
-      console.error('Save error:', error);
+    // Check if connected to GitHub
+    if (!githubStatus?.connected) {
+      // Try to connect
+      try {
+        const result = await githubAPI.login();
+        if (result.auth_url) {
+          window.location.href = result.auth_url;
+        }
+      } catch (error) {
+        toast({
+          title: "Conectar GitHub",
+          description: error.response?.data?.detail || "Configura tus credenciales de GitHub OAuth para continuar",
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+
+    // Show modal to enter repo name
+    setShowGithubModal(true);
+  };
+
+  const handleConfirmGithubPush = async () => {
+    if (!repoName.trim()) {
       toast({
         title: "Error",
-        description: "No se pudo guardar",
+        description: "Ingresa un nombre para el repositorio",
         variant: "destructive"
       });
+      return;
+    }
+
+    setIsSavingToGithub(true);
+    try {
+      const result = await githubAPI.pushConversation(conversationId, repoName, isPrivate);
+      toast({
+        title: "¡Subido a GitHub!",
+        description: `${result.files_pushed} archivos subidos a ${result.repo_name}`
+      });
+      setShowGithubModal(false);
+      setRepoName('');
+      
+      // Open repo in new tab
+      if (result.repo_url) {
+        window.open(result.repo_url, '_blank');
+      }
+      
+      onSaved && onSaved(true);
+    } catch (error) {
+      console.error('GitHub push error:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "No se pudo subir a GitHub",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingToGithub(false);
     }
   };
 
