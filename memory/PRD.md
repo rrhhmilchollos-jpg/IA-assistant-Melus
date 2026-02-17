@@ -1,19 +1,16 @@
 # Assistant Melus - Product Requirements Document
 
 ## Overview
-Assistant Melus es un clon completo del asistente AI de Emergent.sh, con UI/UX idéntica y tema oscuro profesional.
+Assistant Melus es un clon completo y profesional del asistente AI de Emergent.sh, con todas las funcionalidades avanzadas implementadas.
 
-## Original Problem Statement
-Crear un MVP funcional y listo para producción de un clon de asistente AI como Emergent, llamado "Assistant Melus".
-
-## Core Requirements
+## Funcionalidades Implementadas ✅
 
 ### 1. Authentication System
-- [x] Sistema de registro con email/password
+- [x] Registro con email/password
 - [x] Login con email/password
 - [x] Gestión de sesiones con tokens en localStorage
 - [x] Protección de rutas autenticadas
-- [x] UI con tema oscuro
+- [x] UI con tema oscuro profesional
 
 ### 2. Credit-Based System
 - [x] 1,000 créditos gratuitos para nuevos usuarios
@@ -30,51 +27,67 @@ Crear un MVP funcional y listo para producción de un clon de asistente AI como 
 - [x] Edición de mensajes
 - [x] Regeneración de respuestas
 - [x] Contador de tokens
-- [x] Botones Rollback/Copy en mensajes
+- [x] Bloques de código con syntax highlighting
 
 ### 4. UI/UX - Clon de Emergent.sh
-- [x] **Tema oscuro completo** (#0d0d1a, #1a1a2e)
-- [x] **Header estilo Emergent:**
-  - Home button con icono
-  - Tabs de proyectos con punto verde de estado
-  - Botón "+" para nuevo proyecto
-  - Créditos en badge dorado
-  - Botón verde "Comprar créditos"
-  - Botones Code, Preview, Redeploy
-  - Avatar de usuario circular
-- [x] **PromptBox estilo Emergent:**
-  - Input "Message Agent"
-  - Botones: Attachment, Save, Summarize, Ultra
-  - Micrófono y botón enviar
-  - Budget display (0 / 10,000)
-  - "Powered by gpt-4o"
-- [x] **Chat Messages:**
-  - Avatares circulares para user/assistant
-  - Timestamps y modelo
-  - Botones Rollback/Copy on hover
-  - Bloques de código expandibles (estilo terminal verde)
+- [x] Tema oscuro completo (#0d0d1a, #1a1a2e)
+- [x] Header con tabs de proyectos
+- [x] Créditos en badge dorado
+- [x] Botones Code, Preview, Redeploy
+- [x] PromptBox con todos los botones
+- [x] Chat Messages con estilo terminal
 
-## Tech Stack
-- **Frontend:** React 18, TailwindCSS, shadcn/ui
-- **Backend:** FastAPI, Python, Motor (async MongoDB)
-- **Database:** MongoDB
-- **Authentication:** Custom JWT-like tokens
-- **Payments:** Stripe
-- **AI:** Emergent LLM Key (OpenAI GPT-4o)
+### 5. Funcionalidades Avanzadas (NUEVAS)
 
-## Color Palette
-```css
---bg-primary: #0d0d1a
---bg-secondary: #1a1a2e
---bg-input: #1a1a2e (gray-800)
---border: gray-700/800
---text-primary: white
---text-secondary: gray-400
---accent-purple: purple-600
---accent-yellow: yellow-400/500
---accent-green: green-500/600
---code-block-bg: #1a3a2a (green tinted)
-```
+#### 📎 Adjuntar Archivos (Attachments)
+- [x] Upload de archivos (imágenes, PDFs, código)
+- [x] Preview de archivos adjuntados
+- [x] Almacenamiento persistente
+- [x] Límite de 10MB por archivo
+
+#### 💾 Save
+- [x] Guardar/marcar conversaciones
+- [x] Toggle de estado guardado
+- [x] Persistencia en base de datos
+
+#### 📝 Summarize
+- [x] Resumen AI de la conversación
+- [x] Extracción de puntos clave
+- [x] Costo de 50 créditos
+
+#### ⚡ Ultra Mode
+- [x] Toggle para modo de alto rendimiento
+- [x] Indicador visual en PromptBox
+- [x] Multiplicador de costo 1.5x-2x
+
+#### 🎤 Voice Input (Micrófono)
+- [x] Grabación de audio del navegador
+- [x] Transcripción a texto (placeholder)
+- [x] Indicador de grabación activa
+
+#### 💻 Code Viewer
+- [x] Extracción de bloques de código
+- [x] Modal con syntax highlighting
+- [x] Copiar código individual
+- [x] Filtro por lenguaje
+- [x] Timestamps por bloque
+
+#### 👁️ Preview Panel
+- [x] Información del proyecto
+- [x] Estadísticas (mensajes, modelo)
+- [x] Fechas de creación y última actividad
+- [x] Resumen si existe
+- [x] Estados: Ultra, Saved
+
+#### 🔄 Redeploy
+- [x] Trigger de redeploy
+- [x] Registro de acciones
+- [x] Feedback visual
+
+#### ⏪ Rollback
+- [x] Rollback a mensaje específico
+- [x] Elimina mensajes posteriores
+- [x] Feedback con contador
 
 ## API Endpoints
 
@@ -90,10 +103,26 @@ Crear un MVP funcional y listo para producción de un clon de asistente AI como 
 - `DELETE /api/conversations/{id}`
 - `GET /api/conversations/{id}/messages`
 - `POST /api/conversations/{id}/messages`
+- `POST /api/conversations/{id}/save` (NEW)
+- `GET /api/conversations/{id}/export` (NEW)
+- `POST /api/conversations/{id}/summarize` (NEW)
+- `POST /api/conversations/{id}/ultra` (NEW)
+- `GET /api/conversations/{id}/code` (NEW)
+- `GET /api/conversations/{id}/preview` (NEW)
+- `POST /api/conversations/{id}/redeploy` (NEW)
 
 ### Messages
 - `PUT /api/messages/{id}`
 - `POST /api/messages/{id}/regenerate`
+- `POST /api/messages/{id}/rollback` (NEW)
+
+### Attachments (NEW)
+- `POST /api/attachments/upload`
+- `GET /api/attachments/{id}`
+- `GET /api/conversations/{id}/attachments`
+
+### Voice (NEW)
+- `POST /api/voice/transcribe`
 
 ### Credits
 - `GET /api/credits`
@@ -101,49 +130,24 @@ Crear un MVP funcional y listo para producción de un clon de asistente AI como 
 - `POST /api/credits/checkout`
 - `GET /api/credits/transactions`
 
-## Completed Work (Feb 2026)
-
-### Session 1 - Core Development
-- Full-stack foundation
-- Email/password authentication
-- Stripe integration
-- AI chat integration
-
-### Session 2 - Bug Fixes
-- Fixed registration flow
-- Fixed session token management
-- Fixed ChatArea message display
-
-### Session 3 - UI Clone (Current)
-- **Complete UI redesign to match Emergent.sh**
-- Dark theme implementation
-- New Header with project tabs
-- New PromptBox with action buttons
-- New ChatMessage with code blocks
-- Updated Login/Register pages
+## Tech Stack
+- **Frontend:** React 18, TailwindCSS, shadcn/ui
+- **Backend:** FastAPI, Python, Motor (async MongoDB)
+- **Database:** MongoDB
+- **Payments:** Stripe
+- **AI:** Emergent LLM Key (OpenAI GPT-4o)
+- **Storage:** Local filesystem (/app/uploads)
 
 ## Deployment Status
 - [x] All services running
 - [x] Environment variables configured
-- [x] CORS configured
+- [x] All features tested
 - [x] Ready for production
 
-## Pending/Future Tasks
-
-### P1 - High Priority
-1. Implement file attachments (Attachment button functional)
-2. Implement Save functionality
-3. Implement Summarize functionality
-4. Implement Ultra mode
-
-### P2 - Medium Priority
-1. Code view button (show generated code)
-2. Preview button (show app preview)
-3. Redeploy button functionality
-4. Dark mode toggle (light/dark)
-
-### P3 - Low Priority
-1. Voice input (Mic button)
-2. Keyboard shortcuts
-3. Conversation export
-4. Mobile responsive improvements
+## Próximas Mejoras Potenciales
+1. Integración real con Whisper API para transcripción de voz
+2. Export a PDF de conversaciones
+3. Compartir conversaciones públicamente
+4. Themes personalizables
+5. Keyboard shortcuts
+6. Mobile responsive improvements
