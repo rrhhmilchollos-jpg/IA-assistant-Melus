@@ -395,8 +395,24 @@ const AgentConsole = ({ onProjectCreated }) => {
                 Proyecto Generado: {project.name}
               </h3>
               <button
-                onClick={() => {/* Download logic */}}
+                onClick={async () => {
+                  try {
+                    const blob = await deployAPI.downloadZip(project.project_id);
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${project.name.replace(/\s+/g, '_')}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                  } catch (error) {
+                    console.error('Download failed:', error);
+                    alert('Error al descargar el proyecto');
+                  }
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                data-testid="download-project-btn"
               >
                 <Download className="w-4 h-4" />
                 Descargar Código
