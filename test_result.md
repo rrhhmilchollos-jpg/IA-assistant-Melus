@@ -289,11 +289,17 @@ frontend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 1
-  run_ui: false
+  test_sequence: 2
+  run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Login Page UI"
+    - "Pricing Page UI"
+    - "Dashboard UI"
+    - "Authentication Flow"
+    - "Protected Routes"
+    - "Conversation Management UI"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -301,3 +307,5 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: "Comprehensive backend API testing completed successfully. All 9 core backend functionalities working correctly: health check, credit packages, authentication, credit balance, conversation management, messaging, OpenAI integration, credit deduction, and database operations. Test user and session created manually in MongoDB as requested. All endpoints returning correct responses with proper status codes. OpenAI integration using Emergent LLM Key is functional and generating Spanish responses. Credit system working with proper deduction. No critical issues found."
+  - agent: "testing"
+    message: "Starting comprehensive frontend testing for Assistant Melus application. Testing will include Login page, Pricing page, Dashboard UI, Authentication flow, Protected routes, and Conversation management UI. Will create test user and session for testing authenticated pages."
