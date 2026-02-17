@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { agentsAPI, projectsAPI } from '../api/client';
+import { agentsAPI, projectsAPI, deployAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { 
   Play, 
