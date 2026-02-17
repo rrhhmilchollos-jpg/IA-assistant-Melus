@@ -5,7 +5,6 @@ import { authAPI } from '../api/client';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { Sparkles, Loader2, Mail, Lock, User } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
@@ -53,11 +52,11 @@ const Register = () => {
     try {
       const response = await authAPI.register(email, password, name);
       login(response.user);
-      toast({
-        title: "¡Cuenta creada!",
-        description: `Bienvenido/a ${name}. Tienes ${response.user.credits} créditos gratis.`
-      });
       navigate('/dashboard');
+      toast({
+        title: "Cuenta creada",
+        description: "¡Bienvenido a Assistant Melus!"
+      });
     } catch (error) {
       console.error('Register error:', error);
       toast({
@@ -71,117 +70,121 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#0d0d1a] flex items-center justify-center p-6" data-testid="register-page">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl">
-            <Sparkles size={32} className="text-white" />
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-purple-500/25">
+            <Sparkles size={40} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Assistant Melus</h1>
-          <p className="text-purple-200">Crea tu cuenta y obtén créditos gratis</p>
+          <h1 className="text-4xl font-bold text-white mb-3">Assistant Melus</h1>
+          <p className="text-gray-400 text-lg">Crea tu cuenta y obtén créditos gratis</p>
         </div>
 
         {/* Register Card */}
-        <Card className="shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-2xl">Crear Cuenta</CardTitle>
-            <CardDescription>
-              Completa el formulario para registrarte
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit} data-testid="register-form">
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Tu nombre completo"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10"
-                    required
-                    data-testid="register-name-input"
-                  />
-                </div>
+        <div className="bg-[#1a1a2e] rounded-2xl border border-gray-800 p-8 shadow-2xl">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">Crear Cuenta</h2>
+            <p className="text-gray-400">Completa el formulario para registrarte</p>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4" data-testid="register-form">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-gray-300">Nombre</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Tu nombre completo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500"
+                  required
+                  data-testid="register-name-input"
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                    data-testid="register-email-input"
-                  />
-                </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500"
+                  required
+                  data-testid="register-email-input"
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Mínimo 6 caracteres"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    data-testid="register-password-input"
-                  />
-                </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">Contraseña</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500"
+                  required
+                  data-testid="register-password-input"
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Repite tu contraseña"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    data-testid="register-confirm-password-input"
-                  />
-                </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-gray-300">Confirmar Contraseña</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Repite tu contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500"
+                  required
+                  data-testid="register-confirm-password-input"
+                />
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button
-                type="submit"
-                className="w-full bg-purple-600 hover:bg-purple-700"
-                disabled={isLoading}
-                data-testid="register-submit-button"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creando cuenta...
-                  </>
-                ) : (
-                  'Crear Cuenta'
-                )}
-              </Button>
-              <div className="text-center text-sm text-gray-600">
-                ¿Ya tienes cuenta?{' '}
-                <Link to="/login" className="text-purple-600 hover:text-purple-700 font-semibold" data-testid="login-link">
-                  Inicia sesión aquí
-                </Link>
-              </div>
-            </CardFooter>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium mt-6"
+              disabled={isLoading}
+              data-testid="register-submit-button"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creando cuenta...
+                </>
+              ) : (
+                'Crear Cuenta'
+              )}
+            </Button>
           </form>
-        </Card>
+
+          <div className="mt-6 text-center text-gray-400">
+            ¿Ya tienes cuenta?{' '}
+            <Link 
+              to="/login" 
+              className="text-purple-400 hover:text-purple-300 font-semibold"
+              data-testid="login-link"
+            >
+              Inicia sesión aquí
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
