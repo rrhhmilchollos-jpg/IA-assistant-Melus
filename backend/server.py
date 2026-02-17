@@ -14,11 +14,11 @@ import httpx
 from models import (
     User, UserSession, SessionRequest, SessionResponse,
     Conversation, ConversationListItem, ConversationCreate,
-    Message, MessageCreate, MessageResponse,
+    Message, MessageCreate, MessageEdit, MessageResponse, AIModel,
     CreditBalance, CreditPackage, CheckoutRequest,
-    PaymentTransaction
+    PaymentTransaction, TransactionHistory
 )
-from config import CREDIT_PACKAGES, FREE_CREDITS, PROMO_CODES, CREDITS_PER_DOLLAR
+from config import CREDIT_PACKAGES, FREE_CREDITS, PROMO_CODES, CREDITS_PER_DOLLAR, AI_MODELS, DEFAULT_MODEL
 from utils import generate_id, utc_now, ensure_timezone, get_authenticated_user
 
 # Import integrations
