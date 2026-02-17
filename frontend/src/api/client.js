@@ -69,12 +69,25 @@ export const creditsAPI = {
     return response.data;
   },
   
-  createCheckout: async (packageId) => {
+  createCheckout: async (packageId = null, customAmount = null, promoCode = null) => {
     const originUrl = window.location.origin;
-    const response = await apiClient.post('/credits/checkout', {
-      package_id: packageId,
+    const payload = {
       origin_url: originUrl,
-    });
+    };
+    
+    if (packageId) {
+      payload.package_id = packageId;
+    }
+    
+    if (customAmount) {
+      payload.custom_amount = customAmount;
+    }
+    
+    if (promoCode) {
+      payload.promo_code = promoCode;
+    }
+    
+    const response = await apiClient.post('/credits/checkout', payload);
     return response.data;
   },
   
