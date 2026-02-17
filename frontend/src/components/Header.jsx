@@ -252,6 +252,21 @@ const Header = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={githubStatus?.connected ? handlePushToGithub : handleGithubConnect}
+                disabled={!currentConversationId && githubStatus?.connected}
+                className={`rounded-lg ${
+                  githubStatus?.connected
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800'
+                    : 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/20'
+                }`}
+                data-testid="github-button"
+              >
+                <Github size={16} className="mr-2" />
+                {githubStatus?.connected ? 'Push GitHub' : 'GitHub'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleRedeploy}
                 disabled={isRedeploying || !currentConversationId}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg"
