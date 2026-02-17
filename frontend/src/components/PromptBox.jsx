@@ -377,16 +377,22 @@ const PromptBox = ({
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={disabled}
+                disabled={disabled || isTranscribing}
                 onClick={handleMicClick}
                 className={`rounded-full h-8 w-8 p-0 ${
-                  isRecording 
+                  isTranscribing
+                    ? 'bg-blue-600 text-white cursor-wait'
+                    : isRecording 
                     ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
                     : 'text-gray-400 hover:text-white hover:bg-gray-700'
                 }`}
                 data-testid="mic-button"
               >
-                <Mic size={16} />
+                {isTranscribing ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Mic size={16} />
+                )}
               </Button>
               
               {disabled ? (
