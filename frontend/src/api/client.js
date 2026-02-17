@@ -40,6 +40,10 @@ export const authAPI = {
       password, 
       name 
     });
+    // Save session token for future requests
+    if (response.data.session_token) {
+      saveSessionToken(response.data.session_token);
+    }
     return response.data;
   },
   
@@ -48,11 +52,19 @@ export const authAPI = {
       email, 
       password 
     });
+    // Save session token for future requests
+    if (response.data.session_token) {
+      saveSessionToken(response.data.session_token);
+    }
     return response.data;
   },
   
   createSession: async (sessionId) => {
     const response = await apiClient.post('/auth/session', { session_id: sessionId });
+    // Save session token for future requests
+    if (response.data.session_token) {
+      saveSessionToken(response.data.session_token);
+    }
     return response.data;
   },
   
@@ -62,6 +74,7 @@ export const authAPI = {
   },
   
   logout: async () => {
+    clearSessionToken();
     const response = await apiClient.post('/auth/logout');
     return response.data;
   },
