@@ -46,6 +46,7 @@ from routes.projects import router as projects_router
 from routes.chat import router as chat_router
 from routes.voice import router as voice_router
 from routes.deploy import router as deploy_router
+from routes.github import router as github_router
 
 # Include all routers with /api prefix
 app.include_router(auth_router, prefix="/api")
@@ -56,6 +57,7 @@ app.include_router(projects_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(voice_router, prefix="/api")
 app.include_router(deploy_router, prefix="/api")
+app.include_router(github_router, prefix="/api")
 
 # CORS middleware
 app.add_middleware(
