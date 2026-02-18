@@ -145,6 +145,7 @@ const AppGeneratorV2 = () => {
   const [templates, setTemplates] = useState([]);
   const [showTemplates, setShowTemplates] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [ultraMode, setUltraMode] = useState(false);
   const logsEndRef = useRef(null);
   const wsRef = useRef(null);
 
