@@ -238,6 +238,30 @@ const AppGeneratorV2 = () => {
   const [previewError, setPreviewError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentAgent, setCurrentAgent] = useState(null);
+  
+  // Motor No Chat mode states
+  const [executionMode, setExecutionMode] = useState('templates'); // 'templates' | 'motor'
+  const [motorTemplate, setMotorTemplate] = useState(`Proyecto: Mi Aplicación
+
+Objetivo: Describe tu aplicación aquí
+
+# FRONTEND AGENT
+- Framework: React con TailwindCSS
+- Componentes: Header, Footer, Dashboard
+- Páginas: Home, Login, Dashboard
+
+# BACKEND AGENT
+- Framework: FastAPI
+- Endpoints: CRUD usuarios
+- Autenticación: JWT
+
+# DATABASE AGENT
+- Motor: MongoDB
+- Tablas: usuarios, datos
+
+# DEPLOYMENT AGENT
+- Plataforma: Vercel
+- CI/CD: GitHub Actions`);
   const [templates, setTemplates] = useState([]);
   const [showTemplates, setShowTemplates] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
