@@ -190,8 +190,13 @@ Obtener credenciales en: https://github.com/settings/applications/new
 | Booking System | Calendario, citas, servicios, confirmaciones | 500 | 1000 |
 | Analytics Dashboard | Gráficos, métricas, reportes en tiempo real | 450 | 900 |
 
-## Funcionalidades Adicionales [NUEVO]
+## Funcionalidades Adicionales [ACTUALIZADO]
 - **Descarga ZIP**: Exportar proyecto completo como archivo ZIP
 - **Persistencia de Workspace**: El último proyecto se recupera automáticamente
-- **Selección de Templates**: Vista de galería para elegir tipo de app
+- **Selección de Templates**: Galería visual con 12 tipos de apps
 - **App Personalizada**: Opción de describir app custom si no hay template adecuado
+- **ULTRA MODE**: Modo premium con 2x créditos para máxima calidad de código
+  - Prompts mejorados con mejores prácticas
+  - Error handling completo
+  - Accesibilidad incluida
+  - Animaciones y loading states
