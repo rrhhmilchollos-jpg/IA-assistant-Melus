@@ -1,200 +1,120 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Diciembre 2025
-> **Versión:** 2.2.0
+> **Versión:** 2.3.0
 
 ---
 
 ## 1. Visión del Producto
 
-**Melus AI** es un **Constructor Universal de Aplicaciones**, una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando un sistema de **13 agentes especializados** de IA con preview en vivo.
+**Melus AI** es un **Constructor Universal de Aplicaciones** que funciona **idénticamente a Emergent.sh**, proporcionando una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando un sistema de **13 agentes especializados** de IA.
 
-### Objetivo
-Competir directamente con Emergent.sh proporcionando una infraestructura autónoma de construcción y ejecución de software.
+### Características Principales
+- **Modo Motor (No Chat)**: Ejecución directa de proyectos sin conversación
+- **13 Agentes Especializados**: Cada uno con rol específico
+- **Preview en Vivo**: CodeSandbox Sandpack integrado
+- **Sistema de Versionado**: Snapshots y rollback
+- **GitHub Integration**: OAuth y push de proyectos
 
 ---
 
-## 2. Usuarios Objetivo
+## 2. Modos de Ejecución
 
-- **Desarrolladores** que necesitan prototipar rápidamente
-- **Emprendedores** sin conocimientos técnicos
-- **Empresas** que buscan acelerar el desarrollo
-- **Estudiantes** aprendiendo desarrollo web
+### 2.1 Modo Templates (Conversacional)
+- Seleccionar de 12 templates predefinidos
+- Generar apps con descripción libre
+- Ideal para usuarios que quieren guía
+
+### 2.2 MODO MOTOR (No Chat) - NUEVO
+- **Ejecución directa** sin conversación
+- Usa **plantilla de proyecto** estructurada por agentes
+- Ejecuta **TODOS los 11 agentes** en secuencia automática
+- Ideal para usuarios técnicos que saben exactamente lo que quieren
+
+**Flujo del Motor:**
+```
+Classifier → Architect → Design → Database → Frontend → Backend → Integrator → Testing → Security → Deploy → Docs
+```
+
+**Costo Motor:**
+- Normal: ~930 créditos
+- Ultra: ~1860 créditos
 
 ---
 
 ## 3. Sistema de 13 Agentes Especializados
 
-### 3.1 Agentes de Generación (Core)
-| Agente | Costo | Descripción |
-|--------|-------|-------------|
-| **Classifier** | 25 | Analiza y clasifica el tipo de aplicación |
-| **Architect** | 50 | Diseña estructura y arquitectura |
-| **Frontend** | 150 | Genera código React completo |
-| **Backend** | 150 | Genera APIs y lógica de servidor |
-| **Integrator** | 75 | Conecta frontend con backend |
+### 3.1 Agentes Core (Generación)
+| Agente | Costo | Función |
+|--------|-------|---------|
+| Classifier | 25 | Clasifica tipo de aplicación |
+| Architect | 50 | Diseña estructura y arquitectura |
+| Frontend | 150 | Genera código React completo |
+| Backend | 150 | Genera APIs y servidor |
+| Integrator | 75 | Conecta frontend con backend |
 
 ### 3.2 Agentes Especializados
-| Agente | Costo | Descripción |
-|--------|-------|-------------|
-| **Design** | 100 | Define UI/UX y sistema de diseño |
-| **Database** | 100 | Diseña esquemas y queries |
-| **Testing** | 75 | Genera tests automatizados |
-| **Security** | 50 | Analiza vulnerabilidades |
-| **Deploy** | 50 | Genera configs de despliegue |
+| Agente | Costo | Función |
+|--------|-------|---------|
+| Design | 100 | UI/UX y sistema de diseño |
+| Database | 100 | Esquemas y queries |
+| Testing | 75 | Tests automatizados |
+| Security | 50 | Análisis de vulnerabilidades |
+| Deploy | 50 | Configuración de despliegue |
 
 ### 3.3 Agentes de Utilidad
-| Agente | Costo | Descripción |
-|--------|-------|-------------|
-| **Debugger** | 30 | Corrige errores automáticamente (monetización) |
-| **Optimizer** | 50 | Optimiza rendimiento |
-| **Docs** | 25 | Genera documentación |
-
-**Total por generación completa: ~930 créditos (Normal) / ~1860 créditos (Ultra)**
+| Agente | Costo | Función |
+|--------|-------|---------|
+| Debugger | 30 | Corrección de errores (monetización) |
+| Optimizer | 50 | Optimización de rendimiento |
+| Docs | 25 | Generación de documentación |
 
 ---
 
-## 4. Funcionalidades Principales
+## 4. Plantilla de Proyecto (Modo Motor)
 
-### 4.1 Preview en Vivo con Sandpack ✅
-- CodeSandbox Sandpack integrado
-- Hot reload en tiempo real
-- Explorador de archivos visual
-- Editor de código con syntax highlighting
-
-### 4.2 Sistema de Workspaces ✅
-- Filesystem virtual por proyecto
-- Sistema de Versionado/Snapshots
-- Rollback a versiones anteriores
-- WebSocket para logs en tiempo real
-
-### 4.3 12 Templates Predefinidos ✅
-| Template | Créditos | Descripción |
-|----------|----------|-------------|
-| E-Commerce Store | 450 | Tienda con catálogo, carrito, checkout |
-| Blog Platform | 350 | Blog con artículos, categorías |
-| Admin Dashboard | 500 | Panel con métricas y gráficos |
-| Landing Page | 300 | Landing SaaS con hero y pricing |
-| Task Manager | 400 | Gestión de tareas estilo Trello |
-| Portfolio | 300 | Portfolio de desarrollador |
-| CRM System | 550 | Pipeline de ventas y contactos |
-| Chat Application | 450 | Mensajería en tiempo real |
-| Social Network | 500 | Feed, perfiles, likes |
-| Inventory System | 450 | Productos, stock, alertas |
-| Booking System | 500 | Calendario y citas |
-| Analytics Dashboard | 450 | Gráficos y reportes |
-
-### 4.4 Ultra Mode ✅
-- Toggle en UI para activar/desactivar
-- **2x créditos = Máxima calidad**
-- Prompts mejorados con mejores prácticas
-- Error handling completo
-- Accesibilidad incluida
-
-### 4.5 Debug Agent (Fixer) ✅
-- **Costo: 30 créditos por uso**
-- Detecta errores automáticamente
-- Analiza y corrige código
-- Crea nueva versión después del fix
-
-### 4.6 GitHub Integration ✅
-- GitHub OAuth para login
-- Push de workspace a GitHub (50 créditos)
-- Crear repositorios nuevos
-- Repositorios públicos o privados
-
-### 4.7 Descarga ZIP ✅
-- Exportar proyecto completo
-- README generado automáticamente
-
----
-
-## 5. Arquitectura Técnica
-
-### 5.1 Backend (FastAPI)
 ```
-/app/backend/
-├── routes/
-│   ├── agents_v2.py    # 13 agentes especializados
-│   ├── workspace.py    # Workspaces y versionado
-│   ├── github.py       # GitHub OAuth y push
-│   ├── auth.py         # Autenticación
-│   └── billing.py      # Créditos y pagos
-├── templates/
-│   └── app_templates.py
-└── server.py
-```
+Proyecto: [Nombre]
+Objetivo: [Descripción]
 
-### 5.2 Frontend (React)
-```
-/app/frontend/src/
-├── components/
-│   ├── AppGeneratorV2.jsx  # Generador con 13 agentes
-│   └── ui/                 # Shadcn components
-├── pages/
-└── context/
-```
+# FRONTEND AGENT
+- Framework: React con TailwindCSS
+- Componentes: [Lista]
+- Páginas: [Lista]
 
-### 5.3 Base de Datos (MongoDB)
-```javascript
-// Users
-{ user_id, email, credits, is_admin, github_token }
+# BACKEND AGENT
+- Framework: FastAPI
+- Endpoints: [Lista]
+- Autenticación: JWT
 
-// Workspaces
-{ workspace_id, user_id, files, versions[], current_version }
+# DATABASE AGENT
+- Motor: MongoDB
+- Tablas: [Lista]
 
-// GitHub Connections
-{ user_id, github_token, github_username }
+# INTEGRATION AGENT
+- Servicios: Stripe, OAuth
+
+# TESTING AGENT
+- Unit tests
+- Integration tests
+
+# SECURITY AGENT
+- Validación de inputs
+- Protección de endpoints
+
+# DEPLOYMENT AGENT
+- Plataforma: Vercel/Docker
+- CI/CD: GitHub Actions
 ```
 
 ---
 
-## 6. API Endpoints
+## 5. Funcionalidades Implementadas
 
-### 6.1 Agentes v2
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/agents/v2/costs` | Costos de 13 agentes |
-| GET | `/api/agents/v2/agents` | Lista de agentes |
-| POST | `/api/agents/v2/run-agent` | Ejecutar agente individual |
-| POST | `/api/agents/v2/generate` | Generar app completa |
-| POST | `/api/agents/v2/generate-from-template` | Generar desde template |
-| POST | `/api/agents/v2/debug` | Debug Agent (30 créditos) |
-| GET | `/api/agents/v2/download/{id}` | Descargar ZIP |
-| POST | `/api/agents/v2/push-to-github` | Push a GitHub (50 créditos) |
-
-### 6.2 Workspaces
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/workspace/create` | Crear workspace |
-| GET | `/api/workspace/{id}` | Obtener workspace |
-| GET | `/api/workspace/{id}/versions` | Historial versiones |
-| POST | `/api/workspace/{id}/rollback/{v}` | Rollback |
-| WS | `/api/workspace/ws/{id}` | WebSocket logs |
-
-### 6.3 GitHub
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/github/auth/login` | Iniciar OAuth |
-| GET | `/api/github/auth/callback` | Callback OAuth |
-| GET | `/api/github/status` | Estado conexión |
-| GET | `/api/github/repos` | Listar repos |
-
----
-
-## 7. Integraciones
-
-- **OpenAI GPT-4o** - Via Emergent LLM Key
-- **Stripe** - Sistema de pagos
-- **GitHub** - OAuth y push
-- **CodeSandbox Sandpack** - Preview en vivo
-
----
-
-## 8. Estado del Proyecto
-
-### Completado ✅
+### ✅ Completado
 - [x] Sistema de 13 agentes especializados
+- [x] **MODO MOTOR (No Chat)** - Ejecución directa
+- [x] Plantilla de proyecto estructurada
 - [x] Preview en vivo con Sandpack
 - [x] 12 templates predefinidos
 - [x] Ultra Mode (2x créditos)
@@ -202,19 +122,56 @@ Competir directamente con Emergent.sh proporcionando una infraestructura autóno
 - [x] Sistema de versionado/rollback
 - [x] Descarga ZIP
 - [x] GitHub OAuth completo
-- [x] GitHub push desde workspace
+- [x] GitHub push desde workspace (50 créditos)
 - [x] Panel de administración
 
-### Backlog (Próximas tareas)
+### Backlog
 - [ ] Deploy automático (Vercel/Netlify)
 - [ ] Marketplace de templates
-- [ ] Control Plane / Execution Plane separados
 - [ ] Contenedores Docker aislados
-- [ ] Multi-región y autoscaling
 
 ---
 
-## 9. Credenciales de Prueba
+## 6. API Endpoints
+
+### Motor No Chat
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/agents/v2/template` | Obtener formato de plantilla |
+| POST | `/api/agents/v2/execute-project` | Ejecutar proyecto completo |
+
+### Agentes
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/agents/v2/costs` | Costos y modos |
+| GET | `/api/agents/v2/agents` | Lista de 13 agentes |
+| POST | `/api/agents/v2/run-agent` | Ejecutar agente individual |
+| POST | `/api/agents/v2/generate` | Generar (modo chat) |
+| POST | `/api/agents/v2/debug` | Debug Agent (30 créditos) |
+
+---
+
+## 7. Arquitectura Técnica
+
+### Backend (FastAPI)
+```
+/app/backend/
+├── routes/
+│   └── agents_v2.py    # 13 agentes + Motor
+├── services/
+│   └── execution_engine.py  # Parser de plantillas
+└── templates/
+```
+
+### Frontend (React)
+```
+/app/frontend/src/components/
+└── AppGeneratorV2.jsx  # UI con modo Motor
+```
+
+---
+
+## 8. Credenciales de Prueba
 
 | Tipo | Email | Password |
 |------|-------|----------|
@@ -222,8 +179,23 @@ Competir directamente con Emergent.sh proporcionando una infraestructura autóno
 
 ---
 
-## 10. URLs
+## 9. URLs
 
 - **Frontend:** https://agent-labs.preview.emergentagent.com
-- **API:** https://agent-labs.preview.emergentagent.com/api
 - **Generador:** https://agent-labs.preview.emergentagent.com/generator
+- **API:** https://agent-labs.preview.emergentagent.com/api
+
+---
+
+## 10. Comparación con Emergent.sh
+
+| Característica | Emergent.sh | Melus AI |
+|---------------|-------------|----------|
+| Multi-agentes | ✅ | ✅ 13 agentes |
+| Modo No Chat | ✅ | ✅ Motor |
+| Preview en vivo | ✅ | ✅ Sandpack |
+| Tests automáticos | ✅ | ✅ Testing Agent |
+| Deploy automático | ✅ | ⏳ Próximamente |
+| GitHub export | ✅ | ✅ |
+| Sistema de créditos | ✅ | ✅ |
+| Debug/Fixer | ✅ | ✅ 30 créditos |
