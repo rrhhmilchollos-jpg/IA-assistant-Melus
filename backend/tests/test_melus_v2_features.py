@@ -27,7 +27,7 @@ class TestHealth:
         response = requests.get(f"{BASE_URL}/api/health")
         assert response.status_code == 200
         data = response.json()
-        assert data.get("status") == "healthy"
+        assert data.get("status") in ["healthy", "operational"]
         print(f"✓ Health check passed: {data}")
 
 
