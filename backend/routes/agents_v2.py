@@ -21,7 +21,7 @@ router = APIRouter(prefix="/agents/v2", tags=["agents-v2"])
 
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
-# Agent costs
+# Agent costs (normal mode)
 AGENT_COSTS = {
     "classifier": 25,
     "architect": 50,
@@ -30,6 +30,9 @@ AGENT_COSTS = {
     "integrator": 75,
     "debugger": 50
 }
+
+# Ultra mode multiplier
+ULTRA_MULTIPLIER = 2
 
 # Enhanced Agent Prompts for Real Code Generation
 AGENT_PROMPTS = {
