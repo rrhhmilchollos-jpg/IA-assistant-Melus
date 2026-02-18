@@ -41,7 +41,14 @@ import {
   CheckSquare,
   User,
   Sparkles,
-  ArrowLeft
+  ArrowLeft,
+  Users,
+  MessageCircle,
+  Share2,
+  Package,
+  Calendar,
+  BarChart3,
+  Bolt
 } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
