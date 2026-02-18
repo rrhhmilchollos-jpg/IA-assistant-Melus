@@ -353,6 +353,110 @@ const AppGeneratorV2 = () => {
     }
   };
 
+  // Check GitHub connection status
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [githubUsername, setGithubUsername] = useState('');
+  const [isPushingToGithub, setIsPushingToGithub] = useState(false);
+  const [showGithubModal, setShowGithubModal] = useState(false);
+  const [githubRepoName, setGithubRepoName] = useState('');
+  const [githubPrivate, setGithubPrivate] = useState(false);
+
+  // Check GitHub status on mount
+  useEffect(() => {
+    checkGithubStatus();
+  }, []);
+
+  const checkGithubStatus = async () => {
+    const token = localStorage.getItem('session_token');
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/github/status`, {
+        headers: { 'X-Session-Token': token }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setGithubConnected(data.connected);
+        setGithubUsername(data.username || '');
+      }
+    } catch (error) {
+      console.error('GitHub status check failed:', error);
+    }
+  };
+
+  // Connect to GitHub
+  const handleConnectGithub = async () => {
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/github/auth/login`, {
+        headers: { 'X-Session-Token': token }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to GitHub OAuth
+        window.location.href = data.auth_url;
+      }
+    } catch (error) {
+      console.error('GitHub connect failed:', error);
+    }
+  };
+
+  // Push to GitHub
+  const handlePushToGithub = async () => {
+    if (!workspaceId) return;
+    
+    const token = localStorage.getItem('session_token');
+    setIsPushingToGithub(true);
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/agents/v2/push-to-github`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          workspace_id: workspaceId,
+          repo_name: githubRepoName || appName.toLowerCase().replace(/\s+/g, '-'),
+          private: githubPrivate
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Push failed');
+      }
+      
+      updateCredits(data.credits_remaining);
+      setShowGithubModal(false);
+      
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'success',
+        message: `Subido a GitHub: ${data.repo_url}`,
+        timestamp: new Date().toISOString()
+      }]);
+      
+      // Open repo in new tab
+      window.open(data.repo_url, '_blank');
+      
+    } catch (error) {
+      console.error('GitHub push error:', error);
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'error',
+        message: `Error GitHub: ${error.message}`,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsPushingToGithub(false);
+    }
+  };
+
   // WebSocket connection for real-time updates
   useEffect(() => {
     if (workspaceId) {
