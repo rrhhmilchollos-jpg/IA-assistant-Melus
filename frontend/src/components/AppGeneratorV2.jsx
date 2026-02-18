@@ -1154,6 +1154,8 @@ createRoot(document.getElementById('root')).render(<App />);`
               </button>
             </div>
           </div>
+          </>
+          )}
         </div>
       </div>
     );
