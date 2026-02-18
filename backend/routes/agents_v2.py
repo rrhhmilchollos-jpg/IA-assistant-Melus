@@ -805,6 +805,7 @@ async def generate_from_template(request: Request):
     body = await request.json()
     template_id = body.get("template_id")
     app_name = body.get("name", "My App")
+    ultra_mode = body.get("ultra_mode", False)
     
     template = get_template(template_id)
     if not template:
@@ -813,30 +814,30 @@ async def generate_from_template(request: Request):
     # Use template's prompt for generation
     description = template["prompt"]
     
-    # Calculate cost
-    total_cost = template.get("estimated_credits", 500)
+    # Calculate cost with ultra mode multiplier
+    multiplier = ULTRA_MULTIPLIER if ultra_mode else 1
+    base_cost = template.get("estimated_credits", 500)
+    total_cost = base_cost * multiplier
+    
     if user_doc["credits"] < total_cost:
         raise HTTPException(
             status_code=402,
             detail=f"Need {total_cost} credits, you have {user_doc['credits']}"
         )
     
-    # Call the main generate function logic (reuse)
-    # For now, just call the generate endpoint internally
-    body["description"] = description
-    body["name"] = app_name
-    
     # Create workspace
     from routes.workspace import get_connection_manager
     manager = get_connection_manager()
     
     workspace_id = generate_id("ws")
+    mode_label = "ULTRA MODE" if ultra_mode else "Normal"
     workspace = {
         "workspace_id": workspace_id,
         "user_id": user_id,
         "name": app_name,
-        "description": f"Generated from template: {template['name']}",
+        "description": f"[{mode_label}] Generated from template: {template['name']}",
         "template": template_id,
+        "ultra_mode": ultra_mode,
         "files": {},
         "versions": [],
         "current_version": 0,
@@ -847,19 +848,17 @@ async def generate_from_template(request: Request):
     }
     await db.workspaces.insert_one(workspace)
     
-    # Start generation (reuse the logic)
-    # This is a simplified version - in production you'd call the full generate function
     total_credits_used = 0
     all_files = {}
     
     try:
-        # Log start
+        # Log start with mode
         await manager.broadcast(workspace_id, {
             "type": "log",
             "log": {
                 "agent": "system",
                 "type": "info",
-                "message": f"Generating from template: {template['name']}",
+                "message": f"[{mode_label}] Generando: {template['name']}",
                 "timestamp": utc_now().isoformat()
             }
         })
@@ -879,7 +878,7 @@ async def generate_from_template(request: Request):
             "log": {
                 "agent": "classifier",
                 "type": "success",
-                "message": f"Using template: {template['name']}",
+                "message": f"Template: {template['name']} ({mode_label})",
                 "timestamp": utc_now().isoformat()
             }
         })
@@ -890,7 +889,7 @@ async def generate_from_template(request: Request):
             "log": {
                 "agent": "architect",
                 "type": "working",
-                "message": "Designing architecture...",
+                "message": "Diseñando arquitectura...",
                 "timestamp": utc_now().isoformat()
             }
         })
@@ -900,7 +899,8 @@ async def generate_from_template(request: Request):
             f"Design architecture for: {description}",
             {"classification": classification, "template": template_id},
             db,
-            workspace_id
+            workspace_id,
+            ultra_mode
         )
         total_credits_used += architect_result["credits_used"]
         architecture = architect_result["result"]
@@ -910,7 +910,7 @@ async def generate_from_template(request: Request):
             "log": {
                 "agent": "architect",
                 "type": "success",
-                "message": f"Architecture designed",
+                "message": f"Arquitectura diseñada ({architect_result['credits_used']} créditos)",
                 "timestamp": utc_now().isoformat()
             }
         })
@@ -921,7 +921,7 @@ async def generate_from_template(request: Request):
             "log": {
                 "agent": "frontend",
                 "type": "working",
-                "message": "Generating React components...",
+                "message": "Generando componentes React...",
                 "timestamp": utc_now().isoformat()
             }
         })
@@ -931,7 +931,8 @@ async def generate_from_template(request: Request):
             description,
             {"classification": classification, "architecture": architecture, "app_name": app_name},
             db,
-            workspace_id
+            workspace_id,
+            ultra_mode
         )
         total_credits_used += frontend_result["credits_used"]
         
@@ -943,7 +944,7 @@ async def generate_from_template(request: Request):
             "log": {
                 "agent": "frontend",
                 "type": "success",
-                "message": f"Generated {len(frontend_files)} files",
+                "message": f"Generados {len(frontend_files)} archivos ({frontend_result['credits_used']} créditos)",
                 "timestamp": utc_now().isoformat()
             }
         })
@@ -999,7 +1000,7 @@ root.render(<App />);"""
                         "version": 1,
                         "files": all_files,
                         "created_at": utc_now(),
-                        "message": f"Generated from template: {template['name']}"
+                        "message": f"[{mode_label}] Generated from template: {template['name']}"
                     }
                 }
             }
@@ -1011,6 +1012,9 @@ root.render(<App />);"""
             {"$inc": {"credits": -total_credits_used, "credits_used": total_credits_used}}
         )
         
+        # Get updated credits
+        updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+        
         await manager.broadcast(workspace_id, {
             "type": "generation_complete",
             "files": all_files,
@@ -1018,12 +1022,23 @@ root.render(<App />);"""
             "credits_used": total_credits_used
         })
         
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "success",
+                "message": f"App completada! {len(all_files)} archivos, {total_credits_used} créditos",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
         return {
             "workspace_id": workspace_id,
             "files": all_files,
             "template": template_id,
+            "ultra_mode": ultra_mode,
             "credits_used": total_credits_used,
-            "credits_remaining": user_doc["credits"] - total_credits_used
+            "credits_remaining": updated_user.get("credits", 0)
         }
         
     except Exception as e:
