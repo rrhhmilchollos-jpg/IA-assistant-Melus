@@ -1237,15 +1237,79 @@ createRoot(document.getElementById('root')).render(<App />);`
                   <Download className="w-4 h-4" />
                 </button>
                 <button
+                  onClick={() => githubConnected ? setShowGithubModal(true) : handleConnectGithub()}
                   data-testid="github-btn"
-                  className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5"
-                  title="Subir a GitHub"
+                  className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-all ${
+                    githubConnected 
+                      ? 'text-green-400 hover:bg-green-500/10' 
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  title={githubConnected ? `GitHub: @${githubUsername}` : "Conectar GitHub"}
                 >
                   <Github className="w-4 h-4" />
+                  {githubConnected && <span className="text-xs">@{githubUsername}</span>}
                 </button>
               </>
             )}
           </div>
+
+          {/* GitHub Push Modal */}
+          {showGithubModal && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-[#1a1a2e] border border-purple-500/30 rounded-xl p-6 w-96 shadow-2xl">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Github className="w-5 h-5" />
+                  Subir a GitHub
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-gray-400 mb-1 block">Nombre del repositorio</label>
+                    <input
+                      type="text"
+                      value={githubRepoName}
+                      onChange={(e) => setGithubRepoName(e.target.value)}
+                      placeholder={appName.toLowerCase().replace(/\s+/g, '-')}
+                      className="w-full bg-[#0d0d1a] border border-purple-500/30 rounded-lg px-3 py-2 text-sm focus:border-purple-500 outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="private-repo"
+                      checked={githubPrivate}
+                      onChange={(e) => setGithubPrivate(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label htmlFor="private-repo" className="text-sm text-gray-400">Repositorio privado</label>
+                  </div>
+                  <div className="text-xs text-gray-500 bg-white/5 p-3 rounded-lg">
+                    <p className="font-medium text-gray-400 mb-1">Costo: 50 créditos</p>
+                    <p>Se creará un nuevo repositorio y se subirán todos los archivos del proyecto.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowGithubModal(false)}
+                      className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handlePushToGithub}
+                      disabled={isPushingToGithub}
+                      className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isPushingToGithub ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Github className="w-4 h-4" />
+                      )}
+                      {isPushingToGithub ? 'Subiendo...' : 'Subir'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Preview/Code Area */}
           <div className="flex-1 overflow-hidden">
