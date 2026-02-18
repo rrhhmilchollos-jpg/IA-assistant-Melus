@@ -170,9 +170,9 @@ Obtener credenciales en: https://github.com/settings/applications/new
 - **Admin**: rrhh.milchollos@gmail.com / 19862210Des
 
 ## URLs
-- Frontend: https://melus-platform.preview.emergentagent.com
-- API: https://melus-platform.preview.emergentagent.com/api
-- Generador de Apps: https://melus-platform.preview.emergentagent.com/generator
+- Frontend: https://agent-labs.preview.emergentagent.com
+- API: https://agent-labs.preview.emergentagent.com/api
+- Generador de Apps: https://agent-labs.preview.emergentagent.com/generator
 
 ## Templates Predefinidos [ACTUALIZADO]
 | Template | Descripción | Normal | Ultra |

@@ -1,89 +1,72 @@
 <analysis>**original_problem_statement:**
-The user wants to create a fully functional, production-ready MVP clone of an AI assistant like Emergent.sh, named Assistant Melus.
-
-The initial scope was a chat application, but it has been massively expanded based on a user-provided PDF and subsequent instructions.
+The user wants to create a fully functional, production-ready MVP clone of an AI assistant like Emergent.sh, named Assistant Melus. The project has evolved from a simple chat application to a sophisticated, multi-agent application generation platform.
 
 **PRODUCT REQUIREMENTS (Expanded):**
-1.  **Core Functionality:** A complete clone of the Emergent.sh multi-agent application generation platform.
-2.  **Naming:** The application must be named Assistant Melus.
-3.  **Authentication:** A traditional email/password registration and login system with an admin role.
-4.  **Monetization & Credits:**
-    *   A credit-based system where agent actions (design, code, deploy) consume credits.
-    *   Full Stripe integration for credit top-ups and subscription plans (Pro/Enterprise).
-    *   User-facing billing and transaction history.
-5.  **App Generation System:**
-    *   A multi-agent system (Orchestrator, Design, Frontend, Backend, etc.) that can generate applications from a user prompt.
-    *   A real-time Agent Console to show the status and logs of each agent during generation.
-6.  **GitHub Integration:** Allow users to connect their GitHub account (via OAuth) and save both generated application code and chat conversations to their repositories.
-7.  **Admin Panel:** A comprehensive dashboard for admins to manage users, view revenue from Stripe in real-time, and monitor system health.
-8.  **Chat Features:**
-    *   Real-time chat with an AI model (using Emergent LLM Key).
-    *   Voice input using a production Speech-to-Text service.
-    *   Advanced features: Code Viewer, Summarize, Rollback, Redeploy.
-9.  **UI/UX:** A pixel-perfect clone of the Emergent.sh dark-theme UI, including the agent console and admin panels.
+The user has provided a Master Document outlining a vision for a production-grade, hybrid-cloud platform that can compete directly with Emergent.sh. Key features include:
+1.  **Core Functionality:** A multi-agent system that can generate full-stack applications from a user prompt or predefined templates.
+2.  **Architecture:** A hybrid model with a cloud-hosted Control Plane (for orchestration, state) and a dedicated Execution Layer (for running isolated Docker containers for each project build).
+3.  **Live Preview & IDE:** A real-time, interactive preview of the generated application, alongside a full file explorer and code editor.
+4.  **Monetization & Credits:** A credit-based system where actions consume credits. Includes Stripe integration, an Ultra Mode that doubles credit cost for higher quality generation, and a Debug Agent that costs credits per use.
+5.  **GitHub Integration:** Full GitHub OAuth for user login and for saving generated code to user repositories.
+6.  **Templates & Downloads:** A library of predefined application templates and the ability to download any generated project as a ZIP file.
+7.  **Authentication:** A traditional email/password system and GitHub OAuth.
+8.  **Admin Panel:** A dashboard for admins to manage users, view revenue, and monitor system health.
 
 **User's preferred language**: Spanish
 
 **what currently exists?**
-The project has evolved from a simple AI chat app into a sophisticated multi-agent application generation platform, closely mirroring the user's expanded requirements.
-
--   **Backend Architecture:** The monolithic  has been successfully refactored into a modular, router-based architecture (, , , , , , , ).
--   **Core Platform Features:**
-    -   An **App Generator** page allows users to describe an app, which consumes credits and shows a real-time console of agent statuses.
-    -   A comprehensive **Admin Dashboard** is implemented with APIs and a UI to display user metrics, revenue, and system status.
--   **Production-Ready Features:** Mocked functionalities for voice input and application redeployment have been replaced with real backend implementations.
--   **GitHub Integration:** The backend API and frontend components for GitHub integration are in place. The UI has been updated to place a Save to GitHub button in the chat prompt box, which opens a modal for connecting the user's account.
--   **UI:** The frontend includes new pages for the App Generator and Admin Dashboard, fully integrated into the existing dark-theme UI.
+- A sophisticated multi-agent application generation platform built with a FastAPI backend and React frontend.
+- **Live Preview IDE:** The core feature is a new generator page () that uses  to provide a live, interactive preview of the generated React app. It includes a file explorer and code editor, simulating an IDE-like experience.
+- **Multi-Agent Generation:** The backend () orchestrates a series of LLM calls (Classifier, Architect, Builder agents) to generate a complete multi-file React application structure.
+- **Project Persistence:** Generated applications () are saved to MongoDB, allowing users to load and continue working on them.
+- **Templates:** A UI for selecting from 12 predefined application templates (e.g., E-commerce, Blog, Portfolio) is fully functional.
+- **Ultra Mode:** A UI toggle and corresponding backend logic are implemented to use a more powerful model at a 2x credit cost.
+- **Download ZIP:** The functionality to download the complete generated project as a ZIP archive is working.
+- **GitHub OAuth:** The end-to-end user authentication flow via GitHub is fully implemented and configured with user-provided credentials.
+- **WebSockets:** The backend uses WebSockets to stream generation logs to the frontend in real-time.
 
 **Last working item**:
--   **Last item agent was working:** Fixing a critical frontend runtime error: . This error started appearing after the agent moved the GitHub integration logic and its associated modal into the  component. The agent correctly deduced that this is a React DOM rendering issue and was about to fix it using a React Portal.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** N (The fix has not been implemented yet)
--   **Which testing method agent to use?** screenshot tool. After applying the fix, the agent must take a screenshot of the dashboard to ensure the chat UI renders correctly and then click the Connect GitHub button to verify the modal opens without crashing the application.
+-   **Last item agent was working:** The agent was about to begin the massive task of refactoring the entire application to align with the user's Master Document for a production-grade, hybrid architecture. The user had just given the final go-ahead (C for hybrid, D for universal, and implementar TODO). The previous concrete task, GitHub OAuth integration, was successfully completed.
+-   **Status:** NOT STARTED
+-   **Agent Testing Done:** N/A
+-   **Which testing method agent to use?** both. This architectural overhaul will require both granular testing (, screenshots) for individual components and comprehensive end-to-end testing using  after major milestones are completed.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** Frontend crashes with  error on . (P0)
-
-**Issues Detail:**
--   **Issue 1:**
-    -   **Attempted fixes:** None. The agent identified the cause and proposed a fix (React Portal) right before the session ended.
-    -   **Next debug checklist:**
-        1.  Edit .
-        2.  Import  from .
-        3.  Locate the JSX for the  modal.
-        4.  Wrap the modal's JSX in . This will render the modal outside the main component tree, preventing the DOM hierarchy conflict.
-        5.  Test by taking a screenshot to ensure the page loads and the modal opens correctly on button click.
-    -   **Why fix this issue and what will be achieved with the fix?** The application is currently unusable for the user as the main chat interface crashes on load. Fixing this will restore core functionality.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on other issue:** None. This is the primary blocker.
+There are no critical bugs or pending issues. The entire focus is on the new architectural implementation.
 
 **In progress Task List**:
-None. All efforts are focused on fixing the critical P0 bug.
+-   **Task 1:** Implement the Master Document Architecture (P0)
+
+ **Task Detail:**
+-   **Task 1:**
+    -   **Where to resume:** The agent had planned to start by separating the current codebase into a simulated **Control Plane** (orchestration, DB state) and **Execution Plane** (code generation, file system writes). This is the first logical step in refactoring towards the user's vision within the current environment's constraints. The work should begin in  and .
+    -   **What will be achieved with this?** This will begin the transformation of Melus from a functional MVP into the production-grade, scalable, and secure platform specified by the user, laying the foundation for true Docker-based isolation and deployment features.
+    -   **Status:** NOT STARTED
+    -   **Should Test frontend/backend/both after fix?** Both
+    -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   **Task 1 (P0):** Implement backend logic for GitHub OAuth. The frontend UI for GitHub integration exists, but the backend needs endpoints to handle the OAuth callback from GitHub, securely store the user's access token, and use it for API requests. (File: , ).
-    -   **Task 2 (P1):** Implement Ultra mode functionality. The UI button is present but needs to be connected to backend logic.
-    -   **Task 3 (P1):** Implement File Attachments. The Adjuntar button needs frontend logic to handle file uploads (chunking, progress) and a corresponding backend implementation.
-    -   **Task 4 (P2):** Implement a live preview of generated applications, potentially using an iframe.
 
--   **Future Tasks:**
-    -   Create a system for predefined application templates.
-    -   Improve mobile responsiveness across the new Admin and App Generator pages.
-    -   Implement conversation export/import functionality.
-    -   Build out an advanced analytics dashboard for admins.
+-   **Upcoming Tasks (Phase 1 of Master Document):**
+    -   **Task 1 (P0):** Implement a  loop. The UI has an Auto-fix button. This task involves implementing the backend logic for this button to read the error from the Sandpack console, send it to an LLM for a fix, apply the fix to the workspace files, and charge the user 30 credits. (Files: , ).
+    -   **Task 2 (P1):** Implement Versioning/Snapshot System. Create backend endpoints to save the current state of a workspace's files as a versioned snapshot in the database and allow the user to roll back to a previous snapshot. (Files:  (new), ).
+    -   **Task 3 (P2):** Save Master Document to Memory. Create a file  and save the user's complete architectural document into it for easy reference by future agents.
+
+-   **Future Tasks (Phases 2 & 3 of Master Document):**
+    -   Implement a true sandboxed execution environment using Docker containers.
+    -   Implement one-click deployment to services like Vercel.
+    -   Build a marketplace for user-submitted templates.
+    -   Deprecate and remove old generator code (, ).
 
 **Completed work in this session**
--   **Massive Backend Refactor:** Decomposed the monolithic  into a clean, scalable, router-based FastAPI application (, , , , , , , ).
--   **Multi-Agent App Generator:** Implemented the full backend and frontend for a multi-agent application generation system, including a real-time agent console UI.
--   **Admin Dashboard Implementation:** Built a complete admin panel with backend APIs and a functional frontend for user and revenue management.
--   **Production Feature Implementation:** Replaced mocked voice input and redeploy features with fully functional backend APIs and integrated them into the frontend.
--   **GitHub Integration (Phase 1):** Implemented the backend API (using ) and frontend components () to allow saving code to GitHub. UI was iteratively adjusted based on user feedback.
--   **UI/UX Enhancements:** Added new routes and navigation links for the Admin and App Generator pages. Moved the GitHub button to the chat prompt box as requested.
--   **Testing:** Successfully executed a full suite of automated tests via  after the major backend refactor, confirming the stability of the new architecture before subsequent changes were made.
+-   **Complete Architectural Overhaul:** Replaced the initial simple generator with a new  featuring a multi-agent backend and a sophisticated IDE-like frontend.
+-   **Live Preview & IDE:** Successfully integrated  to provide a real-time, interactive code preview, file explorer, and code editor.
+-   **Template-Based Generation:** Implemented a system with 12 predefined application templates, allowing users to generate complex apps with a single click.
+-   **Ultra Mode Monetization:** Added a feature to use a more powerful model for generation at a 2x credit cost, with a functional UI toggle that dynamically updates prices.
+-   **Download as ZIP:** Implemented and verified the functionality to download the generated project as a ZIP archive.
+-   **GitHub OAuth Integration:** Completed the full end-to-end GitHub authentication flow, from configuring user-provided credentials in the  file to verifying the final user-facing login screen.
+-   **Project Persistence & State Management:** Implemented logic to save/load generated  from the database and use  to persist the active workspace ID across page reloads.
 
 **Earlier issues found/mentioned but not fixed**
 None.
@@ -95,77 +78,85 @@ None.
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI (Router-based architecture), Python, MongoDB ().
--   **Frontend:** React, TailwindCSS, , React Portals (proposed for fix).
--   **Architecture:** Multi-agent system design.
--   **Authentication:** JWT via  header, GitHub OAuth (partially implemented).
--   **State Management:** React Context API, , .
+-   **Backend:** FastAPI, Python, MongoDB (), WebSockets for real-time logs.
+-   **Frontend:** React, TailwindCSS,  for live preview, , .
+-   **Architecture:** Multi-agent system (currently simulated via sequential LLM calls), conceptual shift towards a Hybrid Cloud/On-prem model.
+-   **Authentication:** JWT (session-based) and GitHub OAuth2.
+-   **Monetization:** Credit-based system with cost multipliers (Ultra Mode).
 
 **key DB schema**
 -   **users:** 
--   **conversations:** 
--   **transactions:** 
--   **projects:**  (New)
+-   **workspaces:** 
 
 **changes in tech stack**
--   Backend architecture moved from a single-file monolith to a distributed  pattern.
--    library added for GitHub integration.
+-   **Frontend:** Added  for the live preview IDE.
+-   **Backend:** Added the usage: websockets [--version | <uri>] library to support real-time log streaming.
 
 **All files of reference**
--   **New Backend Files:** All files under , , .
--   **Refactored Backend:** , .
--   **New Frontend Files:** All files under , , . All new API clients in .
--   **Modified Frontend Files:** , , , .
--   **File to Fix:** .
+-   **User's Vision:** The Master Document for the platform's architecture, pasted by the user in chat messages (e.g., message 306), is the most critical reference for all future work.
+-   **New Backend Logic:** , , all files in .
+-   **New Frontend UI:** .
+-   **GitHub Auth:**  and .
 
 **Areas that need refactoring**:
--    and  have grown very complex with the addition of new features and state management. They could benefit from being broken down into smaller components or custom hooks.
+-   The entire application needs to be refactored to align with the Master Document provided by the user, moving towards a more robust Control Plane/Execution Plane architecture.
+-   The old app generator files (, ) should be removed.
+-    is becoming large and could be broken down by agent responsibility.
 
 **key api endpoints**
--   **Admin:** , 
--   **App Generator:** 
--   **GitHub:** 
--   **Voice:** 
--   **Deploy:** 
+-   **Generation v2:**
+    -   
+    -   
+    -   
+-   **Workspace Management:**
+    -   
+    -   
+-   **Templates:** 
+-   **GitHub Auth:** , 
 
 **Critical Info for New Agent**
--   The user's scope has massively expanded to a full clone of the Emergent.sh application generation platform. Do not revert to the simpler chat-only model.
--   **The immediate priority is to fix the crashing frontend.** The proposed React Portal solution for the  error in  is the correct path.
--   The GitHub integration is incomplete. While the UI button exists, the crucial backend OAuth flow (handling the callback, storing the token) has not been implemented. This will be the next critical task after the bug fix.
--   The user is highly directive and expects fast, production-quality implementations. Avoid mocked data or placeholder functionality.
+-   **The Master Document is the new source of truth.** The user has a very clear and technical vision for a production-grade platform. All future work must align with this document. The goal is no longer a simple MVP but a direct competitor to Emergent.sh.
+-   **The current implementation is a *simulation* of the final vision.** The live preview runs in the browser (Sandpack), and the multi-agent system is a series of LLM calls in a single process. The next major effort is to start building the real infrastructure (or a more robust simulation of it), separating orchestration from execution.
+-   **Monetization is a core design principle.** The user has specific ideas about how credits should be consumed, including charging for the . All features should be built with this business logic in mind.
+-   **The user is highly technical and ambitious.** Communicate clearly about architectural decisions and focus on implementing their grand vision.
 
 **documents and test reports created in this job**
 -    (heavily updated)
--    (new)
--    (from testing agent run)
+-    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **en el boton de github no debe ir hay arriba...**: IN PROGRESS - User provided corrective feedback, instructing the agent to move the GitHub button from the header to the prompt box, replacing the old Save button. The agent implemented this, which led to the current crash.
-2.  **necesitamos que los proyectos se conecten a github...**: COMPLETED - User requested GitHub integration to upload projects. The agent implemented the first version of this feature.
-3.  **no quiero nada en mock ni pruebas ni test, todo en produccion...**: COMPLETED - User demanded that all mocked features (like voice and redeploy) be made fully functional. The agent implemented this.
-4.  **todo esto mas debes de hacer todo esto-- DEL PDF...**: COMPLETED - User uploaded a PDF and massively expanded the project scope to a full multi-agent platform clone. The agent successfully built the core of this new architecture.
-5.  **Runtime error report**: PENDING - The platform reported the  crash, which is the current P0 issue to be solved.
+1.  **C**: User confirmed the selection of a scalable hybrid architecture.
+2.  **D**: User confirmed the platform should be a Universal Constructor for all app types.
+3.  **DAMELO TODO DE UNA EN UN DOCUMENTO**: User requested the complete architectural plan in a single document, which the agent provided.
+4.  **todo vamos a añadir todo**: User gave the green light to implement all discussed advanced features (Ultra Mode, templates, etc.).
+5.  User provided their **GitHub Client ID and Secret**.
+6.  **URL de devolución de llamada de autorización**: User asked for the GitHub callback URL needed for setup.
+7.  **no, por que asi consume mas creditos...**: User clarified the business logic for charging 30 credits for each use of the Debug Agent as a monetization strategy.
+8.  **SI TODO**: User confirmed the plan to add templates and the download feature.
+9.  **continua**: User prompted the agent to continue after it was working on fixing a bug in the generated code.
+10. **SI CON TODO**: User gave the initial go-ahead to build the full Emergent clone with live preview, even after hearing about the technical limitations of the environment.
 
 **Project Health Check:**
--   **Broken:** The main chat UI is currently non-functional due to a JavaScript runtime error on page load.
--   **Mocked:** The GitHub integration is not fully functional. It lacks the backend OAuth token handling required for it to work for users.
+-   **Broken:** No features are currently broken. The platform is stable and all implemented features are functional.
+-   **Mocked:** The **Execution Environment** is the primary mocked component. Code generation and previewing currently happen within the main backend process and the browser, not in true, isolated Docker containers as per the final architectural design.
 
 **3rd Party Integrations**
--   **OpenAI GPT-4o**: For AI chat functionality. Uses Emergent LLM Key.
--   **OpenAI Whisper**: For voice transcription (production API).
--   **Stripe (Payments)**: For credit purchases.
--   **GitHub**: For saving code. Requires User-provided OAuth credentials (flow is incomplete).
+-   **OpenAI GPT-4o / gpt-4-turbo**: Powers the code generation agents. Uses the Emergent LLM Key.
+-   **Stripe (Payments)**: Integrated for the credit system.
+-   **GitHub**: Fully integrated for user authentication via OAuth. Uses a User-provided API Key.
+-   **@codesandbox/sandpack**: A client-side library used for the browser-based live code preview.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES, a full test suite was passed after the major backend refactor.
+-   **Testing agent used after significant changes:** NO (not in the latest development sprint).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** The entire frontend chat UI is currently down due to a runtime error introduced in the last set of changes.
+-   **Known regressions:** The state management on the generator page, while improved with , can still be fragile on page reloads during generation.
 
 **Credentials to test flow:**
 -   **Admin User:**
     -   Email: 
     -   Password: 
+-   **GitHub Credentials:** Are configured in .
 
 **What agent forgot to execute**
--   The agent implemented the UI for the GitHub connection flow but did not implement the corresponding backend logic to handle the OAuth2 callback from GitHub and securely store the user's access token. This is a critical missing piece for the feature.</analysis>
+-   The user's comprehensive Master Document detailing the platform architecture was pasted multiple times in chat but never saved to a persistent file (e.g., ). This should be done to ensure easy access for future agents.</analysis>
