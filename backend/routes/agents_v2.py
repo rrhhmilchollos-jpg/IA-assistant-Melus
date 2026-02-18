@@ -225,13 +225,19 @@ Generate your response as valid JSON."""
             await manager.broadcast(workspace_id, {
                 "type": "agent_complete",
                 "agent": agent_type,
-                "success": True
+                "success": True,
+                "ultra_mode": ultra_mode
             })
+        
+        # Calculate cost with ultra multiplier
+        base_cost = AGENT_COSTS.get(agent_type, 50)
+        final_cost = base_cost * ULTRA_MULTIPLIER if ultra_mode else base_cost
         
         return {
             "agent": agent_type,
             "result": result,
-            "credits_used": AGENT_COSTS.get(agent_type, 50),
+            "credits_used": final_cost,
+            "ultra_mode": ultra_mode,
             "timestamp": utc_now().isoformat()
         }
         
