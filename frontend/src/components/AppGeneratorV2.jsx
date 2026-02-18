@@ -60,7 +60,13 @@ const TEMPLATE_ICONS = {
   dashboard: LayoutDashboard,
   landing: Rocket,
   taskmanager: CheckSquare,
-  portfolio: User
+  portfolio: User,
+  crm: Users,
+  chat: MessageCircle,
+  social: Share2,
+  inventory: Package,
+  booking: Calendar,
+  analytics: BarChart3
 };
 
 // Agent icons mapping
