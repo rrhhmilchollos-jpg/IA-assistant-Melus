@@ -633,7 +633,7 @@ root.render(<App />);"""
 
 @router.post("/debug")
 async def debug_code(request: Request):
-    """Debug code and fix errors"""
+    """Debug code and fix errors - Costs 30 credits per use"""
     from routes.workspace import get_connection_manager
     
     db = request.app.state.db
@@ -644,9 +644,18 @@ async def debug_code(request: Request):
     workspace_id = body.get("workspace_id")
     error_message = body.get("error", "")
     file_path = body.get("file_path", "")
+    console_logs = body.get("console_logs", [])
     
     if not workspace_id:
         raise HTTPException(status_code=400, detail="workspace_id required")
+    
+    # Debug Agent costs 30 credits (monetization strategy)
+    DEBUG_COST = 30
+    if user_doc["credits"] < DEBUG_COST:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Debug Agent requiere {DEBUG_COST} créditos. Tienes {user_doc['credits']} créditos."
+        )
     
     # Get workspace
     workspace = await db.workspaces.find_one(
@@ -664,20 +673,34 @@ async def debug_code(request: Request):
         "log": {
             "agent": "debugger",
             "type": "working",
-            "message": f"Analyzing error: {error_message[:50]}...",
+            "message": f"🔧 Analizando error (costo: {DEBUG_COST} créditos)...",
             "timestamp": utc_now().isoformat()
         }
     })
     
+    # Build comprehensive error context
+    error_context = {
+        "error": error_message,
+        "file_path": file_path,
+        "console_logs": console_logs[-10:] if console_logs else [],  # Last 10 logs
+        "files": files
+    }
+    
     # Run debug agent
     debug_result = await run_agent_v2(
         "debugger",
-        f"Fix this error: {error_message}",
-        {
-            "error": error_message,
-            "file_path": file_path,
-            "files": files
-        },
+        f"""Fix this error in the React application:
+
+ERROR MESSAGE:
+{error_message}
+
+FILE WITH ERROR: {file_path if file_path else "Unknown"}
+
+CONSOLE LOGS:
+{json.dumps(console_logs[-5:] if console_logs else [], indent=2)}
+
+Analyze the error, find the root cause, and provide the complete fixed file(s).""",
+        error_context,
         db,
         workspace_id
     )
@@ -686,7 +709,7 @@ async def debug_code(request: Request):
     fixes = debug_result["result"].get("fixes", {})
     files.update(fixes)
     
-    # Update workspace
+    # Update workspace with new version
     new_version = workspace.get("current_version", 0) + 1
     await db.workspaces.update_one(
         {"workspace_id": workspace_id},
@@ -701,18 +724,20 @@ async def debug_code(request: Request):
                     "version": new_version,
                     "files": files,
                     "created_at": utc_now(),
-                    "message": f"Debug fix: {error_message[:50]}"
+                    "message": f"🔧 Debug fix: {error_message[:50]}"
                 }
             }
         }
     )
     
-    # Deduct credits
-    credits_used = debug_result["credits_used"]
+    # Deduct exactly 30 credits for Debug Agent
     await db.users.update_one(
         {"user_id": user_id},
-        {"$inc": {"credits": -credits_used, "credits_used": credits_used}}
+        {"$inc": {"credits": -DEBUG_COST, "credits_used": DEBUG_COST}}
     )
+    
+    # Get updated user credits
+    updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
     
     await manager.broadcast(workspace_id, {
         "type": "files_updated",
@@ -724,17 +749,23 @@ async def debug_code(request: Request):
         "log": {
             "agent": "debugger",
             "type": "success",
-            "message": f"Fixed {len(fixes)} files",
-            "data": debug_result["result"].get("explanation"),
+            "message": f"✅ Corregido {len(fixes)} archivo(s) - {DEBUG_COST} créditos usados",
+            "data": {
+                "error_analysis": debug_result["result"].get("error_analysis", ""),
+                "explanation": debug_result["result"].get("explanation", "")
+            },
             "timestamp": utc_now().isoformat()
         }
     })
     
     return {
         "fixes": fixes,
+        "error_analysis": debug_result["result"].get("error_analysis", ""),
         "explanation": debug_result["result"].get("explanation", ""),
-        "credits_used": credits_used,
-        "files": files
+        "credits_used": DEBUG_COST,
+        "credits_remaining": updated_user.get("credits", 0),
+        "files": files,
+        "version": new_version
     }
 
 
