@@ -261,12 +261,14 @@ async def generate_app_v2(request: Request):
     description = body.get("description", "")
     app_name = body.get("name", "My App")
     workspace_id = body.get("workspace_id")
+    ultra_mode = body.get("ultra_mode", False)
     
     if not description:
         raise HTTPException(status_code=400, detail="Description required")
     
-    # Calculate estimated cost
-    total_cost = sum(AGENT_COSTS.values())
+    # Calculate estimated cost (2x for ultra mode)
+    multiplier = ULTRA_MULTIPLIER if ultra_mode else 1
+    total_cost = sum(AGENT_COSTS.values()) * multiplier
     if user_doc["credits"] < total_cost:
         raise HTTPException(
             status_code=402,
@@ -284,6 +286,7 @@ async def generate_app_v2(request: Request):
             "name": app_name,
             "description": description,
             "template": "react-vite",
+            "ultra_mode": ultra_mode,
             "files": {},
             "versions": [],
             "current_version": 0,
@@ -299,12 +302,13 @@ async def generate_app_v2(request: Request):
     
     try:
         # STEP 1: Classify the app
+        mode_label = "ULTRA MODE" if ultra_mode else "Normal"
         await manager.broadcast(workspace_id, {
             "type": "log",
             "log": {
                 "agent": "classifier",
                 "type": "working",
-                "message": "Analyzing app requirements...",
+                "message": f"[{mode_label}] Analyzing app requirements...",
                 "timestamp": utc_now().isoformat()
             }
         })
