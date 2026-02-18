@@ -575,7 +575,10 @@ createRoot(document.getElementById('root')).render(<App />);`
                     ))}
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-purple-400">~{template.estimated_credits} créditos</span>
+                    <span className="text-purple-400">
+                      ~{ultraMode ? template.estimated_credits * 2 : template.estimated_credits} créditos
+                      {ultraMode && <span className="text-yellow-400 ml-1">⚡</span>}
+                    </span>
                     <span className="text-gray-500 group-hover:text-purple-400 transition-colors">
                       Generar →
                     </span>
@@ -583,6 +586,27 @@ createRoot(document.getElementById('root')).render(<App />);`
                 </div>
               );
             })}
+          </div>
+
+          {/* Ultra Mode Toggle */}
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={() => setUltraMode(!ultraMode)}
+              className={`flex items-center gap-3 px-6 py-3 rounded-xl border transition-all ${
+                ultraMode
+                  ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 text-yellow-400'
+                  : 'bg-white/5 border-gray-700 text-gray-400 hover:border-yellow-500/30 hover:text-yellow-400'
+              }`}
+            >
+              <Bolt className={`w-5 h-5 ${ultraMode ? 'animate-pulse' : ''}`} />
+              <div className="text-left">
+                <div className="font-semibold">ULTRA MODE</div>
+                <div className="text-xs opacity-70">2x créditos • Máxima calidad</div>
+              </div>
+              <div className={`w-12 h-6 rounded-full relative transition-colors ${ultraMode ? 'bg-yellow-500' : 'bg-gray-700'}`}>
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${ultraMode ? 'left-7' : 'left-1'}`} />
+              </div>
+            </button>
           </div>
 
           {/* Custom App Section */}
@@ -608,10 +632,14 @@ createRoot(document.getElementById('root')).render(<App />);`
               <button
                 onClick={handleGenerate}
                 disabled={!description.trim()}
-                className="w-full mt-4 py-3 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+                className={`w-full mt-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${
+                  ultraMode 
+                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
+                    : 'bg-purple-500 hover:bg-purple-600'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <Play className="w-5 h-5" />
-                Generar App Personalizada
+                {ultraMode ? <Bolt className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                {ultraMode ? 'Generar con ULTRA MODE' : 'Generar App Personalizada'}
               </button>
             </div>
           </div>
