@@ -75,26 +75,43 @@ const TEMPLATE_ICONS = {
   analytics: BarChart3
 };
 
-// Agent icons mapping
+// Agent icons mapping - All 13 Agents
 const AGENT_ICONS = {
+  // Core Generation
   classifier: Cpu,
   architect: FolderOpen,
   frontend: Code,
   backend: Server,
   integrator: Wrench,
+  // Specialized
+  design: Palette,
+  database: Database,
+  testing: CheckSquare,
+  security: AlertTriangle,
+  deploy: Rocket,
+  // Utility
   debugger: Bug,
-  system: Zap
+  optimizer: Zap,
+  docs: FileText,
+  system: Sparkles
 };
 
-// Agent colors
+// Agent colors - All agents
 const AGENT_COLORS = {
   classifier: 'text-purple-400',
   architect: 'text-blue-400',
+  design: 'text-pink-400',
   frontend: 'text-cyan-400',
   backend: 'text-green-400',
+  database: 'text-amber-400',
   integrator: 'text-yellow-400',
+  testing: 'text-lime-400',
+  security: 'text-red-400',
+  deploy: 'text-indigo-400',
   debugger: 'text-orange-400',
-  system: 'text-pink-400'
+  optimizer: 'text-emerald-400',
+  docs: 'text-slate-400',
+  system: 'text-violet-400'
 };
 
 // Status icons
