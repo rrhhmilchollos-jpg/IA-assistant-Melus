@@ -1,41 +1,48 @@
 # Melus AI - Changelog
 
+## [2.2.0] - 2025-12-18
+
+### Added
+- **Sistema de 13 Agentes Especializados**: Expansión completa del sistema multi-agente
+  - **Core (5):** Classifier, Architect, Frontend, Backend, Integrator
+  - **Specialized (5):** Design, Database, Testing, Security, Deploy
+  - **Utility (3):** Debugger (30 créditos), Optimizer, Docs
+- **GitHub Push desde Workspace**: Nuevo endpoint para subir proyectos a GitHub (50 créditos)
+- **Endpoint run-agent**: Permite ejecutar agentes individuales bajo demanda
+- **UI mejorada**: Barra de estado muestra los 13 agentes con iconos y colores únicos
+- **Modal de GitHub**: Interfaz para configurar nombre de repo y privacidad antes de push
+
+### Changed
+- Total de créditos por generación: ~930 (Normal) / ~1860 (Ultra)
+- Categorización de agentes: generation, specialized, utility
+- Prompts mejorados para todos los agentes con instrucciones más detalladas
+
+---
+
 ## [2.1.0] - 2025-12-18
 
 ### Added
-- **Debug Agent con 30 créditos**: El Debug Agent ahora cuesta 30 créditos por uso (antes 50) como estrategia de monetización
-- **Sistema de Versionado Visual**: UI para ver historial de versiones y hacer rollback a versiones anteriores
-- **Mejor captura de errores**: El preview de Sandpack ahora captura errores de compilación y logs de consola
-- **Ultra Mode mejorado**: Toggle visible en la UI que duplica precios de todos los templates
-- **Prompts mejorados para Debug Agent**: Análisis más preciso de errores con explicaciones detalladas
-
-### Changed
-- Actualizado el costo del Debug Agent de 50 a 30 créditos
-- Mejorada la UI del generador con branding "Melus AI - Constructor Universal de Apps"
-- El endpoint `/api/agents/v2/debug` ahora valida créditos antes de ejecutar y devuelve créditos restantes
-- Generate-from-template ahora soporta Ultra Mode correctamente
+- **Debug Agent a 30 créditos**: Estrategia de monetización
+- **Sistema de Versionado Visual**: UI con historial y rollback
+- **Ultra Mode mejorado**: Toggle visible que duplica precios
 
 ### Fixed
-- Los precios de Ultra Mode ahora se muestran correctamente en la UI (2x)
-- El sistema de versiones se actualiza correctamente después de cada operación
+- Precios de Ultra Mode se muestran correctamente (2x)
+- Sistema de versiones se actualiza después de cada operación
 
 ---
 
 ## [2.0.0] - 2025-12-17
 
 ### Added
-- **Preview en Vivo con Sandpack**: Integración completa de CodeSandbox Sandpack para preview en tiempo real
-- **Sistema Multi-Agente v2**: 6 agentes especializados (Classifier, Architect, Frontend, Backend, Integrator, Debug)
-- **12 Templates Predefinidos**: E-commerce, Blog, Dashboard, Landing, Task Manager, Portfolio, CRM, Chat, Social, Inventory, Booking, Analytics
-- **Ultra Mode**: Modo premium que usa modelo más potente a 2x costo
-- **GitHub OAuth**: Autenticación completa con GitHub
-- **Sistema de Workspaces**: Filesystem virtual con persistencia
-- **Descarga ZIP**: Exportar proyectos como archivos ZIP
-- **WebSockets**: Logs de generación en tiempo real
-
-### Changed
-- Arquitectura completamente rediseñada para soportar generación multi-archivo
-- Nueva UI del generador con explorador de archivos y editor de código
+- **Preview en Vivo con Sandpack**: CodeSandbox integrado
+- **Sistema Multi-Agente v2**: 6 agentes iniciales
+- **12 Templates Predefinidos**
+- **Ultra Mode**: 2x costo para mejor calidad
+- **GitHub OAuth**: Autenticación completa
+- **Sistema de Workspaces**: Filesystem virtual
+- **Descarga ZIP**: Exportar proyectos
+- **WebSockets**: Logs en tiempo real
 
 ---
 
