@@ -6,6 +6,7 @@ import {
   SandpackPreview,
   SandpackFileExplorer,
   useSandpack,
+  SandpackConsole,
 } from '@codesandbox/sandpack-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -48,7 +49,12 @@ import {
   Package,
   Calendar,
   BarChart3,
-  Bolt
+  Bolt,
+  History,
+  RotateCcw,
+  Save,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
@@ -105,27 +111,98 @@ const getStatusIcon = (type) => {
   }
 };
 
-// Custom Preview component with error handling
-const CustomPreview = ({ onError }) => {
+// Custom Preview component with enhanced error capture
+const CustomPreview = ({ onError, onConsoleLog }) => {
   const { sandpack } = useSandpack();
   
   useEffect(() => {
-    // Listen for errors
     const handleMessage = (e) => {
-      if (e.data?.type === 'error') {
-        onError?.(e.data.error);
+      if (e.data?.type === 'error' || e.data?.type === 'console') {
+        if (e.data.type === 'error') {
+          onError?.(e.data.error || e.data.message);
+        }
+        if (e.data.log) {
+          onConsoleLog?.(e.data.log);
+        }
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onError]);
+  }, [onError, onConsoleLog]);
+  
+  // Capture Sandpack errors
+  useEffect(() => {
+    if (sandpack?.error) {
+      onError?.(sandpack.error.message);
+    }
+  }, [sandpack?.error, onError]);
   
   return (
     <SandpackPreview
       showNavigator
       showRefreshButton
+      showOpenInCodeSandbox={false}
       style={{ height: '100%' }}
     />
+  );
+};
+
+// Version History Panel Component
+const VersionHistoryPanel = ({ versions, currentVersion, onRollback, onClose }) => {
+  return (
+    <div className="absolute right-0 top-12 w-80 bg-[#1a1a2e] border border-purple-500/30 rounded-lg shadow-xl z-50 max-h-96 overflow-hidden">
+      <div className="p-3 border-b border-purple-500/20 flex items-center justify-between">
+        <h3 className="font-semibold flex items-center gap-2">
+          <History className="w-4 h-4 text-purple-400" />
+          Historial de Versiones
+        </h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="overflow-y-auto max-h-72">
+        {versions?.length > 0 ? (
+          versions.slice().reverse().map((v, idx) => (
+            <div
+              key={v.version}
+              className={`p-3 border-b border-purple-500/10 hover:bg-white/5 ${
+                v.version === currentVersion ? 'bg-purple-500/10' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-medium text-sm">
+                    Versión {v.version}
+                    {v.version === currentVersion && (
+                      <span className="ml-2 text-xs bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded">
+                        Actual
+                      </span>
+                    )}
+                  </span>
+                  <p className="text-xs text-gray-400 mt-1">{v.message}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(v.created_at).toLocaleString('es-ES')}
+                  </p>
+                </div>
+                {v.version !== currentVersion && (
+                  <button
+                    onClick={() => onRollback(v.version)}
+                    className="px-2 py-1 text-xs bg-orange-500/20 text-orange-400 rounded hover:bg-orange-500/30 flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    Restaurar
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-4 text-center text-gray-500 text-sm">
+            No hay versiones guardadas
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -134,10 +211,12 @@ const AppGeneratorV2 = () => {
   const [description, setDescription] = useState('');
   const [appName, setAppName] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDebugging, setIsDebugging] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [consoleLogs, setConsoleLogs] = useState([]);
   const [files, setFiles] = useState({});
   const [workspaceId, setWorkspaceId] = useState(null);
-  const [activeTab, setActiveTab] = useState('preview'); // preview, code, console
+  const [activeTab, setActiveTab] = useState('preview');
   const [expandedLogs, setExpandedLogs] = useState({});
   const [previewError, setPreviewError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -146,6 +225,9 @@ const AppGeneratorV2 = () => {
   const [showTemplates, setShowTemplates] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [ultraMode, setUltraMode] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [currentVersion, setCurrentVersion] = useState(1);
   const logsEndRef = useRef(null);
   const wsRef = useRef(null);
 
@@ -192,15 +274,65 @@ const AppGeneratorV2 = () => {
         setFiles(data.files || {});
         setAppName(data.name || '');
         setDescription(data.description || '');
+        setVersions(data.versions || []);
+        setCurrentVersion(data.current_version || 1);
         setLogs([{
           agent: 'system',
           type: 'info',
-          message: `Workspace cargado: ${data.name}`,
+          message: `Workspace cargado: ${data.name} (v${data.current_version})`,
           timestamp: new Date().toISOString()
         }]);
       }
     } catch (error) {
       console.error('Failed to load workspace:', error);
+    }
+  };
+
+  // Fetch versions for current workspace
+  const fetchVersions = async () => {
+    if (!workspaceId) return;
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/workspace/${workspaceId}/versions`, {
+        headers: { 'X-Session-Token': token }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setVersions(data.versions || []);
+        setCurrentVersion(data.current_version || 1);
+      }
+    } catch (error) {
+      console.error('Failed to fetch versions:', error);
+    }
+  };
+
+  // Rollback to a specific version
+  const handleRollback = async (version) => {
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/workspace/${workspaceId}/rollback/${version}`, {
+        method: 'POST',
+        headers: { 'X-Session-Token': token }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFiles(data.files);
+        setCurrentVersion(data.version);
+        setShowVersions(false);
+        setLogs(prev => [...prev, {
+          agent: 'system',
+          type: 'success',
+          message: `Restaurado a versión ${version}`,
+          timestamp: new Date().toISOString()
+        }]);
+        fetchVersions();
+      }
+    } catch (error) {
+      console.error('Rollback failed:', error);
     }
   };
 
@@ -252,6 +384,10 @@ const AppGeneratorV2 = () => {
         break;
       case 'files_updated':
         setFiles(data.files);
+        if (data.version) {
+          setCurrentVersion(data.version);
+        }
+        fetchVersions();
         break;
       case 'agent_start':
         setCurrentAgent(data.agent);
@@ -263,6 +399,11 @@ const AppGeneratorV2 = () => {
       case 'generation_complete':
         setFiles(data.files);
         setIsGenerating(false);
+        fetchVersions();
+        break;
+      case 'rollback':
+        setFiles(data.files);
+        setCurrentVersion(data.version);
         break;
       default:
         break;
@@ -281,11 +422,11 @@ const AppGeneratorV2 = () => {
     setIsGenerating(true);
     setShowTemplates(false);
     setLogs([]);
+    setConsoleLogs([]);
     setFiles({});
     setPreviewError(null);
     
-    // Add initial log
-    const modeLabel = ultraMode ? '⚡ ULTRA MODE' : 'Normal';
+    const modeLabel = ultraMode ? 'ULTRA MODE' : 'Normal';
     setLogs([{
       agent: 'system',
       type: 'info',
@@ -316,15 +457,13 @@ const AppGeneratorV2 = () => {
       setWorkspaceId(data.workspace_id);
       setFiles(data.files);
       updateCredits(data.credits_remaining);
-      
-      // Save workspace ID to localStorage for persistence
       localStorage.setItem('melus_workspace_id', data.workspace_id);
+      fetchVersions();
       
-      // Add success log
       setLogs(prev => [...prev, {
         agent: 'system',
         type: 'success',
-        message: `¡App generada! ${Object.keys(data.files).length} archivos creados`,
+        message: `App generada! ${Object.keys(data.files).length} archivos creados - ${data.credits_used} créditos`,
         timestamp: new Date().toISOString()
       }]);
       
@@ -341,16 +480,18 @@ const AppGeneratorV2 = () => {
     }
   };
 
+  // Enhanced Debug function with 30 credits
   const handleDebug = async () => {
     if (!previewError || !workspaceId) return;
     
     const token = localStorage.getItem('session_token');
+    setIsDebugging(true);
     
     try {
       setLogs(prev => [...prev, {
         agent: 'debugger',
         type: 'working',
-        message: 'Analizando y corrigiendo error...',
+        message: 'Analizando error... (30 créditos)',
         timestamp: new Date().toISOString()
       }]);
       
@@ -362,19 +503,44 @@ const AppGeneratorV2 = () => {
         },
         body: JSON.stringify({
           workspace_id: workspaceId,
-          error: previewError
+          error: previewError,
+          console_logs: consoleLogs
         })
       });
 
       const data = await response.json();
       
-      if (response.ok) {
-        setFiles(data.files);
-        setPreviewError(null);
-        updateCredits(data.credits_remaining);
+      if (!response.ok) {
+        throw new Error(data.detail || 'Debug failed');
       }
+      
+      setFiles(data.files);
+      setPreviewError(null);
+      setCurrentVersion(data.version);
+      updateCredits(data.credits_remaining);
+      fetchVersions();
+      
+      setLogs(prev => [...prev, {
+        agent: 'debugger',
+        type: 'success',
+        message: `Corregido! ${data.credits_used} créditos usados`,
+        data: {
+          analysis: data.error_analysis,
+          explanation: data.explanation
+        },
+        timestamp: new Date().toISOString()
+      }]);
+      
     } catch (error) {
       console.error('Debug error:', error);
+      setLogs(prev => [...prev, {
+        agent: 'debugger',
+        type: 'error',
+        message: error.message,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsDebugging(false);
     }
   };
 
@@ -389,16 +555,18 @@ const AppGeneratorV2 = () => {
     setIsGenerating(true);
     setShowTemplates(false);
     setLogs([]);
+    setConsoleLogs([]);
     setFiles({});
     setPreviewError(null);
     
     const template = templates.find(t => t.id === templateId);
     setSelectedTemplate(template);
     
+    const modeLabel = ultraMode ? 'ULTRA MODE' : 'Normal';
     setLogs([{
       agent: 'system',
       type: 'info',
-      message: `Generando desde template: ${template?.name}...`,
+      message: `[${modeLabel}] Generando: ${template?.name}...`,
       timestamp: new Date().toISOString()
     }]);
 
@@ -411,7 +579,8 @@ const AppGeneratorV2 = () => {
         },
         body: JSON.stringify({
           template_id: templateId,
-          name: template?.name || 'Mi App'
+          name: template?.name || 'Mi App',
+          ultra_mode: ultraMode
         })
       });
 
@@ -426,11 +595,12 @@ const AppGeneratorV2 = () => {
       setAppName(template?.name || '');
       updateCredits(data.credits_remaining);
       localStorage.setItem('melus_workspace_id', data.workspace_id);
+      fetchVersions();
       
       setLogs(prev => [...prev, {
         agent: 'system',
         type: 'success',
-        message: `¡App generada! ${Object.keys(data.files).length} archivos creados`,
+        message: `App generada! ${Object.keys(data.files).length} archivos - ${data.credits_used} créditos`,
         timestamp: new Date().toISOString()
       }]);
       
@@ -467,6 +637,13 @@ const AppGeneratorV2 = () => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        
+        setLogs(prev => [...prev, {
+          agent: 'system',
+          type: 'success',
+          message: 'Proyecto descargado como ZIP',
+          timestamp: new Date().toISOString()
+        }]);
       }
     } catch (error) {
       console.error('Download error:', error);
@@ -478,11 +655,20 @@ const AppGeneratorV2 = () => {
     setShowTemplates(true);
     setFiles({});
     setLogs([]);
+    setConsoleLogs([]);
     setWorkspaceId(null);
     setAppName('');
     setDescription('');
     setSelectedTemplate(null);
+    setVersions([]);
+    setCurrentVersion(1);
+    setPreviewError(null);
     localStorage.removeItem('melus_workspace_id');
+  };
+
+  // Handle console logs from preview
+  const handleConsoleLog = (log) => {
+    setConsoleLogs(prev => [...prev.slice(-50), log]);
   };
 
   // Convert files to Sandpack format
@@ -490,7 +676,6 @@ const AppGeneratorV2 = () => {
     const sandpackFiles = {};
     
     Object.entries(files).forEach(([path, content]) => {
-      // Ensure path starts with /
       const normalizedPath = path.startsWith('/') ? path : `/${path}`;
       sandpackFiles[normalizedPath] = {
         code: content,
@@ -498,13 +683,15 @@ const AppGeneratorV2 = () => {
       };
     });
     
-    // Ensure minimum files exist
     if (!sandpackFiles['/src/App.jsx'] && !sandpackFiles['/src/App.js']) {
       sandpackFiles['/src/App.jsx'] = {
         code: `export default function App() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <h1 className="text-3xl">Generating your app...</h1>
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">Melus AI</h1>
+        <p className="text-gray-400">Generando tu aplicación...</p>
+      </div>
     </div>
   );
 }`,
@@ -533,30 +720,61 @@ createRoot(document.getElementById('root')).render(<App />);`
         <div className="border-b border-purple-500/20 bg-[#0d0d1a]">
           <div className="px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Sparkles className="w-6 h-6 text-purple-400" />
-              <h1 className="text-xl font-bold">Crear Nueva App</h1>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Melus AI</h1>
+                <p className="text-xs text-gray-500">Constructor Universal de Apps</p>
+              </div>
             </div>
-            <span className="text-sm text-gray-400">
-              Créditos: <span className="text-purple-400 font-medium">{user?.credits || 0}</span>
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-400">
+                Créditos: <span className="text-purple-400 font-bold">{user?.credits || 0}</span>
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Templates Grid */}
         <div className="max-w-6xl mx-auto px-6 py-10">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold mb-3">Elige una plantilla</h2>
-            <p className="text-gray-400">Selecciona un tipo de app y genera código completo con un clic</p>
+            <h2 className="text-3xl font-bold mb-3">Crea tu Aplicación</h2>
+            <p className="text-gray-400">Elige una plantilla o describe tu app personalizada</p>
+          </div>
+
+          {/* Ultra Mode Toggle */}
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={() => setUltraMode(!ultraMode)}
+              data-testid="ultra-mode-toggle"
+              className={`flex items-center gap-3 px-6 py-3 rounded-xl border transition-all ${
+                ultraMode
+                  ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 text-yellow-400'
+                  : 'bg-white/5 border-gray-700 text-gray-400 hover:border-yellow-500/30 hover:text-yellow-400'
+              }`}
+            >
+              <Bolt className={`w-5 h-5 ${ultraMode ? 'animate-pulse' : ''}`} />
+              <div className="text-left">
+                <div className="font-semibold">ULTRA MODE</div>
+                <div className="text-xs opacity-70">2x créditos = Máxima calidad</div>
+              </div>
+              <div className={`w-12 h-6 rounded-full relative transition-colors ${ultraMode ? 'bg-yellow-500' : 'bg-gray-700'}`}>
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${ultraMode ? 'left-7' : 'left-1'}`} />
+              </div>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {templates.map((template) => {
               const Icon = TEMPLATE_ICONS[template.id] || Code;
+              const credits = ultraMode ? template.estimated_credits * 2 : template.estimated_credits;
               return (
                 <div
                   key={template.id}
                   onClick={() => handleGenerateFromTemplate(template.id)}
-                  className="group cursor-pointer bg-[#1a1a2e] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/50 hover:bg-[#1f1f3a] transition-all"
+                  data-testid={`template-${template.id}`}
+                  className="group cursor-pointer bg-[#1a1a2e] border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/50 hover:bg-[#1f1f3a] transition-all hover:scale-[1.02]"
                 >
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${template.color} flex items-center justify-center mb-4`}>
                     <Icon className="w-6 h-6 text-white" />
@@ -564,7 +782,7 @@ createRoot(document.getElementById('root')).render(<App />);`
                   <h3 className="text-lg font-semibold mb-2 group-hover:text-purple-400 transition-colors">
                     {template.name}
                   </h3>
-                  <p className="text-gray-400 text-sm mb-4">
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
                     {template.description}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -575,12 +793,12 @@ createRoot(document.getElementById('root')).render(<App />);`
                     ))}
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-purple-400">
-                      ~{ultraMode ? template.estimated_credits * 2 : template.estimated_credits} créditos
-                      {ultraMode && <span className="text-yellow-400 ml-1">⚡</span>}
+                    <span className={ultraMode ? 'text-yellow-400' : 'text-purple-400'}>
+                      ~{credits} créditos
+                      {ultraMode && <Bolt className="w-3 h-3 inline ml-1" />}
                     </span>
-                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors">
-                      Generar →
+                    <span className="text-gray-500 group-hover:text-purple-400 transition-colors flex items-center gap-1">
+                      Generar <ChevronRight className="w-4 h-4" />
                     </span>
                   </div>
                 </div>
@@ -588,32 +806,11 @@ createRoot(document.getElementById('root')).render(<App />);`
             })}
           </div>
 
-          {/* Ultra Mode Toggle */}
-          <div className="flex justify-center mb-8">
-            <button
-              onClick={() => setUltraMode(!ultraMode)}
-              className={`flex items-center gap-3 px-6 py-3 rounded-xl border transition-all ${
-                ultraMode
-                  ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50 text-yellow-400'
-                  : 'bg-white/5 border-gray-700 text-gray-400 hover:border-yellow-500/30 hover:text-yellow-400'
-              }`}
-            >
-              <Bolt className={`w-5 h-5 ${ultraMode ? 'animate-pulse' : ''}`} />
-              <div className="text-left">
-                <div className="font-semibold">ULTRA MODE</div>
-                <div className="text-xs opacity-70">2x créditos • Máxima calidad</div>
-              </div>
-              <div className={`w-12 h-6 rounded-full relative transition-colors ${ultraMode ? 'bg-yellow-500' : 'bg-gray-700'}`}>
-                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${ultraMode ? 'left-7' : 'left-1'}`} />
-              </div>
-            </button>
-          </div>
-
           {/* Custom App Section */}
           <div className="border-t border-purple-500/20 pt-10">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">¿Tienes algo específico en mente?</h3>
-              <p className="text-gray-400 text-sm">Describe tu app y nuestros agentes la construirán</p>
+              <h3 className="text-xl font-semibold mb-2">App Personalizada</h3>
+              <p className="text-gray-400 text-sm">Describe tu aplicación y los agentes la construirán</p>
             </div>
             <div className="max-w-2xl mx-auto">
               <input
@@ -621,25 +818,28 @@ createRoot(document.getElementById('root')).render(<App />);`
                 value={appName}
                 onChange={(e) => setAppName(e.target.value)}
                 placeholder="Nombre de tu app"
+                data-testid="app-name-input"
                 className="w-full bg-[#1a1a2e] border border-purple-500/30 rounded-lg px-4 py-3 mb-3 focus:border-purple-500 outline-none"
               />
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe tu aplicación en detalle..."
+                placeholder="Describe tu aplicación en detalle... Ejemplo: Una plataforma de cursos online con videos, cuestionarios, progreso del estudiante y certificados."
+                data-testid="app-description-input"
                 className="w-full h-32 bg-[#1a1a2e] border border-purple-500/30 rounded-lg px-4 py-3 resize-none focus:border-purple-500 outline-none"
               />
               <button
                 onClick={handleGenerate}
                 disabled={!description.trim()}
+                data-testid="generate-custom-app-btn"
                 className={`w-full mt-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${
                   ultraMode 
                     ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
-                    : 'bg-purple-500 hover:bg-purple-600'
+                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {ultraMode ? <Bolt className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                {ultraMode ? 'Generar con ULTRA MODE' : 'Generar App Personalizada'}
+                {ultraMode ? <Bolt className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
+                {ultraMode ? 'Generar con ULTRA MODE' : 'Generar App'}
               </button>
             </div>
           </div>
@@ -656,28 +856,58 @@ createRoot(document.getElementById('root')).render(<App />);`
           <div className="flex items-center gap-4">
             <button
               onClick={handleNewProject}
+              data-testid="back-btn"
               className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
               <ArrowLeft size={18} />
             </button>
-            <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-              App Generator
-            </h1>
-            {workspaceId && (
-              <span className="text-xs text-gray-500 font-mono">
-                {workspaceId}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">Melus AI</h1>
+                {workspaceId && (
+                  <span className="text-xs text-gray-500">
+                    v{currentVersion} • {workspaceId}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Version History Button */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  fetchVersions();
+                  setShowVersions(!showVersions);
+                }}
+                data-testid="version-history-btn"
+                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <History size={16} />
+                <span className="hidden sm:inline">v{currentVersion}</span>
+              </button>
+              {showVersions && (
+                <VersionHistoryPanel
+                  versions={versions}
+                  currentVersion={currentVersion}
+                  onRollback={handleRollback}
+                  onClose={() => setShowVersions(false)}
+                />
+              )}
+            </div>
+            
             <button
               onClick={handleNewProject}
+              data-testid="new-project-btn"
               className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             >
               + Nuevo
             </button>
             <span className="text-sm text-gray-400">
-              Créditos: <span className="text-purple-400 font-medium">{user?.credits || 0}</span>
+              <span className="text-purple-400 font-bold">{user?.credits || 0}</span> créditos
             </span>
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
@@ -706,17 +936,18 @@ createRoot(document.getElementById('root')).render(<App />);`
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe tu aplicación en detalle... Ej: Una app de gestión de tareas con autenticación, donde los usuarios pueden crear proyectos, añadir tareas, marcarlas como completadas y ver estadísticas."
-              className="w-full h-24 bg-[#1a1a2e] border border-purple-500/30 rounded-lg px-3 py-2 text-sm resize-none focus:border-purple-500 outline-none"
+              placeholder="Describe tu aplicación..."
+              className="w-full h-20 bg-[#1a1a2e] border border-purple-500/30 rounded-lg px-3 py-2 text-sm resize-none focus:border-purple-500 outline-none"
               disabled={isGenerating}
             />
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !description.trim()}
+              data-testid="generate-btn"
               className={`w-full mt-3 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${
                 isGenerating
                   ? 'bg-orange-500/20 text-orange-400'
-                  : 'bg-purple-500 hover:bg-purple-600 text-white'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
               }`}
             >
               {isGenerating ? (
@@ -727,7 +958,7 @@ createRoot(document.getElementById('root')).render(<App />);`
               ) : (
                 <>
                   <Play className="w-4 h-4" />
-                  Generar App
+                  Generar
                 </>
               )}
             </button>
@@ -741,7 +972,7 @@ createRoot(document.getElementById('root')).render(<App />);`
                   key={agent}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all ${
                     currentAgent === agent
-                      ? 'bg-purple-500/30 ring-1 ring-purple-500'
+                      ? 'bg-purple-500/30 ring-1 ring-purple-500 scale-105'
                       : logs.some(l => l.agent === agent && l.type === 'success')
                       ? 'bg-green-500/20'
                       : 'bg-white/5'
@@ -761,13 +992,14 @@ createRoot(document.getElementById('root')).render(<App />);`
             <div className="px-4 py-2 bg-[#1a1a2e] border-b border-purple-500/20 flex items-center justify-between">
               <span className="text-sm text-gray-400 flex items-center gap-2">
                 <Terminal className="w-4 h-4" />
-                Consola
+                Consola de Agentes
               </span>
               <span className="text-xs text-purple-400">{logs.length} eventos</span>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2 font-mono text-xs">
               {logs.length === 0 ? (
                 <div className="text-gray-600 text-center py-8">
+                  <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   Describe tu app y haz clic en "Generar"
                 </div>
               ) : (
@@ -779,7 +1011,7 @@ createRoot(document.getElementById('root')).render(<App />);`
                     <div
                       key={idx}
                       className={`p-2 rounded ${
-                        log.type === 'error' ? 'bg-red-500/10' :
+                        log.type === 'error' ? 'bg-red-500/10 border border-red-500/20' :
                         log.type === 'success' ? 'bg-green-500/10' :
                         log.type === 'working' ? 'bg-yellow-500/10' :
                         'bg-white/5'
@@ -813,7 +1045,7 @@ createRoot(document.getElementById('root')).render(<App />);`
                       )}
                       {log.data && expandedLogs[idx] && (
                         <pre className="mt-2 ml-6 p-2 bg-[#0a0a12] rounded text-gray-400 overflow-x-auto text-[10px]">
-                          {JSON.stringify(log.data, null, 2)}
+                          {typeof log.data === 'string' ? log.data : JSON.stringify(log.data, null, 2)}
                         </pre>
                       )}
                     </div>
@@ -831,6 +1063,7 @@ createRoot(document.getElementById('root')).render(<App />);`
           <div className="flex items-center gap-1 px-4 py-2 bg-[#1a1a2e] border-b border-purple-500/20">
             <button
               onClick={() => setActiveTab('preview')}
+              data-testid="tab-preview"
               className={`px-4 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-all ${
                 activeTab === 'preview'
                   ? 'bg-purple-500/20 text-purple-400'
@@ -842,6 +1075,7 @@ createRoot(document.getElementById('root')).render(<App />);`
             </button>
             <button
               onClick={() => setActiveTab('code')}
+              data-testid="tab-code"
               className={`px-4 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-all ${
                 activeTab === 'code'
                   ? 'bg-purple-500/20 text-purple-400'
@@ -854,13 +1088,20 @@ createRoot(document.getElementById('root')).render(<App />);`
             
             <div className="flex-1" />
             
+            {/* Debug Button - 30 credits */}
             {previewError && (
               <button
                 onClick={handleDebug}
-                className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
+                disabled={isDebugging}
+                data-testid="debug-btn"
+                className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 disabled:opacity-50"
               >
-                <Bug className="w-4 h-4" />
-                Auto-fix
+                {isDebugging ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Bug className="w-4 h-4" />
+                )}
+                Auto-fix (30 créditos)
               </button>
             )}
             
@@ -868,12 +1109,16 @@ createRoot(document.getElementById('root')).render(<App />);`
               <>
                 <button
                   onClick={handleDownload}
+                  data-testid="download-btn"
                   className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5"
+                  title="Descargar ZIP"
                 >
                   <Download className="w-4 h-4" />
                 </button>
                 <button
+                  data-testid="github-btn"
                   className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5"
+                  title="Subir a GitHub"
                 >
                   <Github className="w-4 h-4" />
                 </button>
@@ -886,7 +1131,9 @@ createRoot(document.getElementById('root')).render(<App />);`
             {Object.keys(files).length === 0 ? (
               <div className="h-full flex items-center justify-center bg-[#0d0d1a]">
                 <div className="text-center">
-                  <Code className="w-16 h-16 text-purple-500/30 mx-auto mb-4" />
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Code className="w-10 h-10 text-purple-500/50" />
+                  </div>
                   <h3 className="text-xl text-gray-400 mb-2">Tu app aparecerá aquí</h3>
                   <p className="text-gray-600 text-sm">
                     Describe tu aplicación y haz clic en "Generar"
@@ -927,7 +1174,10 @@ createRoot(document.getElementById('root')).render(<App />);`
                     </>
                   ) : (
                     <div style={{ width: '100%', height: '100%' }}>
-                      <CustomPreview onError={(err) => setPreviewError(err)} />
+                      <CustomPreview 
+                        onError={(err) => setPreviewError(err)} 
+                        onConsoleLog={handleConsoleLog}
+                      />
                     </div>
                   )}
                 </SandpackLayout>
@@ -937,14 +1187,15 @@ createRoot(document.getElementById('root')).render(<App />);`
 
           {/* Error Bar */}
           {previewError && (
-            <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/30 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-red-400 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span className="truncate">{previewError}</span>
+            <div className="px-4 py-3 bg-red-500/10 border-t border-red-500/30 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-red-400 text-sm font-medium">Error detectado</p>
+                <p className="text-red-300/70 text-xs mt-1 break-all">{previewError}</p>
               </div>
               <button
                 onClick={() => setPreviewError(null)}
-                className="text-red-400 hover:text-red-300"
+                className="text-red-400 hover:text-red-300 flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
