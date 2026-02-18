@@ -1,4 +1,6 @@
-"""Complete Multi-Agent System for Melus AI - All Specialized Agents"""
+"""Complete Multi-Agent System for Melus AI - All Specialized Agents
+Motor de Ejecución No Chat - Sistema de agentes especializados
+"""
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from typing import List, Optional, Dict, Any
@@ -14,6 +16,13 @@ from datetime import datetime
 from utils import generate_id, utc_now, get_authenticated_user
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from templates.app_templates import get_template, get_all_templates, TEMPLATES
+from services.execution_engine import (
+    parse_project_template, 
+    detect_execution_mode, 
+    build_agent_prompt,
+    get_project_template,
+    ProjectPlan
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +31,7 @@ router = APIRouter(prefix="/agents/v2", tags=["agents-v2"])
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
 # ============================================
-# COMPLETE AGENT COSTS (All 10 Agents)
+# AGENT COSTS - Sistema de 13 Agentes
 # ============================================
 AGENT_COSTS = {
     # Core Generation Agents
@@ -47,6 +56,10 @@ AGENT_COSTS = {
 
 # Ultra mode multiplier
 ULTRA_MULTIPLIER = 2
+
+# Execution modes
+EXECUTION_MODE = "execution"  # Modo Motor - Sin chat
+CHAT_MODE = "chat"            # Modo conversacional
 
 # ============================================
 # COMPLETE AGENT PROMPTS
