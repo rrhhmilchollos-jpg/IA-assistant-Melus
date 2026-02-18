@@ -174,15 +174,21 @@ Obtener credenciales en: https://github.com/settings/applications/new
 - API: https://melus-platform.preview.emergentagent.com/api
 - Generador de Apps: https://melus-platform.preview.emergentagent.com/generator
 
-## Templates Predefinidos [NUEVO]
-| Template | Descripción | Créditos |
-|----------|-------------|----------|
-| E-Commerce Store | Tienda con catálogo, carrito, checkout | ~450 |
-| Blog Platform | Blog con artículos, categorías, comentarios | ~350 |
-| Admin Dashboard | Panel con métricas, gráficos, usuarios | ~500 |
-| Landing Page | Landing SaaS con hero, features, pricing | ~300 |
-| Task Manager | Gestión de tareas estilo Trello | ~400 |
-| Portfolio | Portfolio de desarrollador con proyectos | ~300 |
+## Templates Predefinidos [ACTUALIZADO]
+| Template | Descripción | Normal | Ultra |
+|----------|-------------|--------|-------|
+| E-Commerce Store | Tienda con catálogo, carrito, checkout | 450 | 900 |
+| Blog Platform | Blog con artículos, categorías, comentarios | 350 | 700 |
+| Admin Dashboard | Panel con métricas, gráficos, usuarios | 500 | 1000 |
+| Landing Page | Landing SaaS con hero, features, pricing | 300 | 600 |
+| Task Manager | Gestión de tareas estilo Trello | 400 | 800 |
+| Portfolio | Portfolio de desarrollador con proyectos | 300 | 600 |
+| CRM System | Pipeline de ventas, contactos, seguimiento | 550 | 1100 |
+| Chat Application | Mensajería en tiempo real, conversaciones | 450 | 900 |
+| Social Network | Feed, perfiles, likes, comentarios | 500 | 1000 |
+| Inventory System | Productos, stock, categorías, alertas | 450 | 900 |
+| Booking System | Calendario, citas, servicios, confirmaciones | 500 | 1000 |
+| Analytics Dashboard | Gráficos, métricas, reportes en tiempo real | 450 | 900 |
 
 ## Funcionalidades Adicionales [NUEVO]
 - **Descarga ZIP**: Exportar proyecto completo como archivo ZIP
