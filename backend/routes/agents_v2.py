@@ -28,7 +28,7 @@ AGENT_COSTS = {
     "frontend": 150,
     "backend": 150,
     "integrator": 75,
-    "debugger": 50
+    "debugger": 30  # Debug Agent: 30 créditos por uso (monetización)
 }
 
 # Ultra mode multiplier
