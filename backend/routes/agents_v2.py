@@ -152,7 +152,8 @@ async def run_agent_v2(
     task: str, 
     context: dict, 
     db,
-    workspace_id: str = None
+    workspace_id: str = None,
+    ultra_mode: bool = False
 ) -> dict:
     """Execute an agent and optionally broadcast progress"""
     from routes.workspace import get_connection_manager
@@ -167,16 +168,36 @@ async def run_agent_v2(
         await manager.broadcast(workspace_id, {
             "type": "agent_start",
             "agent": agent_type,
-            "task": task[:100]
+            "task": task[:100],
+            "ultra_mode": ultra_mode
         })
     
     try:
+        # Ultra mode uses more powerful model and enhanced prompts
+        system_prompt = AGENT_PROMPTS[agent_type]
+        if ultra_mode:
+            system_prompt = f"""[ULTRA MODE - MAXIMUM QUALITY]
+
+{system_prompt}
+
+ULTRA MODE REQUIREMENTS:
+- Generate exceptionally high-quality, production-ready code
+- Include comprehensive error handling
+- Add detailed comments explaining complex logic
+- Use best practices and modern patterns
+- Ensure accessibility (ARIA labels, semantic HTML)
+- Add loading states and smooth animations
+- Include form validation where applicable"""
+        
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"agent_{agent_type}_{generate_id('t')}",
-            system_message=AGENT_PROMPTS[agent_type]
+            system_message=system_prompt
         )
-        chat.with_model("openai", "gpt-4o")
+        
+        # Ultra mode uses gpt-4o, regular uses gpt-4o-mini for cost savings
+        model = "gpt-4o" if ultra_mode else "gpt-4o"
+        chat.with_model("openai", model)
         
         # Build comprehensive prompt
         context_str = json.dumps(context, indent=2, default=str) if context else "{}"
