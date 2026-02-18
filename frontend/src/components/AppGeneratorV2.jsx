@@ -795,6 +795,77 @@ Objetivo: Describe tu aplicación aquí
     }
   };
 
+  // MOTOR NO CHAT - Execute complete project with all agents
+  const handleExecuteMotor = async () => {
+    if (!motorTemplate.trim()) return;
+    
+    const token = localStorage.getItem('session_token');
+    if (!token) {
+      alert('Sesión expirada. Por favor, inicia sesión de nuevo.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setShowTemplates(false);
+    setLogs([]);
+    setConsoleLogs([]);
+    setFiles({});
+    setPreviewError(null);
+    
+    const modeLabel = ultraMode ? 'ULTRA MOTOR' : 'MOTOR';
+    setLogs([{
+      agent: 'system',
+      type: 'info',
+      message: `[${modeLabel}] MODO MOTOR INICIADO - Ejecutando TODOS los agentes...`,
+      timestamp: new Date().toISOString()
+    }]);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/agents/v2/execute-project`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          template: motorTemplate,
+          name: appName || 'Mi Proyecto Motor',
+          ultra_mode: ultraMode
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Motor execution failed');
+      }
+
+      setWorkspaceId(data.workspace_id);
+      setFiles(data.files);
+      updateCredits(data.credits_remaining);
+      localStorage.setItem('melus_workspace_id', data.workspace_id);
+      fetchVersions();
+      
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'success',
+        message: `PROYECTO COMPLETO! ${data.files_count} archivos | ${data.credits_used} créditos | ${data.agents_executed?.length || 0} agentes`,
+        timestamp: new Date().toISOString()
+      }]);
+      
+    } catch (error) {
+      console.error('Motor execution error:', error);
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'error',
+        message: error.message,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Start new project
   const handleNewProject = () => {
     setShowTemplates(true);
