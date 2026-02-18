@@ -624,12 +624,39 @@ Generate your response as valid JSON."""
 
         response = await chat.send_message(UserMessage(text=prompt))
         
-        # Extract JSON from response
-        json_match = re.search(r'\{[\s\S]*\}', response)
-        if json_match:
-            result = json.loads(json_match.group())
-        else:
-            result = {"raw_response": response}
+        # Extract JSON from response with better error handling
+        result = {}
+        try:
+            # Try to find JSON in response
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                json_str = json_match.group()
+                # Clean up common JSON issues
+                json_str = json_str.replace('\n', '\\n').replace('\t', '\\t')
+                try:
+                    result = json.loads(json_str)
+                except json.JSONDecodeError:
+                    # Try to fix common escape issues
+                    json_str = re.sub(r'(?<!\\)\\(?!["\\/bfnrt])', r'\\\\', json_str)
+                    try:
+                        result = json.loads(json_str)
+                    except:
+                        # If still fails, extract files manually
+                        files_match = re.findall(r'"([^"]+\.jsx?)":\s*"([^"]*)"', response, re.DOTALL)
+                        if files_match:
+                            result = {"files": {path: content for path, content in files_match}}
+                        else:
+                            result = {"raw_response": response[:5000]}
+            else:
+                # No JSON found, try to extract code blocks
+                code_blocks = re.findall(r'```(?:\w+)?\n([\s\S]*?)```', response)
+                if code_blocks:
+                    result = {"files": {"src/App.jsx": code_blocks[0]}}
+                else:
+                    result = {"raw_response": response[:5000]}
+        except Exception as parse_error:
+            logger.warning(f"JSON parse error in {agent_type}: {parse_error}")
+            result = {"raw_response": response[:5000], "parse_error": str(parse_error)}
         
         # Broadcast completion
         if workspace_id:
