@@ -279,15 +279,17 @@ const AppGeneratorV2 = () => {
     }
 
     setIsGenerating(true);
+    setShowTemplates(false);
     setLogs([]);
     setFiles({});
     setPreviewError(null);
     
     // Add initial log
+    const modeLabel = ultraMode ? '⚡ ULTRA MODE' : 'Normal';
     setLogs([{
       agent: 'system',
       type: 'info',
-      message: `Iniciando generación de "${appName || 'Mi App'}"...`,
+      message: `[${modeLabel}] Iniciando generación de "${appName || 'Mi App'}"...`,
       timestamp: new Date().toISOString()
     }]);
 
@@ -300,7 +302,8 @@ const AppGeneratorV2 = () => {
         },
         body: JSON.stringify({
           description,
-          name: appName || 'Mi App'
+          name: appName || 'Mi App',
+          ultra_mode: ultraMode
         })
       });
 
