@@ -1,21 +1,24 @@
-# Assistant Melus - Product Requirements Document
+# Assistant Melus AI - Product Requirements Document
 
 ## Resumen
-Assistant Melus es un clon completo de Emergent.sh, una plataforma de generación de aplicaciones impulsada por IA con arquitectura multi-agente y preview en vivo.
+**Melus AI** es un Constructor Universal de Aplicaciones, un clon completo de Emergent.sh que genera aplicaciones full-stack usando un sistema multi-agente con preview en vivo.
 
 ## Problema que Resuelve
-Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en lenguaje natural y obtener código generado automáticamente por agentes especializados de IA, con preview en tiempo real.
+Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en lenguaje natural y obtener código generado automáticamente por agentes especializados de IA, con preview en tiempo real y sistema de versionado.
 
 ## Usuarios Objetivo
 - Desarrolladores que necesitan prototipar rápidamente
 - Emprendedores sin conocimientos técnicos
 - Empresas que buscan acelerar el desarrollo
 
+---
+
 ## Funcionalidades Principales - TODAS EN PRODUCCIÓN
 
 ### 1. Sistema de Autenticación ✅
 - Registro con email/password
 - Login con email/password
+- GitHub OAuth completo
 - Gestión de sesiones con JWT
 - Rol de administrador
 
@@ -25,156 +28,37 @@ Proporcionar una plataforma donde los usuarios pueden describir aplicaciones en 
 - Historial de transacciones
 - Integración con Stripe para compras
 - Paquetes de créditos configurables
-- Códigos promocionales
 
-### 3. Planes de Suscripción ✅
-- Plan Free (100 créditos/mes)
-- Plan Pro ($29.99 - 5000 créditos/mes)
-- Plan Enterprise ($99.99 - 25000 créditos/mes)
+### 3. Arquitectura Multi-Agente v2 ✅
+Sistema de 6 agentes especializados:
 
-### 4. Arquitectura Multi-Agente v2 ✅ [NUEVO]
-Sistema de agentes mejorado con generación de código estructurado:
+| Agente | Créditos Normal | Créditos Ultra |
+|--------|----------------|----------------|
+| Classifier | 25 | 50 |
+| Architect | 50 | 100 |
+| Frontend | 150 | 300 |
+| Backend | 150 | 300 |
+| Integrator | 75 | 150 |
+| **Debug Agent** | **30** | 60 |
 
-- **Classifier Agent** (25 créditos): Analiza tipo de app, complejidad, requisitos
-- **Architect Agent** (50 créditos): Define estructura de archivos y dependencias
-- **Frontend Agent** (150 créditos): Genera React/Tailwind con sintaxis correcta v6
-- **Backend Agent** (150 créditos): Genera APIs Express/FastAPI
-- **Integrator Agent** (75 créditos): Conecta frontend con backend
-- **Debug Agent** (50 créditos): Corrige errores automáticamente
+**Total generación: ~480 créditos (Normal) / ~960 créditos (Ultra)**
 
-### 5. Preview en Vivo con Sandpack ✅ [NUEVO]
-- Iframe con CodeSandbox integrado
+### 4. Preview en Vivo con Sandpack ✅
+- CodeSandbox Sandpack integrado
 - Hot reload en tiempo real
 - Compilación de React en el navegador
-- Sin necesidad de contenedores Docker
 - Explorador de archivos visual
 - Editor de código con syntax highlighting
-- Múltiples pestañas de archivos
 
-### 6. Sistema de Workspaces ✅ [NUEVO]
+### 5. Sistema de Workspaces ✅
 - Filesystem virtual por proyecto
-- Versionado con snapshots
-- Rollback a versiones anteriores
+- **Sistema de Versionado/Snapshots**
+- **Rollback a versiones anteriores**
 - WebSocket para actualizaciones en tiempo real
 - Persistencia en MongoDB
-- Recuperación de workspace al recargar
+- Recuperación automática al recargar
 
-### 7. Chat con IA ✅
-- Conversación en tiempo real con GPT-4o
-- Múltiples modelos disponibles
-- Fork de conversaciones
-- Edición y regeneración de mensajes
-- Rollback a mensajes anteriores
-- Resumen de conversaciones
-- Extracción de bloques de código
-
-### 8. Panel de Administración ✅
-- Dashboard con métricas en tiempo real
-- Gestión de usuarios
-- Historial de transacciones
-- Análisis de ingresos
-- Estado del sistema
-- Configuración de costos de agentes
-
-### 9. Generador de Aplicaciones v2 ✅ [MEJORADO]
-- Consola de agentes en tiempo real con logs
-- Preview en vivo mientras se genera
-- Explorador de archivos integrado
-- Editor de código con syntax highlighting
-- Descarga de proyecto
-- Auto-fix de errores con Debug Agent
-
-### 10. Entrada de Voz (Whisper) ✅
-- Transcripción de audio a texto con OpenAI Whisper
-- Soporte para español e inglés
-- Costo: 25 créditos por transcripción
-
-### 11. Sistema de Despliegue ✅
-- Redeploy de proyectos (50 créditos)
-- Descarga de código en ZIP
-- Historial de deployments
-- Estado de deployments
-
-### 12. Integración con GitHub ✅
-- Botón "Connect GitHub" / "Save to GitHub" en la barra de acciones del chat
-- Conectar cuenta de GitHub via OAuth
-- Modal para crear repositorios desde la app
-- Subir código de conversaciones a GitHub (50 créditos)
-- Soporte para repos públicos y privados
-- Ubicado junto a los botones Summarize y Ultra
-
-## Arquitectura Técnica
-
-### Backend (Refactorizado)
-- Framework: FastAPI
-- Base de datos: MongoDB
-- Autenticación: JWT con X-Session-Token
-- Pagos: Stripe
-- WebSocket: Para logs en tiempo real
-
-**Rutas modulares:**
-- `/api/auth` - Autenticación
-- `/api/credits` - Créditos y facturación
-- `/api/admin` - Panel de administración
-- `/api/agents` - Sistema multi-agente original
-- `/api/agents/v2` - Sistema multi-agente mejorado [NUEVO]
-- `/api/workspace` - Gestión de workspaces [NUEVO]
-- `/api/projects` - Gestión de proyectos
-- `/api/conversations` - Chat
-- `/api/voice` - Transcripción de voz
-- `/api/deploy` - Despliegue
-- `/api/github` - Integración GitHub
-
-### Frontend
-- Framework: React
-- Styling: TailwindCSS
-- Componentes: shadcn/ui
-- Estado: React Context
-- Preview: @codesandbox/sandpack-react [NUEVO]
-
-### Integraciones EN PRODUCCIÓN
-- OpenAI GPT-4o (via Emergent LLM Key)
-- OpenAI Whisper (via Emergent LLM Key)
-- Stripe Payments
-- GitHub API (requiere OAuth credentials)
-- CodeSandbox Sandpack [NUEVO]
-
-## Costos de Créditos
-| Acción | Créditos |
-|--------|----------|
-| Chat con IA | ~50 (variable) |
-| Classifier Agent | 25 |
-| Architect Agent | 50 |
-| Frontend Agent | 150 |
-| Backend Agent | 150 |
-| Integrator Agent | 75 |
-| Debug Agent | 50 |
-| Transcripción voz | 25 |
-| Redeploy | 50 |
-| Push proyecto a GitHub | 100 |
-| Push código a GitHub | 50 |
-
-**Generación completa de app: ~500 créditos**
-
-## Configuración de GitHub
-Para habilitar la integración con GitHub, añadir al `.env` del backend:
-```
-GITHUB_CLIENT_ID=tu_client_id
-GITHUB_CLIENT_SECRET=tu_client_secret
-```
-
-Obtener credenciales en: https://github.com/settings/applications/new
-- Callback URL: https://tu-dominio/api/github/auth/callback
-
-## Credenciales de Prueba
-- **Admin**: rrhh.milchollos@gmail.com / 19862210Des
-
-## URLs
-- Frontend: https://agent-labs.preview.emergentagent.com
-- API: https://agent-labs.preview.emergentagent.com/api
-- Generador de Apps: https://agent-labs.preview.emergentagent.com/generator
-
-## Templates Predefinidos [ACTUALIZADO]
+### 6. 12 Templates Predefinidos ✅
 | Template | Descripción | Normal | Ultra |
 |----------|-------------|--------|-------|
 | E-Commerce Store | Tienda con catálogo, carrito, checkout | 450 | 900 |
@@ -190,13 +74,119 @@ Obtener credenciales en: https://github.com/settings/applications/new
 | Booking System | Calendario, citas, servicios, confirmaciones | 500 | 1000 |
 | Analytics Dashboard | Gráficos, métricas, reportes en tiempo real | 450 | 900 |
 
-## Funcionalidades Adicionales [ACTUALIZADO]
-- **Descarga ZIP**: Exportar proyecto completo como archivo ZIP
-- **Persistencia de Workspace**: El último proyecto se recupera automáticamente
-- **Selección de Templates**: Galería visual con 12 tipos de apps
-- **App Personalizada**: Opción de describir app custom si no hay template adecuado
-- **ULTRA MODE**: Modo premium con 2x créditos para máxima calidad de código
-  - Prompts mejorados con mejores prácticas
-  - Error handling completo
-  - Accesibilidad incluida
-  - Animaciones y loading states
+### 7. Ultra Mode ✅
+- Toggle en UI para activar/desactivar
+- **2x créditos = Máxima calidad de código**
+- Prompts mejorados con mejores prácticas
+- Error handling completo
+- Accesibilidad incluida
+- Animaciones y loading states
+
+### 8. Debug Agent (Fixer Agent) ✅
+- **Costo: 30 créditos por uso** (monetización)
+- Detecta errores de compilación automáticamente
+- Analiza el código y corrige errores
+- Aplica fixes y crea nueva versión
+- Botón "Auto-fix" en la UI
+
+### 9. Descarga ZIP ✅
+- Exportar proyecto completo como archivo ZIP
+- Incluye README generado automáticamente
+- Estructura de carpetas correcta
+
+### 10. Panel de Administración ✅
+- Dashboard con métricas en tiempo real
+- Gestión de usuarios
+- Historial de transacciones
+- Análisis de ingresos
+
+---
+
+## Arquitectura Técnica
+
+### Backend (FastAPI)
+```
+/app/backend/
+├── routes/
+│   ├── agents_v2.py    # Sistema multi-agente v2
+│   ├── workspace.py    # Workspaces y versionado
+│   ├── auth.py         # Autenticación
+│   ├── github.py       # GitHub OAuth
+│   ├── billing.py      # Créditos y pagos
+│   └── admin.py        # Panel admin
+├── templates/
+│   └── app_templates.py  # 12 templates
+├── models.py
+└── server.py
+```
+
+### Frontend (React)
+```
+/app/frontend/src/
+├── components/
+│   ├── AppGeneratorV2.jsx  # Generador principal
+│   └── ui/                 # Shadcn components
+├── pages/
+│   ├── GeneratorPage.jsx
+│   ├── Dashboard.jsx
+│   └── AdminPanel.jsx
+└── context/
+    └── AuthContext.jsx
+```
+
+### Integraciones
+- OpenAI GPT-4o (via Emergent LLM Key)
+- Stripe Payments
+- GitHub OAuth
+- CodeSandbox Sandpack
+
+---
+
+## API Endpoints Principales
+
+### Agentes v2
+- `GET /api/agents/v2/costs` - Costos de agentes
+- `GET /api/agents/v2/templates` - Lista de templates
+- `POST /api/agents/v2/generate` - Generar app custom
+- `POST /api/agents/v2/generate-from-template` - Generar desde template
+- `POST /api/agents/v2/debug` - Debug Agent (30 créditos)
+- `GET /api/agents/v2/download/{workspace_id}` - Descargar ZIP
+
+### Workspaces
+- `POST /api/workspace/create` - Crear workspace
+- `GET /api/workspace/{id}` - Obtener workspace
+- `GET /api/workspace/{id}/versions` - Historial de versiones
+- `POST /api/workspace/{id}/rollback/{version}` - Rollback
+- `WS /api/workspace/ws/{id}` - WebSocket para logs
+
+---
+
+## Credenciales de Prueba
+- **Admin**: rrhh.milchollos@gmail.com / 19862210Des
+
+## URLs
+- Frontend: https://agent-labs.preview.emergentagent.com
+- API: https://agent-labs.preview.emergentagent.com/api
+- Generador: https://agent-labs.preview.emergentagent.com/generator
+
+---
+
+## Estado del Proyecto: Diciembre 2025
+
+### Completado ✅
+- [x] Sistema multi-agente v2 completo
+- [x] Preview en vivo con Sandpack
+- [x] 12 templates predefinidos
+- [x] Ultra Mode (2x créditos)
+- [x] Debug Agent (30 créditos)
+- [x] Sistema de versionado/rollback
+- [x] Descarga ZIP
+- [x] GitHub OAuth
+- [x] Panel de administración
+
+### Próximas Tareas (Backlog)
+- [ ] GitHub Export desde generador (crear repo + push)
+- [ ] Deploy automático (Vercel/Netlify)
+- [ ] Marketplace de templates
+- [ ] Separación Control Plane / Execution Plane
+- [ ] Contenedores Docker aislados por proyecto

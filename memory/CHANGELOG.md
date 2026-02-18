@@ -1,153 +1,49 @@
-# Assistant Melus - Changelog
+# Melus AI - Changelog
 
-## [3.0.0] - 2026-02-17 - MAJOR UPDATE: Live Preview System
-
-### Added - Sistema de Preview en Vivo
-- **Sandpack Integration**: CodeSandbox embebido para preview en tiempo real
-- **Explorador de archivos**: Vista de árbol de todos los archivos del proyecto
-- **Editor de código**: Syntax highlighting, múltiples pestañas
-- **Hot reload**: Actualización automática del preview al cambiar código
-
-### Added - Sistema de Agentes v2
-- **Classifier Agent**: Clasifica tipo de app (landing, SaaS, dashboard, etc.)
-- **Architect Agent**: Diseña estructura de archivos y dependencias
-- **Frontend Agent**: Genera React con React Router v6 (sintaxis correcta)
-- **Backend Agent**: Genera APIs Express/FastAPI
-- **Integrator Agent**: Conecta frontend y backend
-- **Debug Agent**: Corrige errores automáticamente
-
-### Added - Workspaces
-- Sistema de filesystem virtual
-- Versionado con snapshots
-- Rollback a versiones anteriores
-- WebSocket para actualizaciones en tiempo real
-- Persistencia en localStorage y MongoDB
-
-### Added - Templates Predefinidos
-- **6 Templates**: E-Commerce, Blog, Dashboard, Landing, Task Manager, Portfolio
-- Galería visual de selección
-- Generación con un clic
-- Costos estimados por template
-
-### Added - Descarga ZIP
-- Exportar proyecto completo como ZIP
-- Incluye README.md generado
-- Estructura de carpetas organizada
-
-### Changed - App Generator
-- Nueva UI con panel dividido (consola + preview)
-- Barra de estado de agentes
-- Logs en tiempo real durante generación
-- Botón Auto-fix para corrección de errores
-- Botón "+ Nuevo" para crear nuevo proyecto
-
-### Technical
-- Nuevas rutas: `/api/agents/v2`, `/api/workspace`
-- Nueva dependencia: @codesandbox/sandpack-react
-- WebSocket server para logs en tiempo real
-- Templates en `/backend/templates/app_templates.py`
-
----
-
-## [2.1.0] - 2026-02-17
-
-### Verified
-- **Sistema completo funcionando sin errores**
-  - Dashboard con chat: ✅ Operativo
-  - Generador de aplicaciones: ✅ Operativo
-  - Panel de administración: ✅ Operativo
-  - APIs de autenticación: ✅ Operativo
-  - APIs de admin: ✅ Operativo
-
-### Note
-- **Integración GitHub**: Backend completamente implementado. Pendiente configurar `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET` en el `.env` del backend para activar OAuth.
-
----
-
-## [2.0.0] - 2026-02-17
+## [2.1.0] - 2025-12-18
 
 ### Added
-- **Arquitectura Multi-Agente Completa**
-  - Agente Orquestador para análisis de proyectos
-  - Agente de Diseño para UI/UX y wireframes
-  - Agente Frontend para código React
-  - Agente Backend para APIs FastAPI
-  - Agente Database para esquemas de BD
-  - Agente Deploy para configuración de despliegue
-
-- **Panel de Administración**
-  - Dashboard con métricas en tiempo real
-  - Gestión de usuarios (listar, editar, eliminar)
-  - Historial de transacciones
-  - Gráfico de ingresos (30 días)
-  - Estado del sistema (MongoDB, API)
-  - Configuración de costos de agentes
-
-- **Generador de Aplicaciones**
-  - Consola de agentes en tiempo real
-  - Indicadores de estado por agente
-  - Logs detallados de ejecución
-  - Descarga de código generado
-
-- **Sistema de Suscripciones**
-  - Plan Free (100 créditos/mes)
-  - Plan Pro ($29.99 - 5000 créditos/mes)  
-  - Plan Enterprise ($99.99 - 25000 créditos/mes)
-
-- **Tracking de Uso de Créditos**
-  - Consumo por tipo de agente
-  - Historial detallado de uso
+- **Debug Agent con 30 créditos**: El Debug Agent ahora cuesta 30 créditos por uso (antes 50) como estrategia de monetización
+- **Sistema de Versionado Visual**: UI para ver historial de versiones y hacer rollback a versiones anteriores
+- **Mejor captura de errores**: El preview de Sandpack ahora captura errores de compilación y logs de consola
+- **Ultra Mode mejorado**: Toggle visible en la UI que duplica precios de todos los templates
+- **Prompts mejorados para Debug Agent**: Análisis más preciso de errores con explicaciones detalladas
 
 ### Changed
-- **Refactorización del Backend**
-  - `server.py` dividido en routers modulares:
-    - `routes/auth.py` - Autenticación
-    - `routes/billing.py` - Créditos y Stripe
-    - `routes/admin.py` - Panel de admin
-    - `routes/agents.py` - Sistema multi-agente
-    - `routes/projects.py` - Gestión de proyectos
-    - `routes/chat.py` - Conversaciones
-
-- **API Client del Frontend**
-  - Nuevas APIs: agentsAPI, projectsAPI, adminAPI
-  - Función clearSessionToken exportada
-
-- **Header Mejorado**
-  - Botón "Generar App" añadido
-  - Botón "Admin" para administradores
-  - Enlaces en menú de usuario
+- Actualizado el costo del Debug Agent de 50 a 30 créditos
+- Mejorada la UI del generador con branding "Melus AI - Constructor Universal de Apps"
+- El endpoint `/api/agents/v2/debug` ahora valida créditos antes de ejecutar y devuelve créditos restantes
+- Generate-from-template ahora soporta Ultra Mode correctamente
 
 ### Fixed
-- Referencias a `advancedAPI` eliminadas
-- Importación de `clearSessionToken` corregida
-- `getCurrentUser` añadido a authAPI
+- Los precios de Ultra Mode ahora se muestran correctamente en la UI (2x)
+- El sistema de versiones se actualiza correctamente después de cada operación
 
 ---
 
-## [1.5.0] - 2026-02-16
+## [2.0.0] - 2025-12-17
 
 ### Added
-- Funcionalidades avanzadas de chat:
-  - Code Viewer modal
-  - Preview Panel
-  - Message Rollback
-  - Conversation Summarize
-  - Save/Bookmark conversations
-- Sistema de adjuntos de archivos
-- Botón Ultra Mode (placeholder)
+- **Preview en Vivo con Sandpack**: Integración completa de CodeSandbox Sandpack para preview en tiempo real
+- **Sistema Multi-Agente v2**: 6 agentes especializados (Classifier, Architect, Frontend, Backend, Integrator, Debug)
+- **12 Templates Predefinidos**: E-commerce, Blog, Dashboard, Landing, Task Manager, Portfolio, CRM, Chat, Social, Inventory, Booking, Analytics
+- **Ultra Mode**: Modo premium que usa modelo más potente a 2x costo
+- **GitHub OAuth**: Autenticación completa con GitHub
+- **Sistema de Workspaces**: Filesystem virtual con persistencia
+- **Descarga ZIP**: Exportar proyectos como archivos ZIP
+- **WebSockets**: Logs de generación en tiempo real
 
-### Fixed
-- Bug de login loop con cookies cross-site
-- Session management migrado a localStorage
+### Changed
+- Arquitectura completamente rediseñada para soportar generación multi-archivo
+- Nueva UI del generador con explorador de archivos y editor de código
 
 ---
 
-## [1.0.0] - 2026-02-15
+## [1.0.0] - 2025-12-15
 
 ### Added
-- Sistema de autenticación email/password
+- Sistema de autenticación (email/password + JWT)
 - Sistema de créditos con Stripe
-- Chat con IA usando GPT-4o
-- UI clonada de Emergent.sh (modo oscuro)
-- Gestión de conversaciones
-- Selección de modelos de IA
+- Chat con IA (GPT-4o)
+- Panel de administración
+- Generador de apps básico
