@@ -681,8 +681,641 @@ async def get_costs():
             "generation": ["classifier", "architect", "frontend", "backend", "integrator"],
             "specialized": ["design", "database", "testing", "security", "deploy"],
             "utility": ["debugger", "optimizer", "docs"]
+        },
+        "modes": {
+            "execution": "Motor No Chat - Ejecución directa de proyectos",
+            "chat": "Modo conversacional tradicional"
         }
     }
+
+
+@router.get("/template")
+async def get_template_format():
+    """Get the project template format for Motor No Chat mode"""
+    return {
+        "template": get_project_template(),
+        "description": "Plantilla para modo Motor (No Chat). Completa cada sección con las instrucciones para cada agente.",
+        "agents": [
+            "FRONTEND AGENT - UI y componentes",
+            "BACKEND AGENT - APIs y servidor",
+            "DATABASE AGENT - Esquemas y datos",
+            "INTEGRATION AGENT - Servicios externos",
+            "TESTING AGENT - Pruebas automatizadas",
+            "SECURITY AGENT - Análisis de seguridad",
+            "DEPLOYMENT AGENT - Configuración de despliegue"
+        ],
+        "tips": [
+            "Usa comandos directos: 'Genera...', 'Construye...', 'Implementa...'",
+            "Evita preguntas tipo '¿Qué opinas?' o '¿Cómo puedo?'",
+            "Especifica frameworks y tecnologías exactas",
+            "Incluye todos los detalles de funcionalidad"
+        ]
+    }
+
+
+@router.post("/execute-project")
+async def execute_project_no_chat(request: Request):
+    """
+    MODO MOTOR (NO CHAT) - Ejecuta un proyecto completo automáticamente
+    
+    Este endpoint recibe una plantilla de proyecto y ejecuta TODOS los agentes
+    en secuencia sin interacción de chat.
+    
+    Flujo:
+    1. Parsear plantilla de proyecto
+    2. Ejecutar agentes en orden: classifier -> architect -> design -> frontend -> backend -> database -> integration -> testing -> security -> deploy
+    3. Retornar proyecto completo
+    """
+    from routes.workspace import get_connection_manager
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    project_template = body.get("template", body.get("description", ""))
+    project_name = body.get("name", "Mi Proyecto")
+    ultra_mode = body.get("ultra_mode", False)
+    
+    # Detectar modo de ejecución
+    mode = detect_execution_mode(project_template)
+    
+    if mode == CHAT_MODE:
+        # Si detectamos modo chat, sugerir usar el otro endpoint
+        return {
+            "mode_detected": "chat",
+            "message": "Tu prompt parece ser conversacional. Usa /generate para modo chat o reformula tu prompt con comandos directos.",
+            "tip": "Usa: 'Genera una app de...' en lugar de '¿Qué opinas de...?'"
+        }
+    
+    # Parsear plantilla si tiene formato estructurado
+    project_plan = None
+    if '# FRONTEND' in project_template or '# BACKEND' in project_template:
+        project_plan = parse_project_template(project_template)
+        project_name = project_plan.name or project_name
+    
+    # Calcular costo total (todos los agentes)
+    agents_to_run = ['classifier', 'architect', 'design', 'frontend', 'backend', 'database', 'integrator', 'testing', 'security', 'deploy', 'docs']
+    multiplier = ULTRA_MULTIPLIER if ultra_mode else 1
+    total_cost = sum(AGENT_COSTS.get(a, 50) for a in agents_to_run) * multiplier
+    
+    if user_doc["credits"] < total_cost:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Proyecto completo requiere {total_cost} créditos. Tienes {user_doc['credits']}."
+        )
+    
+    manager = get_connection_manager()
+    
+    # Crear workspace
+    workspace_id = generate_id("ws")
+    mode_label = "ULTRA MODE" if ultra_mode else "Normal"
+    workspace = {
+        "workspace_id": workspace_id,
+        "user_id": user_id,
+        "name": project_name,
+        "description": project_template[:500],
+        "mode": "execution",
+        "ultra_mode": ultra_mode,
+        "files": {},
+        "versions": [],
+        "current_version": 0,
+        "status": "generating",
+        "agent_results": {},
+        "created_at": utc_now(),
+        "updated_at": utc_now()
+    }
+    await db.workspaces.insert_one(workspace)
+    
+    total_credits_used = 0
+    all_files = {}
+    agent_results = {}
+    
+    try:
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "info",
+                "message": f"[{mode_label}] MODO MOTOR INICIADO - Ejecutando {len(agents_to_run)} agentes",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 1: CLASSIFIER - Analizar proyecto
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "classifier",
+                "type": "working",
+                "message": "Analizando tipo de aplicación...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        classifier_result = await run_agent_v2(
+            "classifier",
+            f"Classify this app: {project_template}",
+            {"project_name": project_name},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += classifier_result["credits_used"]
+        classification = classifier_result["result"]
+        agent_results["classifier"] = classification
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "classifier",
+                "type": "success",
+                "message": f"Tipo: {classification.get('app_type', 'custom')} | Complejidad: {classification.get('complexity', 'medium')}",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 2: ARCHITECT - Diseñar estructura
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "architect",
+                "type": "working",
+                "message": "Diseñando arquitectura del proyecto...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        architect_result = await run_agent_v2(
+            "architect",
+            f"Design complete architecture for: {project_template}",
+            {"classification": classification, "project_name": project_name},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += architect_result["credits_used"]
+        architecture = architect_result["result"]
+        agent_results["architect"] = architecture
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "architect",
+                "type": "success",
+                "message": f"Estructura: {len(architecture.get('structure', {}))} archivos planificados",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 3: DESIGN - Sistema de diseño
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "design",
+                "type": "working",
+                "message": "Creando sistema de diseño UI/UX...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        design_result = await run_agent_v2(
+            "design",
+            f"Create design system for: {project_template}",
+            {"classification": classification, "architecture": architecture},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += design_result["credits_used"]
+        design_system = design_result["result"]
+        agent_results["design"] = design_system
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "design",
+                "type": "success",
+                "message": f"Tema: {design_system.get('theme', {}).get('mode', 'dark')} | Colores definidos",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 4: DATABASE - Esquemas de datos
+        # ========================================
+        if classification.get("requires_database", True):
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "database",
+                    "type": "working",
+                    "message": "Diseñando esquemas de base de datos...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            database_result = await run_agent_v2(
+                "database",
+                f"Design database schema for: {project_template}",
+                {"classification": classification, "architecture": architecture},
+                db, workspace_id, ultra_mode
+            )
+            total_credits_used += database_result["credits_used"]
+            database_schema = database_result["result"]
+            agent_results["database"] = database_schema
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "database",
+                    "type": "success",
+                    "message": f"DB: {database_schema.get('database_type', 'mongodb')} | Tablas diseñadas",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+        
+        # ========================================
+        # PASO 5: FRONTEND - Generar UI
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "frontend",
+                "type": "working",
+                "message": "Generando componentes React...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        frontend_context = {
+            "classification": classification,
+            "architecture": architecture,
+            "design": design_system,
+            "project_name": project_name
+        }
+        
+        frontend_result = await run_agent_v2(
+            "frontend",
+            f"Generate complete React frontend for: {project_template}",
+            frontend_context,
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += frontend_result["credits_used"]
+        
+        frontend_files = frontend_result["result"].get("files", {})
+        all_files.update(frontend_files)
+        agent_results["frontend"] = {"files_generated": len(frontend_files)}
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "frontend",
+                "type": "success",
+                "message": f"Generados {len(frontend_files)} archivos frontend",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # Broadcast files update
+        await manager.broadcast(workspace_id, {
+            "type": "files_updated",
+            "files": all_files
+        })
+        
+        # ========================================
+        # PASO 6: BACKEND - Generar APIs
+        # ========================================
+        if classification.get("requires_database") or classification.get("requires_auth"):
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "backend",
+                    "type": "working",
+                    "message": "Generando APIs y servidor...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            backend_result = await run_agent_v2(
+                "backend",
+                f"Generate backend API for: {project_template}",
+                {"classification": classification, "database": agent_results.get("database", {})},
+                db, workspace_id, ultra_mode
+            )
+            total_credits_used += backend_result["credits_used"]
+            
+            backend_files = backend_result["result"].get("files", {})
+            for path, content in backend_files.items():
+                all_files[f"backend/{path}"] = content
+            
+            agent_results["backend"] = {"files_generated": len(backend_files)}
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "backend",
+                    "type": "success",
+                    "message": f"Generados {len(backend_files)} archivos backend",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+        
+        # ========================================
+        # PASO 7: INTEGRATOR - Conectar todo
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "integrator",
+                "type": "working",
+                "message": "Integrando frontend con backend...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        integrator_result = await run_agent_v2(
+            "integrator",
+            "Integrate and verify all components",
+            {"files": all_files, "classification": classification},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += integrator_result["credits_used"]
+        
+        integration_fixes = integrator_result["result"].get("fixes", {})
+        all_files.update(integration_fixes)
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "integrator",
+                "type": "success",
+                "message": "Integración completada",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 8: TESTING - Generar tests
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "testing",
+                "type": "working",
+                "message": "Generando tests automatizados...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        testing_result = await run_agent_v2(
+            "testing",
+            "Generate tests for all components and APIs",
+            {"files": all_files, "classification": classification},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += testing_result["credits_used"]
+        
+        test_files = testing_result["result"].get("files", {})
+        for path, content in test_files.items():
+            all_files[f"tests/{path}"] = content
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "testing",
+                "type": "success",
+                "message": f"Generados {len(test_files)} archivos de tests",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 9: SECURITY - Análisis
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "security",
+                "type": "working",
+                "message": "Analizando seguridad...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        security_result = await run_agent_v2(
+            "security",
+            "Analyze and fix security issues",
+            {"files": all_files},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += security_result["credits_used"]
+        
+        security_fixes = security_result["result"].get("fixes", {})
+        all_files.update(security_fixes)
+        
+        vulnerabilities = security_result["result"].get("vulnerabilities", [])
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "security",
+                "type": "success",
+                "message": f"Seguridad: {len(vulnerabilities)} issues encontrados y corregidos",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 10: DEPLOY - Configuración
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "deploy",
+                "type": "working",
+                "message": "Generando configuración de despliegue...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        deploy_result = await run_agent_v2(
+            "deploy",
+            "Generate deployment configuration for Vercel and Docker",
+            {"files": all_files, "project_name": project_name},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += deploy_result["credits_used"]
+        
+        deploy_files = deploy_result["result"].get("files", {})
+        all_files.update(deploy_files)
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "deploy",
+                "type": "success",
+                "message": "Configuración de deploy generada",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # PASO 11: DOCS - Documentación
+        # ========================================
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "docs",
+                "type": "working",
+                "message": "Generando documentación...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        docs_result = await run_agent_v2(
+            "docs",
+            f"Generate documentation for {project_name}",
+            {"files": all_files, "classification": classification},
+            db, workspace_id, ultra_mode
+        )
+        total_credits_used += docs_result["credits_used"]
+        
+        docs_files = docs_result["result"].get("files", {})
+        all_files.update(docs_files)
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "docs",
+                "type": "success",
+                "message": "Documentación generada",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # ========================================
+        # FINALIZAR - Agregar archivos base
+        # ========================================
+        base_files = {
+            "package.json": json.dumps({
+                "name": project_name.lower().replace(" ", "-"),
+                "private": True,
+                "version": "0.0.1",
+                "dependencies": {
+                    "react": "^18.2.0",
+                    "react-dom": "^18.2.0",
+                    "react-router-dom": "^6.20.0"
+                }
+            }, indent=2),
+            "public/index.html": f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{project_name}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900">
+    <div id="root"></div>
+</body>
+</html>""",
+            "src/index.js": """import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);"""
+        }
+        
+        for path, content in base_files.items():
+            if path not in all_files:
+                all_files[path] = content
+        
+        # Guardar en workspace
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {
+                "$set": {
+                    "files": all_files,
+                    "status": "completed",
+                    "current_version": 1,
+                    "classification": classification,
+                    "architecture": architecture,
+                    "design_system": design_system,
+                    "agent_results": agent_results,
+                    "total_credits_used": total_credits_used,
+                    "updated_at": utc_now()
+                },
+                "$push": {
+                    "versions": {
+                        "version": 1,
+                        "files": all_files,
+                        "created_at": utc_now(),
+                        "message": f"[{mode_label}] MOTOR NO CHAT - Proyecto completo"
+                    }
+                }
+            }
+        )
+        
+        # Deducir créditos
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"credits": -total_credits_used, "credits_used": total_credits_used}}
+        )
+        
+        updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+        
+        # Broadcast final
+        await manager.broadcast(workspace_id, {
+            "type": "generation_complete",
+            "files": all_files,
+            "workspace_id": workspace_id,
+            "credits_used": total_credits_used
+        })
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "success",
+                "message": f"PROYECTO COMPLETO! {len(all_files)} archivos | {total_credits_used} créditos | {len(agents_to_run)} agentes ejecutados",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        return {
+            "mode": "execution",
+            "workspace_id": workspace_id,
+            "project_name": project_name,
+            "files": all_files,
+            "files_count": len(all_files),
+            "agents_executed": agents_to_run,
+            "classification": classification,
+            "credits_used": total_credits_used,
+            "credits_remaining": updated_user.get("credits", 0),
+            "ultra_mode": ultra_mode
+        }
+        
+    except Exception as e:
+        logger.error(f"Motor execution failed: {e}")
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "error",
+                "message": f"Error: {str(e)}",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {"$set": {"status": "failed", "error": str(e)}}
+        )
+        
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/agents")
