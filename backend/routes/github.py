@@ -168,8 +168,10 @@ async def github_login(request: Request):
         "created_at": utc_now().isoformat()
     }
     
-    # Build authorization URL
-    redirect_uri = f"{request.base_url}api/github/auth/callback"
+    # Use external URL for callback (from environment or hardcoded)
+    external_url = os.environ.get('EXTERNAL_URL', 'https://melus-platform.preview.emergentagent.com')
+    redirect_uri = f"{external_url}/api/github/auth/callback"
+    
     auth_url = (
         f"https://github.com/login/oauth/authorize?"
         f"client_id={GITHUB_CLIENT_ID}&"
