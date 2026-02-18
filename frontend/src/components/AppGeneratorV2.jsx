@@ -956,7 +956,35 @@ createRoot(document.getElementById('root')).render(<App />);`
         <div className="max-w-6xl mx-auto px-6 py-10">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-3">Crea tu Aplicación</h2>
-            <p className="text-gray-400">Elige una plantilla o describe tu app personalizada</p>
+            <p className="text-gray-400">Elige una plantilla o usa el Motor para control total</p>
+          </div>
+
+          {/* Mode Tabs: Templates vs Motor */}
+          <div className="flex justify-center gap-4 mb-8">
+            <button
+              onClick={() => setExecutionMode('templates')}
+              data-testid="mode-templates"
+              className={`px-6 py-3 rounded-xl border font-medium transition-all flex items-center gap-2 ${
+                executionMode === 'templates'
+                  ? 'bg-purple-500/20 border-purple-500 text-purple-400'
+                  : 'bg-white/5 border-gray-700 text-gray-400 hover:border-purple-500/30'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              Templates
+            </button>
+            <button
+              onClick={() => setExecutionMode('motor')}
+              data-testid="mode-motor"
+              className={`px-6 py-3 rounded-xl border font-medium transition-all flex items-center gap-2 ${
+                executionMode === 'motor'
+                  ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500 text-orange-400'
+                  : 'bg-white/5 border-gray-700 text-gray-400 hover:border-orange-500/30'
+              }`}
+            >
+              <Zap className="w-5 h-5" />
+              Motor No Chat
+            </button>
           </div>
 
           {/* Ultra Mode Toggle */}
@@ -981,6 +1009,73 @@ createRoot(document.getElementById('root')).render(<App />);`
             </button>
           </div>
 
+          {/* MOTOR NO CHAT MODE */}
+          {executionMode === 'motor' && (
+            <div className="max-w-4xl mx-auto mb-12">
+              <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-orange-400">MODO MOTOR (No Chat)</h3>
+                    <p className="text-xs text-gray-400">Ejecución directa - TODOS los agentes en secuencia</p>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-gray-300 mb-4">
+                  Define tu proyecto con instrucciones directas para cada agente. 
+                  Sin conversación, solo ejecución automática de los 11 agentes especializados.
+                </p>
+
+                <div className="bg-black/30 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-500 font-mono">PLANTILLA DE PROYECTO</span>
+                    <span className="text-xs text-orange-400">~930 créditos (Normal) | ~1860 (Ultra)</span>
+                  </div>
+                  <textarea
+                    value={motorTemplate}
+                    onChange={(e) => setMotorTemplate(e.target.value)}
+                    placeholder="Define tu proyecto con instrucciones para cada agente..."
+                    className="w-full h-64 bg-transparent border-none outline-none text-sm font-mono text-gray-300 resize-none"
+                    data-testid="motor-template-input"
+                  />
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <input
+                    type="text"
+                    value={appName}
+                    onChange={(e) => setAppName(e.target.value)}
+                    placeholder="Nombre del proyecto"
+                    className="flex-1 bg-black/30 border border-orange-500/30 rounded-lg px-4 py-2 text-sm focus:border-orange-500 outline-none"
+                    data-testid="motor-name-input"
+                  />
+                  <button
+                    onClick={handleExecuteMotor}
+                    disabled={!motorTemplate.trim()}
+                    data-testid="execute-motor-btn"
+                    className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
+                      ultraMode
+                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black'
+                        : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    <Zap className="w-4 h-4" />
+                    EJECUTAR MOTOR
+                  </button>
+                </div>
+
+                <div className="mt-4 text-xs text-gray-500">
+                  <strong>Agentes ejecutados:</strong> Classifier → Architect → Design → Database → Frontend → Backend → Integrator → Testing → Security → Deploy → Docs
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TEMPLATES MODE */}
+          {executionMode === 'templates' && (
+            <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {templates.map((template) => {
               const Icon = TEMPLATE_ICONS[template.id] || Code;
