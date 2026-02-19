@@ -4,8 +4,10 @@ Provides 3 execution modes:
 - A) CodeSandbox API (remote, recommended)
 - B) Node.js Process Sandbox (local, simulated)
 - C) Docker Container (full isolation, requires Docker)
+
+Plus WebSocket support for real-time output streaming.
 """
-from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Request, BackgroundTasks, WebSocket, WebSocketDisconnect
 from typing import Optional, Dict, Any, List
 import logging
 import asyncio
@@ -30,8 +32,61 @@ MAX_EXECUTION_TIME = 30  # seconds
 MAX_MEMORY_MB = 256
 MAX_OUTPUT_SIZE = 100000  # characters
 
-# Store running executions
+# Store running executions and WebSocket connections
 active_executions: Dict[str, Dict] = {}
+sandbox_websockets: Dict[str, List[WebSocket]] = {}
+
+
+# ============================================================================
+# WebSocket Manager for Real-time Output
+# ============================================================================
+
+class SandboxConnectionManager:
+    def __init__(self):
+        self.connections: Dict[str, List[WebSocket]] = {}
+    
+    async def connect(self, execution_id: str, websocket: WebSocket):
+        await websocket.accept()
+        if execution_id not in self.connections:
+            self.connections[execution_id] = []
+        self.connections[execution_id].append(websocket)
+    
+    def disconnect(self, execution_id: str, websocket: WebSocket):
+        if execution_id in self.connections:
+            self.connections[execution_id].remove(websocket)
+            if not self.connections[execution_id]:
+                del self.connections[execution_id]
+    
+    async def send_output(self, execution_id: str, message: dict):
+        if execution_id in self.connections:
+            for connection in self.connections[execution_id]:
+                try:
+                    await connection.send_json(message)
+                except:
+                    pass
+
+sandbox_manager = SandboxConnectionManager()
+
+
+@router.websocket("/ws/{execution_id}")
+async def sandbox_websocket(websocket: WebSocket, execution_id: str):
+    """WebSocket endpoint for real-time sandbox output"""
+    await sandbox_manager.connect(execution_id, websocket)
+    try:
+        while True:
+            # Keep connection alive, wait for messages
+            data = await websocket.receive_text()
+            # Could handle commands here (e.g., cancel execution)
+            if data == "cancel":
+                if execution_id in active_executions:
+                    active_executions[execution_id]["cancelled"] = True
+                    await sandbox_manager.send_output(execution_id, {
+                        "type": "cancelled",
+                        "message": "Ejecución cancelada"
+                    })
+    except WebSocketDisconnect:
+        sandbox_manager.disconnect(execution_id, websocket)
+
 
 
 # ============================================================================
