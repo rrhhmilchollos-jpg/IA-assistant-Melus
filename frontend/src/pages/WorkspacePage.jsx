@@ -52,6 +52,7 @@ const WorkspacePage = () => {
   
   // UI state
   const [activeView, setActiveView] = useState(null); // null | 'code' | 'preview'
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [tabs, setTabs] = useState([
     { id: 'current', name: projectName, active: true }
   ]);
