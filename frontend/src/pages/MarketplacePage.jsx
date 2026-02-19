@@ -634,7 +634,8 @@ const PublishTemplateModal = ({ workspaces, onClose, onSuccess }) => {
           description: formData.description,
           category: formData.category,
           tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
-          is_free: true
+          is_free: formData.is_free,
+          price: formData.is_free ? 0 : formData.price
         })
       });
       
