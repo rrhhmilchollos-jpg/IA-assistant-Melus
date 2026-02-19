@@ -9,7 +9,7 @@ import json
 from pymongo import MongoClient
 
 # Configuration
-BASE_URL = "https://motor-no-chat.preview.emergentagent.com/api"
+BASE_URL = "https://melus-studio.preview.emergentagent.com/api"
 MONGO_URL = "mongodb://localhost:27017"
 DB_NAME = "test_database"
 

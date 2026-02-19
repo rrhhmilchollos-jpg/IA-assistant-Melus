@@ -181,9 +181,9 @@ Objetivo: [Descripción]
 
 ## 9. URLs
 
-- **Frontend:** https://motor-no-chat.preview.emergentagent.com
-- **Generador:** https://motor-no-chat.preview.emergentagent.com/generator
-- **API:** https://motor-no-chat.preview.emergentagent.com/api
+- **Frontend:** https://melus-studio.preview.emergentagent.com
+- **Generador:** https://melus-studio.preview.emergentagent.com/generator
+- **API:** https://melus-studio.preview.emergentagent.com/api
 
 ---
 
