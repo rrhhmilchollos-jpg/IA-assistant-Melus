@@ -50,6 +50,7 @@ from routes.deploy import router as deploy_router
 from routes.github import router as github_router
 from routes.workspace import router as workspace_router
 from routes.marketplace import router as marketplace_router
+from routes.sandbox import router as sandbox_router
 
 # Include all routers with /api prefix
 app.include_router(auth_router, prefix="/api")
@@ -64,6 +65,7 @@ app.include_router(deploy_router, prefix="/api")
 app.include_router(github_router, prefix="/api")
 app.include_router(workspace_router, prefix="/api")
 app.include_router(marketplace_router, prefix="/api")
+app.include_router(sandbox_router, prefix="/api")
 
 # CORS middleware
 app.add_middleware(
