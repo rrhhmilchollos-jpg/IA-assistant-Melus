@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
-> **Última actualización:** Febrero 2026
-> **Versión:** 3.0.0 - FEATURE COMPLETE
+> **Última actualización:** Diciembre 2025
+> **Versión:** 3.1.0 - HOMEPAGE COMPLETE
 
 ---
 
@@ -10,7 +10,7 @@
 **Melus AI** es un **Constructor Universal de Aplicaciones** que funciona **idénticamente a Emergent.sh**, proporcionando una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando un sistema de **13 agentes especializados** de IA.
 
 ### Características Principales
-- **Modo Motor (No Chat)**: Ejecución directa de proyectos sin conversación
+- **HomePage Completa**: Interfaz principal con todos los controles funcionales
 - **13 Agentes Especializados**: Cada uno con rol específico
 - **Preview en Vivo**: CodeSandbox Sandpack integrado
 - **Sistema de Versionado**: Snapshots y rollback
@@ -18,27 +18,26 @@
 
 ---
 
-## 2. Modos de Ejecución
+## 2. Estado Actual - Actualizado Diciembre 2025
 
-### 2.1 Modo Templates (Conversacional)
-- Seleccionar de 12 templates predefinidos
-- Generar apps con descripción libre
-- Ideal para usuarios que quieren guía
+### ✅ Completado en esta sesión
+- [x] **HomePage Funcional Completa**:
+  - Botón de adjuntar archivos (clip) - abre selector de archivos
+  - Botón de micrófono - grabación de voz
+  - Selectores de agente E1/E2 - cambian estado activo
+  - Ultra Mode toggle - activa/desactiva con toast
+  - Selector de modelos dropdown (GPT-4o, Claude 4.5 Opus, Claude 4.5 Sonnet, Gemini 3 Pro)
+  - Botón de configuración - muestra panel con Temperatura y Max Tokens
+  - Botón expand/collapse - oculta/muestra proyectos recientes
+  - Botones de sugerencias - rellenan el prompt
+  - Botón Crear App - navega a workspace con parámetros
+- [x] **Ruta /generator OCULTA** - Redirige a /home (por solicitud del usuario)
+- [x] **Backend voice/transcribe** - Soporta FormData y JSON
+- [x] **data-testid agregados** - Todos los elementos interactivos identificados
 
-### 2.2 MODO MOTOR (No Chat) - NUEVO
-- **Ejecución directa** sin conversación
-- Usa **plantilla de proyecto** estructurada por agentes
-- Ejecuta **TODOS los 11 agentes** en secuencia automática
-- Ideal para usuarios técnicos que saben exactamente lo que quieren
-
-**Flujo del Motor:**
-```
-Classifier → Architect → Design → Database → Frontend → Backend → Integrator → Testing → Security → Deploy → Docs
-```
-
-**Costo Motor:**
-- Normal: ~930 créditos
-- Ultra: ~1860 créditos
+### Testing Completado
+- **Frontend:** 100% (11/11 features probadas)
+- **Archivo de test:** `/app/test_reports/iteration_5.json`
 
 ---
 
@@ -198,12 +197,29 @@ Objetivo: [Descripción]
 ## 9. URLs
 
 - **Frontend:** https://melus-homepage-fix.preview.emergentagent.com
-- **Generador:** https://melus-homepage-fix.preview.emergentagent.com/generator
+- **HomePage:** https://melus-homepage-fix.preview.emergentagent.com/home
+- **Workspace:** https://melus-homepage-fix.preview.emergentagent.com/workspace
 - **API:** https://melus-homepage-fix.preview.emergentagent.com/api
+
+> **NOTA:** La ruta /generator ha sido OCULTA por solicitud del usuario.
 
 ---
 
-## 10. Comparación con Emergent.sh
+## 10. Próximas Tareas
+
+### P1 - Pendientes
+- [ ] **Implementar lógica completa de GitHub Deploy** - UI existe, falta lógica backend
+- [ ] **Expert Agents backend logic** - Scaffolding existe
+
+### P2 - Futuro
+- [ ] Deploy funcional a Vercel (actualmente descarga ZIP)
+- [ ] Ejecución sandboxed con Docker
+- [ ] Backend del Marketplace de templates
+- [ ] Sistema de versionado para Rollback
+
+---
+
+## 11. Comparación con Emergent.sh
 
 | Característica | Emergent.sh | Melus AI |
 |---------------|-------------|----------|
