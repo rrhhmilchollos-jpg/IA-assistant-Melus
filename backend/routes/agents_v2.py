@@ -631,29 +631,38 @@ Generate your response as valid JSON."""
             json_match = re.search(r'\{[\s\S]*\}', response)
             if json_match:
                 json_str = json_match.group()
-                # Clean up common JSON issues
-                json_str = json_str.replace('\n', '\\n').replace('\t', '\\t')
                 try:
                     result = json.loads(json_str)
                 except json.JSONDecodeError:
-                    # Try to fix common escape issues
-                    json_str = re.sub(r'(?<!\\)\\(?!["\\/bfnrt])', r'\\\\', json_str)
-                    try:
-                        result = json.loads(json_str)
-                    except:
-                        # If still fails, extract files manually
-                        files_match = re.findall(r'"([^"]+\.jsx?)":\s*"([^"]*)"', response, re.DOTALL)
-                        if files_match:
-                            result = {"files": {path: content for path, content in files_match}}
-                        else:
-                            result = {"raw_response": response[:5000]}
+                    # Try extracting code blocks from the response if JSON fails
+                    code_blocks = re.findall(r'```(?:jsx?|javascript|tsx?)?\n([\s\S]*?)```', response)
+                    if code_blocks:
+                        result = {"files": {"src/App.jsx": code_blocks[0]}}
+                    else:
+                        result = {"raw_response": response[:5000]}
             else:
                 # No JSON found, try to extract code blocks
-                code_blocks = re.findall(r'```(?:\w+)?\n([\s\S]*?)```', response)
+                code_blocks = re.findall(r'```(?:jsx?|javascript|tsx?)?\n([\s\S]*?)```', response)
                 if code_blocks:
                     result = {"files": {"src/App.jsx": code_blocks[0]}}
                 else:
                     result = {"raw_response": response[:5000]}
+            
+            # Post-process: ensure file contents have proper newlines
+            if "files" in result:
+                processed_files = {}
+                for path, content in result["files"].items():
+                    if isinstance(content, str):
+                        # Convert escaped newlines to real newlines if they're literal strings
+                        if '\\n' in content and '\n' not in content:
+                            content = content.replace('\\n', '\n')
+                        if '\\t' in content:
+                            content = content.replace('\\t', '\t')
+                        # Remove any remaining escape issues
+                        content = content.replace('\\"', '"')
+                    processed_files[path] = content
+                result["files"] = processed_files
+                
         except Exception as parse_error:
             logger.warning(f"JSON parse error in {agent_type}: {parse_error}")
             result = {"raw_response": response[:5000], "parse_error": str(parse_error)}
