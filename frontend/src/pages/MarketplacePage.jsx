@@ -223,38 +223,6 @@ const MarketplacePage = () => {
     }
   };
 
-  const handlePurchaseTemplate = async (template) => {
-    const token = localStorage.getItem('session_token');
-    
-    // Confirm purchase
-    if (!window.confirm(`¿Comprar "${template.name}" por ${template.price} créditos?`)) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_BASE}/api/marketplace/templates/${template.template_id}/purchase`, {
-        method: 'POST',
-        headers: { 'X-Session-Token': token }
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        if (data.already_purchased) {
-          toast.info(data.message);
-        } else {
-          toast.success(`¡Template comprado! Te quedan ${data.credits_remaining?.toFixed(2)} créditos`);
-        }
-        // Now use the template
-        handleUseTemplate(template.template_id);
-      } else {
-        toast.error(data.detail || 'Error al comprar template');
-      }
-    } catch (error) {
-      toast.error('Error de conexión');
-    }
-  };
-
   const loadUserWorkspaces = async () => {
     const token = localStorage.getItem('session_token');
     try {
