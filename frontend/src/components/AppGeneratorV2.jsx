@@ -54,7 +54,11 @@ import {
   RotateCcw,
   Save,
   AlertTriangle,
-  Info
+  Info,
+  Cloud,
+  Upload,
+  Store,
+  ExternalLink
 } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
