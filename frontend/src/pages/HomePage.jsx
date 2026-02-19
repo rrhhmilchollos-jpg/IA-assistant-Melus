@@ -94,12 +94,11 @@ const HomePage = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!prompt.trim() || isLoading) return;
     
-    setIsLoading(true);
-    
-    // Navigate to workspace with the prompt
+    // Navigate to workspace with the prompt directly without setting loading state
+    // since we're navigating away immediately
     navigate(`/workspace?prompt=${encodeURIComponent(prompt)}`);
   };
 
