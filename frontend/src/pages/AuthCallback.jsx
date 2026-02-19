@@ -35,8 +35,8 @@ const AuthCallback = () => {
         // Set user in context
         login(response.user);
 
-        // Redirect to dashboard
-        navigate('/dashboard', { replace: true, state: { user: response.user } });
+        // Redirect to home
+        navigate('/home', { replace: true, state: { user: response.user } });
       } catch (error) {
         console.error('Auth error:', error);
         navigate('/login');
