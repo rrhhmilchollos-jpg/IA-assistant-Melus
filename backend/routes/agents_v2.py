@@ -1863,6 +1863,222 @@ root.render(<App />);"""
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/expert-agents")
+async def list_expert_agents():
+    """Get all available expert agents with their capabilities and costs"""
+    agents = []
+    for agent_type, config in EXPERT_AGENTS.items():
+        agents.append({
+            "type": agent_type,
+            "name": config["name"],
+            "description": config["description"],
+            "cost": config["cost"],
+            "capabilities": config["capabilities"]
+        })
+    return {"agents": agents}
+
+
+@router.post("/generate-expert")
+async def generate_with_expert_agent(request: Request):
+    """Generate a project using a specialized expert agent"""
+    from routes.workspace import get_connection_manager
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    description = body.get("description", "")
+    app_name = body.get("name", "My App")
+    expert_type = body.get("expert_type")  # e.g., "game", "mobile", "ecommerce"
+    features = body.get("features", [])
+    ultra_mode = body.get("ultra_mode", False)
+    
+    if not description:
+        raise HTTPException(status_code=400, detail="Description required")
+    
+    # Auto-detect expert type if not specified
+    if not expert_type:
+        expert_type = detect_project_type(description)
+    
+    # Get expert agent config
+    expert_config = get_expert_agent(expert_type)
+    
+    # Calculate cost
+    cost = calculate_expert_cost(expert_type, ultra_mode)
+    
+    # Check credits
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    
+    if not is_unlimited and user_doc.get("credits", 0) < cost:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Necesitas {cost} créditos. El agente {expert_config['name']} cuesta {expert_config['cost']} créditos."
+        )
+    
+    # Create workspace
+    workspace_id = generate_id("ws")
+    workspace = {
+        "workspace_id": workspace_id,
+        "user_id": user_id,
+        "name": app_name,
+        "description": description,
+        "expert_type": expert_type,
+        "expert_agent": expert_config["name"],
+        "files": {},
+        "versions": [],
+        "current_version": 0,
+        "status": "generating",
+        "created_at": utc_now(),
+        "updated_at": utc_now()
+    }
+    await db.workspaces.insert_one(workspace)
+    
+    manager = get_connection_manager()
+    
+    try:
+        # Notify start
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "expert",
+                "type": "working",
+                "message": f"Iniciando {expert_config['name']}...",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # Generate with expert prompt
+        expert_prompt = get_expert_prompt(expert_type, description, features)
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            model="gpt-4o" if ultra_mode else "gpt-4o-mini"
+        )
+        
+        response = await chat.send_message(UserMessage(text=expert_prompt))
+        
+        # Parse response
+        all_files = {}
+        try:
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                result = json.loads(json_match.group())
+                all_files = result.get("files", {})
+                
+                # Process files (fix newlines)
+                for path, content in all_files.items():
+                    if isinstance(content, str):
+                        if '\\n' in content and '\n' not in content:
+                            content = content.replace('\\n', '\n')
+                        if '\\t' in content:
+                            content = content.replace('\\t', '\t')
+                        all_files[path] = content
+        except Exception as e:
+            logger.warning(f"Expert agent parse error: {e}")
+        
+        # Add base files
+        base_files = {
+            "package.json": json.dumps({
+                "name": app_name.lower().replace(" ", "-"),
+                "private": True,
+                "version": "0.0.1",
+                "dependencies": {
+                    "react": "^18.2.0",
+                    "react-dom": "^18.2.0",
+                    "react-router-dom": "^6.20.0",
+                    "lucide-react": "^0.294.0"
+                }
+            }, indent=2),
+            "public/index.html": f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{app_name}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900">
+    <div id="root"></div>
+</body>
+</html>""",
+            "src/index.js": """import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);"""
+        }
+        
+        for path, content in base_files.items():
+            if path not in all_files:
+                all_files[path] = content
+        
+        # Update workspace
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {
+                "$set": {
+                    "files": all_files,
+                    "status": "completed",
+                    "current_version": 1,
+                    "updated_at": utc_now()
+                },
+                "$push": {
+                    "versions": {
+                        "version": 1,
+                        "files": all_files,
+                        "created_at": utc_now(),
+                        "message": f"Generated by {expert_config['name']}"
+                    }
+                }
+            }
+        )
+        
+        # Deduct credits
+        if not is_unlimited:
+            await db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"credits": -cost, "credits_used": cost}}
+            )
+        
+        # Notify completion
+        await manager.broadcast(workspace_id, {
+            "type": "generation_complete",
+            "files": all_files,
+            "workspace_id": workspace_id,
+            "credits_used": cost
+        })
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "expert",
+                "type": "success",
+                "message": f"Proyecto generado por {expert_config['name']}: {len(all_files)} archivos",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        return {
+            "workspace_id": workspace_id,
+            "files": all_files,
+            "expert_type": expert_type,
+            "expert_name": expert_config["name"],
+            "credits_used": cost if not is_unlimited else 0
+        }
+        
+    except Exception as e:
+        logger.error(f"Expert agent failed: {e}")
+        
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {"$set": {"status": "failed", "error": str(e)}}
+        )
+        
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================
 # ASYNC GENERATION SYSTEM
 # ============================================
