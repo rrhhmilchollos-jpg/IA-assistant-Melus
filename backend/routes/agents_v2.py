@@ -624,6 +624,9 @@ Generate your response as valid JSON."""
 
         response = await chat.send_message(UserMessage(text=prompt))
         
+        # Log raw response for debugging
+        logger.info(f"Agent {agent_type} raw response length: {len(response)}")
+        
         # Extract JSON from response with better error handling
         result = {}
         try:
