@@ -47,11 +47,6 @@ function AppRouter() {
           <Dashboard />
         </ProtectedRoute>
       } />
-      <Route path="/generator" element={
-        <ProtectedRoute>
-          <GeneratorPage />
-        </ProtectedRoute>
-      } />
       {/* Workspace - New IDE interface */}
       <Route path="/workspace" element={
         <ProtectedRoute>
