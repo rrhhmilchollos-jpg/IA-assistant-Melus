@@ -380,3 +380,167 @@ async def get_revenue_chart(request: Request, days: int = 30):
         ],
         "period_days": days
     }
+
+
+# ============================================================================
+# NEW METRICS ENDPOINTS
+# ============================================================================
+
+@router.get("/metrics/projects")
+async def get_projects_metrics(request: Request):
+    """Get project generation metrics"""
+    db = request.app.state.db
+    await require_admin(request)
+    
+    now = utc_now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = now - timedelta(days=7)
+    
+    # Total projects
+    total = await db.workspaces.count_documents({})
+    
+    # Today's projects
+    today = await db.workspaces.count_documents({
+        "created_at": {"$gte": today_start}
+    })
+    
+    # This week's projects
+    this_week = await db.workspaces.count_documents({
+        "created_at": {"$gte": week_start}
+    })
+    
+    # Projects by type
+    pipeline = [
+        {"$group": {
+            "_id": "$project_type",
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    by_type = await db.workspaces.aggregate(pipeline).to_list(10)
+    
+    return {
+        "total": total,
+        "today": today,
+        "this_week": this_week,
+        "by_type": [{"type": t["_id"] or "custom", "count": t["count"]} for t in by_type]
+    }
+
+
+@router.get("/metrics/sandbox")
+async def get_sandbox_metrics(request: Request):
+    """Get sandbox execution metrics"""
+    db = request.app.state.db
+    await require_admin(request)
+    
+    # Total executions
+    total = await db.sandbox_executions.count_documents({})
+    
+    # Successful executions
+    successful = await db.sandbox_executions.count_documents({"exit_code": 0})
+    
+    # Failed executions
+    failed = total - successful
+    
+    # By method
+    pipeline = [
+        {"$group": {
+            "_id": "$type",
+            "count": {"$sum": 1}
+        }}
+    ]
+    by_method_list = await db.sandbox_executions.aggregate(pipeline).to_list(10)
+    by_method = {m["_id"]: m["count"] for m in by_method_list}
+    
+    return {
+        "total": total,
+        "successful": successful,
+        "failed": failed,
+        "by_method": by_method
+    }
+
+
+@router.get("/metrics/credits")
+async def get_credits_metrics(request: Request):
+    """Get credits consumption metrics"""
+    db = request.app.state.db
+    await require_admin(request)
+    
+    now = utc_now()
+    week_ago = now - timedelta(days=7)
+    
+    # Daily credits consumption
+    pipeline = [
+        {"$match": {
+            "created_at": {"$gte": week_ago}
+        }},
+        {"$group": {
+            "_id": {
+                "$dateToString": {
+                    "format": "%Y-%m-%d",
+                    "date": "$created_at"
+                }
+            },
+            "credits": {"$sum": "$credits_used"}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    
+    daily_raw = await db.workspaces.aggregate(pipeline).to_list(7)
+    
+    # Build daily data with day names
+    days_of_week = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+    daily = []
+    
+    for d in daily_raw:
+        date_obj = datetime.strptime(d["_id"], "%Y-%m-%d")
+        daily.append({
+            "date": d["_id"],
+            "day": days_of_week[date_obj.weekday()],
+            "credits": d["credits"] or 0
+        })
+    
+    # Total consumed
+    total_consumed = sum(d["credits"] for d in daily)
+    daily_average = total_consumed / max(len(daily), 1)
+    
+    return {
+        "total_consumed": total_consumed,
+        "daily_average": daily_average,
+        "daily": daily
+    }
+
+
+@router.get("/projects")
+async def get_all_projects_v2(request: Request, limit: int = 50, skip: int = 0):
+    """Get all workspaces/projects with user info"""
+    db = request.app.state.db
+    await require_admin(request)
+    
+    projects = await db.workspaces.find(
+        {},
+        {"_id": 0, "files": 0, "versions": 0}  # Exclude large fields
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Enrich with user emails and file counts
+    for proj in projects:
+        user = await db.users.find_one({"user_id": proj.get("user_id")}, {"email": 1, "_id": 0})
+        proj["user_email"] = user.get("email") if user else "unknown"
+        
+        # Get file count from a separate query if needed
+        workspace_full = await db.workspaces.find_one(
+            {"workspace_id": proj["workspace_id"]},
+            {"files": 1}
+        )
+        proj["file_count"] = len(workspace_full.get("files", {})) if workspace_full else 0
+    
+    total = await db.workspaces.count_documents({})
+    
+    return {
+        "projects": projects,
+        "total": total,
+        "limit": limit,
+        "skip": skip
+    }
+
