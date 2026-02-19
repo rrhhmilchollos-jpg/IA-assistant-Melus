@@ -2048,6 +2048,12 @@ async def generate_from_template(request: Request):
                 "type": "success",
                 "message": "Diseño completado",
                 "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # Merge design files
+        design_files = design_result["result"].get("files", {})
+        all_files.update(design_files)
 
 
 @router.post("/modify")
