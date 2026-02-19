@@ -31,23 +31,37 @@ async def transcribe_audio(request: Request):
         raise HTTPException(status_code=402, detail="Créditos insuficientes para transcripción")
     
     try:
-        body = await request.json()
-        audio_data = body.get("audio_data")
-        language = body.get("language", "es")  # Default Spanish
+        # Handle FormData (multipart) or JSON
+        content_type = request.headers.get("content-type", "")
         
-        if not audio_data:
-            raise HTTPException(status_code=400, detail="No audio data provided")
-        
-        # Decode base64 audio
-        try:
-            # Handle data URL format
-            if "," in audio_data:
-                audio_bytes = base64.b64decode(audio_data.split(",")[1])
-            else:
-                audio_bytes = base64.b64decode(audio_data)
-        except Exception as e:
-            logger.error(f"Failed to decode audio: {e}")
-            raise HTTPException(status_code=400, detail="Invalid audio data format")
+        if "multipart/form-data" in content_type:
+            # Handle FormData upload
+            form = await request.form()
+            audio_file = form.get("audio")
+            language = form.get("language", "es")
+            
+            if not audio_file:
+                raise HTTPException(status_code=400, detail="No audio file provided")
+            
+            audio_bytes = await audio_file.read()
+        else:
+            # Handle JSON with base64
+            body = await request.json()
+            audio_data = body.get("audio_data")
+            language = body.get("language", "es")
+            
+            if not audio_data:
+                raise HTTPException(status_code=400, detail="No audio data provided")
+            
+            # Decode base64 audio
+            try:
+                if "," in audio_data:
+                    audio_bytes = base64.b64decode(audio_data.split(",")[1])
+                else:
+                    audio_bytes = base64.b64decode(audio_data)
+            except Exception as e:
+                logger.error(f"Failed to decode audio: {e}")
+                raise HTTPException(status_code=400, detail="Invalid audio data format")
         
         # Check file size (max 25MB)
         if len(audio_bytes) > 25 * 1024 * 1024:
