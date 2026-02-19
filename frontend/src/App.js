@@ -12,7 +12,6 @@ import HomePage from "./pages/HomePage";
 import Pricing from "./pages/Pricing";
 import Success from "./pages/Success";
 import AdminPanel from "./pages/AdminPanel";
-import GeneratorPage from "./pages/GeneratorPage";
 import WorkspacePage from "./pages/WorkspacePage";
 import MarketplacePage from "./pages/MarketplacePage";
 
