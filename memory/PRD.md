@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Febrero 2026
-> **Versión:** 2.7.0
+> **Versión:** 3.0.0 - FEATURE COMPLETE
 
 ---
 
@@ -137,11 +137,14 @@ Objetivo: [Descripción]
 - [x] **Vercel Deploy** - Preparación de proyecto para Vercel con ZIP
 - [x] **Sistema de Rollback UI** - Modal con historial de versiones
 - [x] **Documentación GitHub** - Instrucciones de configuración OAuth
+- [x] **Marketplace de Templates** - Publicar, buscar, descargar templates
+- [x] **Expert Agents** - 8 agentes especializados (Game, Mobile, E-commerce, etc.)
+- [x] **Docker Sandbox Service** - Estructura para ejecución aislada
 
-### Backlog
-- [ ] Marketplace de templates
-- [ ] Contenedores Docker aislados
-- [ ] Expert Agents completos
+### Backlog (Opcional)
+- [ ] Integración directa con Vercel API
+- [ ] Autenticación social (Google, GitHub)
+- [ ] Soporte para Vue/Angular/Svelte
 
 ---
 
