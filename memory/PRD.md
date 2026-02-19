@@ -197,9 +197,9 @@ Objetivo: [Descripción]
 
 ## 9. URLs
 
-- **Frontend:** https://melus-preview-2.preview.emergentagent.com
-- **Generador:** https://melus-preview-2.preview.emergentagent.com/generator
-- **API:** https://melus-preview-2.preview.emergentagent.com/api
+- **Frontend:** https://melus-homepage-fix.preview.emergentagent.com
+- **Generador:** https://melus-homepage-fix.preview.emergentagent.com/generator
+- **API:** https://melus-homepage-fix.preview.emergentagent.com/api
 
 ---
 

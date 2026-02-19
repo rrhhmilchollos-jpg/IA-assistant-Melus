@@ -169,7 +169,7 @@ async def github_login(request: Request):
     }
     
     # Use external URL for callback (from environment or hardcoded)
-    external_url = os.environ.get('EXTERNAL_URL', 'https://melus-preview-2.preview.emergentagent.com')
+    external_url = os.environ.get('EXTERNAL_URL', 'https://melus-homepage-fix.preview.emergentagent.com')
     redirect_uri = f"{external_url}/api/github/auth/callback"
     
     auth_url = (
@@ -243,7 +243,7 @@ async def github_callback(request: Request, code: str, state: str):
     )
     
     # Redirect to frontend with success
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://melus-preview-2.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://melus-homepage-fix.preview.emergentagent.com')
     return RedirectResponse(url=f"{frontend_url}/dashboard?github=connected")
 
 
@@ -403,7 +403,7 @@ This project was generated using AI-powered multi-agent architecture.
 3. Run the application
 
 ---
-Generated on {utc_now().strftime('%Y-%m-%d %H:%M:%S')} by [Assistant Melus](https://melus-preview-2.preview.emergentagent.com)
+Generated on {utc_now().strftime('%Y-%m-%d %H:%M:%S')} by [Assistant Melus](https://melus-homepage-fix.preview.emergentagent.com)
 """
     files.append({"path": "README.md", "content": readme_content})
     
