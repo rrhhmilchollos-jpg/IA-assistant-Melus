@@ -1,7 +1,7 @@
 """Complete Multi-Agent System for Melus AI - All Specialized Agents
 Motor de Ejecución No Chat - Sistema de agentes especializados
 """
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from typing import List, Optional, Dict, Any
 import logging
@@ -27,6 +27,11 @@ from services.execution_engine import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/agents/v2", tags=["agents-v2"])
+
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+
+# In-memory job storage for quick access (also persisted to MongoDB)
+generation_jobs: Dict[str, Dict[str, Any]] = {}
 
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
