@@ -82,7 +82,7 @@
 | Backend | 150 | Genera APIs y servidor |
 | Integrator | 75 | Conecta frontend con backend |
 
-### 3.2 Agentes Especializados
+### 4.2 Agentes Especializados
 | Agente | Costo | Función |
 |--------|-------|---------|
 | Design | 100 | UI/UX y sistema de diseño |
