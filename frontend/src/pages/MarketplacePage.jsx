@@ -20,7 +20,7 @@ import {
   Cloud,
   Smartphone,
   Gamepad,
-  Tool,
+  Wrench,
   Box,
   X
 } from 'lucide-react';
@@ -36,7 +36,7 @@ const CATEGORY_ICONS = {
   saas: Cloud,
   mobile: Smartphone,
   game: Gamepad,
-  tool: Tool,
+  tool: Wrench,
   other: Box
 };
 
