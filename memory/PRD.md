@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Febrero 2026
-> **Versión:** 2.6.0
+> **Versión:** 2.7.0
 
 ---
 
@@ -119,7 +119,7 @@ Objetivo: [Descripción]
 - [x] 12 templates predefinidos
 - [x] Ultra Mode (2x créditos)
 - [x] Debug Agent (30 créditos)
-- [x] Sistema de versionado/rollback
+- [x] Sistema de versionado/rollback - **FUNCIONAL**
 - [x] Descarga ZIP
 - [x] GitHub OAuth completo
 - [x] GitHub push desde workspace (50 créditos)
@@ -134,12 +134,14 @@ Objetivo: [Descripción]
 - [x] **Fix: Prompt mejorado para evitar imports CSS externos**
 - [x] **Backend Asíncrono** - Generación con BackgroundTasks + polling
 - [x] **GitHub Deploy Modal** - UI completa para subir a GitHub
+- [x] **Vercel Deploy** - Preparación de proyecto para Vercel con ZIP
+- [x] **Sistema de Rollback UI** - Modal con historial de versiones
+- [x] **Documentación GitHub** - Instrucciones de configuración OAuth
 
 ### Backlog
-- [ ] Deploy automático (Vercel/Netlify)
 - [ ] Marketplace de templates
 - [ ] Contenedores Docker aislados
-- [ ] Sistema de rollback funcional
+- [ ] Expert Agents completos
 
 ---
 
