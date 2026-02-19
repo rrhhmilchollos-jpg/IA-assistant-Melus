@@ -175,7 +175,7 @@ async def create_checkout_session(request: Request, checkout_req: CheckoutReques
     
     checkout_request = CheckoutSessionRequest(
         amount=amount,
-        currency="usd",
+        currency=CURRENCY,
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={
