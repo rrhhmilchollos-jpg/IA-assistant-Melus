@@ -75,7 +75,7 @@ SUBSCRIPTION_PLANS = {
     }
 }
 
-# Credit packages configuration
+# Credit packages configuration (EUR)
 CREDIT_PACKAGES = {
     "package_100": {
         "name": "100 créditos",
@@ -115,6 +115,10 @@ CREDIT_PACKAGES = {
         "base_credits": 5000
     }
 }
+
+# Currency
+CURRENCY = "eur"
+CURRENCY_SYMBOL = "€"
 
 # Promo codes
 PROMO_CODES = {
