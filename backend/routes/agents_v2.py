@@ -1953,10 +1953,15 @@ async def generate_with_expert_agent(request: Request):
         
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
-            model="gpt-4o" if ultra_mode else "gpt-4o-mini"
+            session_id=f"expert_{expert_type}_{generate_id('t')}",
+            system_message=expert_prompt
         )
         
-        response = await chat.send_message(UserMessage(text=expert_prompt))
+        # Model selection
+        model = "gpt-4o" if ultra_mode else "gpt-4o-mini"
+        chat.with_model("openai", model)
+        
+        response = await chat.send_message(UserMessage(text=f"Generate the {app_name} application: {description}"))
         
         # Parse response
         all_files = {}
