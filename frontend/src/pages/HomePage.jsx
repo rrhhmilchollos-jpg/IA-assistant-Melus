@@ -186,6 +186,10 @@ const HomePage = () => {
                   <Zap className="mr-2 h-4 w-4 text-yellow-400" />
                   Créditos
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/marketplace')} className="cursor-pointer">
+                  <Store className="mr-2 h-4 w-4 text-cyan-400" />
+                  Marketplace
+                </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer">
                   <Receipt className="mr-2 h-4 w-4" />
                   Historial
