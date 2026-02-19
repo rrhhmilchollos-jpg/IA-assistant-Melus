@@ -62,7 +62,7 @@ const Pricing = () => {
     if (!amount || amount < 1) {
       toast({
         title: "Error",
-        description: "El monto mínimo es $1",
+        description: "El monto mínimo es 1€",
         variant: "destructive"
       });
       return;
