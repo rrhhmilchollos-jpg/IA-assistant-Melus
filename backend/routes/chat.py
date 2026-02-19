@@ -181,7 +181,10 @@ async def send_message(request: Request, conversation_id: str, message_create: M
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
-    if user_doc["credits"] < 100:
+    # Check if user has unlimited credits (owner)
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    
+    if not is_unlimited and user_doc["credits"] < 100:
         raise HTTPException(
             status_code=402,
             detail="Insufficient credits. Please purchase more credits to continue."
