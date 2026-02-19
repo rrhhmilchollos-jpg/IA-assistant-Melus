@@ -170,34 +170,24 @@ async def execute_node_sandbox(request: Request):
         # Write code to file
         code_file = os.path.join(temp_dir, "sandbox.js")
         
-        # Wrap code with safety measures
-        wrapped_code = f'''
-// Sandbox wrapper - disable dangerous APIs
-const _setTimeout = setTimeout;
-const _setInterval = setInterval;
-const _console = console;
-
-// Override dangerous globals
-global.require = undefined;
-global.process.exit = () => {{ throw new Error("process.exit is disabled"); }};
-global.process.kill = () => {{ throw new Error("process.kill is disabled"); }};
-
-// Capture output
+        # Simpler wrapper - capture console output
+        wrapped_code = '''
 const output = [];
-console.log = (...args) => output.push({{ type: 'log', data: args.map(a => String(a)).join(' ') }});
-console.error = (...args) => output.push({{ type: 'error', data: args.map(a => String(a)).join(' ') }});
-console.warn = (...args) => output.push({{ type: 'warn', data: args.map(a => String(a)).join(' ') }});
+const _log = console.log;
+const _error = console.error;
+const _warn = console.warn;
 
-// User code
-try {{
-{code}
-}} catch (error) {{
-    output.push({{ type: 'error', data: error.message }});
-}}
+console.log = (...args) => output.push({ type: 'log', data: args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') });
+console.error = (...args) => output.push({ type: 'error', data: args.map(a => String(a)).join(' ') });
+console.warn = (...args) => output.push({ type: 'warn', data: args.map(a => String(a)).join(' ') });
 
-// Output results
-console.log = _console.log;
-console.log(JSON.stringify({{ success: true, output }}));
+try {
+''' + code + '''
+} catch (error) {
+    output.push({ type: 'error', data: error.message });
+}
+
+_log(JSON.stringify({ success: true, output }));
 '''
         
         with open(code_file, 'w') as f:
