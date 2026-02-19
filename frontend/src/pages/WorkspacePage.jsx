@@ -214,8 +214,8 @@ const WorkspacePage = () => {
     // TODO: Implementar rollback
   };
 
-  const handleRedeploy = () => {
-    addLog('message', 'Función de redeploy próximamente disponible.');
+  const handleDeploy = () => {
+    addLog('message', 'Función de deploy próximamente disponible.');
   };
 
   // Format files for Sandpack
