@@ -191,7 +191,7 @@ const Pricing = () => {
                 <CardDescription>
                   <div className="mt-2">
                     <span className="text-3xl font-bold text-gray-900">
-                      ${pkg.price}
+                      {pkg.price}€
                     </span>
                   </div>
                 </CardDescription>
