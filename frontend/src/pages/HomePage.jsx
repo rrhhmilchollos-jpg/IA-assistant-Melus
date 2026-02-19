@@ -3,21 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Home,
-  ChevronDown,
-  Paperclip,
-  Mic,
-  Zap,
   Send,
-  Settings,
+  Zap,
   Sparkles,
   Clock,
   Rocket,
   MoreHorizontal,
-  Plus,
   User,
   LogOut,
   Receipt,
-  Shield
+  Shield,
+  Loader2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -31,7 +27,7 @@ import { Toaster } from '../components/ui/sonner';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
-// Matrix background effect component
+// Matrix background effect
 const MatrixBackground = () => (
   <div className="absolute inset-0 overflow-hidden opacity-5 pointer-events-none">
     <div className="matrix-rain" style={{
@@ -46,61 +42,27 @@ const MatrixBackground = () => (
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { user, logout, updateCredits } = useAuth();
+  const { user, logout } = useAuth();
   const [prompt, setPrompt] = useState('');
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [selectedModel, setSelectedModel] = useState('gpt-4o');
-  const [ultraMode, setUltraMode] = useState(false);
-  const [activeTab, setActiveTab] = useState('recent'); // 'recent' | 'deployed'
-  const [recentTasks, setRecentTasks] = useState([]);
-  const [deployedApps, setDeployedApps] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [recentTasks, setRecentTasks] = useState([]);
+  const [activeTab, setActiveTab] = useState('recent');
+  const [deployedApps, setDeployedApps] = useState([]);
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
 
+  // Suggestions - Simple ideas
   const suggestions = [
-    { id: 'meltbot', label: 'MeltBot', isNew: true, color: 'text-red-400' },
-    { id: 'idea', label: 'Idea Logger', color: 'text-cyan-400' },
-    { id: 'baking', label: 'Baking Bliss', color: 'text-yellow-400' },
-    { id: 'surprise', label: 'Sorpréndeme', color: 'text-purple-400' }
-  ];
-
-  const models = [
-    { id: 'gpt-4o', name: 'GPT-4o', icon: '🧠' },
-    { id: 'claude-4.5-opus', name: 'Claude 4.5 Opus', icon: '🎭' },
-    { id: 'claude-4.5-sonnet', name: 'Claude 4.5 Sonnet', icon: '🎵' },
-    { id: 'gemini-3-pro', name: 'Gemini 3 Pro', icon: '💎' }
+    { id: 'store', label: 'Tienda online', prompt: 'Crea una tienda online de ropa con carrito de compras' },
+    { id: 'landing', label: 'Landing page', prompt: 'Crea una landing page para mi negocio de consultoría' },
+    { id: 'dashboard', label: 'Dashboard', prompt: 'Crea un dashboard de administración con gráficos' },
+    { id: 'blog', label: 'Blog', prompt: 'Crea un blog moderno con sistema de comentarios' },
+    { id: 'portfolio', label: 'Portfolio', prompt: 'Crea un portfolio profesional para desarrollador' },
   ];
 
   useEffect(() => {
-    loadProjects();
     loadRecentTasks();
     loadDeployedApps();
-    
-    // Set mock data immediately for demo
-    setRecentTasks([
-      { workspace_id: 'EMT-8ac70B', name: 'protect-staging-1', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a comprehensive, enterprise-grade,...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() },
-      { workspace_id: 'EMT-1c2aa2', name: 'mano-protect-preview', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() }
-    ]);
   }, []);
-
-  const loadProjects = async () => {
-    const token = localStorage.getItem('session_token');
-    try {
-      const response = await fetch(`${API_BASE}/api/workspace/list`, {
-        headers: { 'X-Session-Token': token }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data.workspaces || []);
-        if (data.workspaces?.length > 0 && !selectedProject) {
-          setSelectedProject(data.workspaces[0]);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load projects:', error);
-    }
-  };
 
   const loadRecentTasks = async () => {
     const token = localStorage.getItem('session_token');
@@ -110,23 +72,10 @@ const HomePage = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        if (data.workspaces && data.workspaces.length > 0) {
-          setRecentTasks(data.workspaces);
-        } else {
-          // Show mock data for demo
-          setRecentTasks([
-            { workspace_id: 'EMT-8ac70B', name: 'protect-staging-1', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a comprehensive, enterprise-grade,...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() },
-            { workspace_id: 'EMT-1c2aa2', name: 'mano-protect-preview', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() }
-          ]);
-        }
+        setRecentTasks(data.workspaces || []);
       }
     } catch (error) {
       console.error('Failed to load recent tasks:', error);
-      // Mock data for demo
-      setRecentTasks([
-        { workspace_id: 'EMT-8ac70B', name: 'protect-staging-1', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a comprehensive, enterprise-grade,...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() },
-        { workspace_id: 'EMT-1c2aa2', name: 'mano-protect-preview', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() }
-      ]);
     }
   };
 
@@ -146,55 +95,20 @@ const HomePage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || isLoading) return;
     
     setIsLoading(true);
-    const token = localStorage.getItem('session_token');
     
-    try {
-      // Create new workspace and start generation
-      const response = await fetch(`${API_BASE}/api/agents/v2/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-Token': token
-        },
-        body: JSON.stringify({
-          description: prompt,
-          name: prompt.substring(0, 50),
-          ultra_mode: ultraMode,
-          model: selectedModel
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        updateCredits(data.credits_remaining);
-        // Navigate to the workspace/generator view
-        navigate(`/generator?workspace=${data.workspace_id}`);
-      } else {
-        throw new Error(data.detail || 'Error al generar');
-      }
-    } catch (error) {
-      console.error('Generation error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    // Navigate to workspace with the prompt
+    navigate(`/workspace?prompt=${encodeURIComponent(prompt)}`);
   };
 
   const handleSuggestionClick = (suggestion) => {
-    if (suggestion.id === 'surprise') {
-      const ideas = [
-        'Construye una app de gestión de tareas con drag and drop',
-        'Crea un dashboard de analytics con gráficos interactivos',
-        'Genera un e-commerce de productos artesanales',
-        'Desarrolla una plataforma de cursos online'
-      ];
-      setPrompt(ideas[Math.floor(Math.random() * ideas.length)]);
-    } else {
-      setPrompt(`Construyeme una app ${suggestion.label}`);
-    }
+    setPrompt(suggestion.prompt);
+  };
+
+  const handleTaskClick = (task) => {
+    navigate(`/workspace?workspace=${task.workspace_id}`);
   };
 
   const handleLogout = async () => {
@@ -212,8 +126,6 @@ const HomePage = () => {
     return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
   };
 
-  const currentModel = models.find(m => m.id === selectedModel) || models[0];
-
   return (
     <div className="min-h-screen bg-[#0a0a12] text-white relative" data-testid="home-page">
       <MatrixBackground />
@@ -221,15 +133,16 @@ const HomePage = () => {
       {/* Header */}
       <header className="relative z-10 border-b border-gray-800/50 bg-[#0a0a12]/80 backdrop-blur-sm">
         <div className="flex items-center justify-between h-14 px-4">
-          {/* Left - Home */}
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:bg-white/5 rounded-lg transition-colors"
-            data-testid="home-button"
-          >
-            <Home size={18} />
-            <span className="text-sm font-medium">Home</span>
-          </button>
+          {/* Left - Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <Sparkles size={20} className="text-white" />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg">Melus AI</h1>
+              <p className="text-xs text-gray-500">Constructor Universal de Apps</p>
+            </div>
+          </div>
 
           {/* Right - Credits and User */}
           <div className="flex items-center gap-3">
@@ -239,36 +152,20 @@ const HomePage = () => {
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full hover:opacity-80 transition-colors ${
                 user?.unlimited_credits || user?.is_owner 
                   ? 'bg-gradient-to-r from-yellow-500/30 to-orange-500/30 border border-yellow-500/50' 
-                  : 'bg-red-500/20 border border-red-500/30'
+                  : 'bg-purple-500/20 border border-purple-500/30'
               }`}
               data-testid="credits-display"
             >
-              <div className={`w-2 h-2 rounded-full animate-pulse ${
-                user?.unlimited_credits || user?.is_owner ? 'bg-yellow-400' : 'bg-red-500'
-              }`} />
-              <span className={`font-bold text-sm ${
-                user?.unlimited_credits || user?.is_owner ? 'text-yellow-400' : 'text-red-400'
-              }`}>
+              <Zap size={14} className={user?.unlimited_credits ? 'text-yellow-400' : 'text-purple-400'} />
+              <span className={`font-bold text-sm ${user?.unlimited_credits ? 'text-yellow-400' : 'text-purple-400'}`}>
                 {user?.unlimited_credits || user?.is_owner 
                   ? '∞ ILIMITADO' 
                   : user?.credits?.toLocaleString() || 0}
               </span>
               {(user?.unlimited_credits || user?.is_owner) && (
-                <span className="text-xs text-yellow-500">👑 Owner</span>
+                <span className="text-xs text-yellow-500">👑</span>
               )}
             </button>
-
-            {/* Buy Credits - Hide for unlimited users */}
-            {!(user?.unlimited_credits || user?.is_owner) && (
-              <button
-                onClick={() => setIsCreditModalOpen(true)}
-                className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all"
-                data-testid="buy-credits-btn"
-              >
-                <Zap size={14} className="inline mr-1" />
-                Comprar
-              </button>
-            )}
 
             {/* User Avatar */}
             <DropdownMenu>
@@ -284,18 +181,10 @@ const HomePage = () => {
                 <div className="px-3 py-2 border-b border-gray-700">
                   <div className="font-medium">{user?.name || 'Usuario'}</div>
                   <div className="text-xs text-gray-400">{user?.email}</div>
-                  {(user?.unlimited_credits || user?.is_owner) && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-yellow-400 text-xs rounded border border-yellow-500/50">
-                      👑 Owner - Créditos Ilimitados
-                    </span>
-                  )}
-                  {user?.is_admin && !(user?.unlimited_credits || user?.is_owner) && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded">Admin</span>
-                  )}
                 </div>
                 <DropdownMenuItem onClick={() => setIsCreditModalOpen(true)} className="cursor-pointer">
                   <Zap className="mr-2 h-4 w-4 text-yellow-400" />
-                  Comprar Créditos
+                  Créditos
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer">
                   <Receipt className="mr-2 h-4 w-4" />
@@ -319,53 +208,23 @@ const HomePage = () => {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-4xl mx-auto px-4 pt-16 pb-8">
-        {/* Project Selector */}
-        <div className="flex justify-center mb-6">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-cyan-400 hover:bg-cyan-500/30 transition-colors">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                <span className="text-sm font-medium">{selectedProject?.name || "Nuevo Proyecto"}</span>
-                <ChevronDown size={16} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 bg-[#1a1a2e] border-gray-700 text-gray-200">
-              <DropdownMenuItem 
-                onClick={() => setSelectedProject(null)}
-                className="cursor-pointer"
-              >
-                <Plus className="mr-2 h-4 w-4 text-green-400" />
-                Nuevo Proyecto
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-gray-700" />
-              {projects.map(project => (
-                <DropdownMenuItem 
-                  key={project.workspace_id}
-                  onClick={() => setSelectedProject(project)}
-                  className="cursor-pointer"
-                >
-                  <div className={`w-2 h-2 rounded-full mr-2 ${project.workspace_id === selectedProject?.workspace_id ? 'bg-cyan-400' : 'bg-gray-500'}`} />
-                  {project.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
+      <main className="relative z-10 max-w-3xl mx-auto px-4 pt-20 pb-8">
         {/* Main Title */}
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-10 text-white">
-          ¿Qué construirás hoy?
+        <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
+          ¿Qué quieres crear?
         </h1>
+        <p className="text-center text-gray-400 mb-10">
+          Describe tu idea y los agentes de IA la construirán automáticamente
+        </p>
 
-        {/* Input Box */}
-        <div className="relative mb-6">
+        {/* Input Box - Simple */}
+        <div className="relative mb-8">
           <div className="bg-[#1a1a2e]/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 focus-within:border-purple-500/50 transition-colors">
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Construyeme una app SaaS..."
-              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none text-lg min-h-[100px]"
+              placeholder="Ejemplo: Crea una tienda online de productos artesanales..."
+              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none text-lg min-h-[120px]"
               data-testid="main-prompt-input"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -375,132 +234,45 @@ const HomePage = () => {
               }}
             />
             
-            {/* Input Controls */}
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700/50">
-              <div className="flex items-center gap-2">
-                {/* Attachment */}
-                <button 
-                  className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                  data-testid="attach-btn"
-                >
-                  <Paperclip size={20} />
-                </button>
-                
-                {/* Voice */}
-                <button 
-                  className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                  data-testid="voice-btn"
-                >
-                  <Mic size={20} />
-                </button>
-
-                {/* Tier Selector - E1 */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1 px-3 py-1.5 bg-cyan-500/20 text-cyan-400 rounded-full text-sm hover:bg-cyan-500/30 transition-colors">
-                      <Zap size={14} />
-                      <span>E1</span>
-                      <ChevronDown size={14} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-[#1a1a2e] border-gray-700">
-                    <DropdownMenuItem className="text-cyan-400">
-                      <Zap className="mr-2 h-4 w-4" />E1 - Standard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-purple-400">
-                      <Zap className="mr-2 h-4 w-4" />E2 - Advanced
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Ultra Toggle */}
-                <button 
-                  onClick={() => setUltraMode(!ultraMode)}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-all ${
-                    ultraMode 
-                      ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500/50' 
-                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
-                  }`}
-                  data-testid="ultra-toggle"
-                >
-                  <Sparkles size={14} />
-                  <span>Ultra</span>
-                  <div className={`w-8 h-4 rounded-full relative transition-colors ${ultraMode ? 'bg-yellow-500' : 'bg-gray-600'}`}>
-                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${ultraMode ? 'left-4' : 'left-0.5'}`} />
-                  </div>
-                </button>
-
-                {/* Model Selector */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-full text-sm hover:bg-purple-500/30 transition-colors">
-                      <span>{currentModel.icon}</span>
-                      <span>{currentModel.name}</span>
-                      <ChevronDown size={14} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-[#1a1a2e] border-gray-700">
-                    {models.map(model => (
-                      <DropdownMenuItem 
-                        key={model.id}
-                        onClick={() => setSelectedModel(model.id)}
-                        className={`cursor-pointer ${model.id === selectedModel ? 'text-purple-400' : 'text-gray-300'}`}
-                      >
-                        <span className="mr-2">{model.icon}</span>
-                        {model.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <button className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  <Settings size={20} />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  <ChevronDown size={20} />
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={!prompt.trim() || isLoading}
-                  className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  data-testid="submit-btn"
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Send size={20} />
-                  )}
-                </button>
-              </div>
+            {/* Send Button */}
+            <div className="flex justify-end mt-4 pt-4 border-t border-gray-700/50">
+              <button
+                onClick={handleSubmit}
+                disabled={!prompt.trim() || isLoading}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                data-testid="submit-btn"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    <span>Creando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} />
+                    <span>Crear App</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
 
         {/* Suggestions */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
           {suggestions.map(suggestion => (
             <button
               key={suggestion.id}
               onClick={() => handleSuggestionClick(suggestion)}
-              className={`flex items-center gap-2 px-4 py-2 bg-[#1a1a2e]/60 border border-gray-700/50 rounded-full text-sm hover:bg-white/5 hover:border-gray-600 transition-all ${suggestion.color}`}
+              className="px-4 py-2 bg-[#1a1a2e]/60 border border-gray-700/50 rounded-full text-sm text-gray-300 hover:bg-purple-500/20 hover:border-purple-500/30 hover:text-white transition-all"
               data-testid={`suggestion-${suggestion.id}`}
             >
-              {suggestion.isNew && (
-                <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded">New</span>
-              )}
-              <Sparkles size={14} />
-              <span>{suggestion.label}</span>
+              {suggestion.label}
             </button>
           ))}
-          <button className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-            <Settings size={18} />
-          </button>
         </div>
 
-        {/* Tasks Section */}
+        {/* Recent Projects Section */}
         <div className="bg-[#1a1a2e]/60 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden">
           {/* Tabs */}
           <div className="flex items-center gap-1 px-4 pt-4 border-b border-gray-700/50">
@@ -512,7 +284,7 @@ const HomePage = () => {
               data-testid="tab-recent"
             >
               <Clock size={16} />
-              Tareas recientes
+              Mis proyectos
               {activeTab === 'recent' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />
               )}
@@ -526,7 +298,7 @@ const HomePage = () => {
               data-testid="tab-deployed"
             >
               <Rocket size={16} />
-              Apps desplegadas
+              Desplegadas
               {activeTab === 'deployed' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />
               )}
@@ -538,10 +310,9 @@ const HomePage = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-700/50">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-cyan-400 uppercase">Tarea</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-yellow-400 uppercase">Última modificación</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase"></th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Proyecto</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Última vez</th>
+                  <th className="px-4 py-3 text-right"></th>
                 </tr>
               </thead>
               <tbody>
@@ -551,12 +322,11 @@ const HomePage = () => {
                       <tr 
                         key={task.workspace_id}
                         className="border-b border-gray-700/30 hover:bg-white/5 cursor-pointer transition-colors"
-                        onClick={() => navigate(`/generator?workspace=${task.workspace_id}`)}
+                        onClick={() => handleTaskClick(task)}
                         data-testid={`task-row-${task.workspace_id}`}
                       >
-                        <td className="px-4 py-4 text-sm text-gray-400 font-mono">{task.workspace_id}</td>
                         <td className="px-4 py-4">
-                          <div className="text-cyan-400 font-medium">{task.name}</div>
+                          <div className="text-white font-medium">{task.name}</div>
                           <div className="text-xs text-gray-500 mt-1 line-clamp-1">
                             {task.description}
                           </div>
@@ -573,8 +343,10 @@ const HomePage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                        No hay tareas recientes
+                      <td colSpan={3} className="px-4 py-12 text-center text-gray-500">
+                        <Sparkles size={32} className="mx-auto mb-3 opacity-30" />
+                        <p>No tienes proyectos aún</p>
+                        <p className="text-sm mt-1">Describe tu idea arriba para comenzar</p>
                       </td>
                     </tr>
                   )
@@ -586,7 +358,6 @@ const HomePage = () => {
                         className="border-b border-gray-700/30 hover:bg-white/5 cursor-pointer transition-colors"
                         onClick={() => window.open(app.url, '_blank')}
                       >
-                        <td className="px-4 py-4 text-sm text-gray-400 font-mono">{app.workspace_id}</td>
                         <td className="px-4 py-4">
                           <div className="text-green-400 font-medium">{app.name}</div>
                           <div className="text-xs text-gray-500 mt-1">{app.url}</div>
@@ -603,8 +374,9 @@ const HomePage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                        No hay apps desplegadas
+                      <td colSpan={3} className="px-4 py-12 text-center text-gray-500">
+                        <Rocket size={32} className="mx-auto mb-3 opacity-30" />
+                        <p>No hay apps desplegadas</p>
                       </td>
                     </tr>
                   )
