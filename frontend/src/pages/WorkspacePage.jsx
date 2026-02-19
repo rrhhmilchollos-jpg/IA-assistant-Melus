@@ -31,7 +31,11 @@ import {
   Zap,
   ShoppingCart,
   History,
-  Download
+  Download,
+  Play,
+  Terminal,
+  ExternalLink,
+  Box
 } from 'lucide-react';
 import CreditModal from '../components/CreditModal';
 
