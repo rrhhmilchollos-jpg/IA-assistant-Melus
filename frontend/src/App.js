@@ -34,6 +34,13 @@ function AppRouter() {
           <Success />
         </ProtectedRoute>
       } />
+      {/* Home - Main page like Emergent.sh */}
+      <Route path="/home" element={
+        <ProtectedRoute>
+          <HomePage />
+        </ProtectedRoute>
+      } />
+      {/* Dashboard - Chat interface */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
@@ -49,8 +56,9 @@ function AppRouter() {
           <AdminPanel />
         </ProtectedRoute>
       } />
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Default redirect to home */}
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }
