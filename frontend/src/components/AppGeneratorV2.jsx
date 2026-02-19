@@ -485,6 +485,124 @@ Objetivo: Describe tu aplicación aquí
     }
   };
 
+  // Deploy states
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [deployPlatform, setDeployPlatform] = useState('vercel');
+  const [deployUrl, setDeployUrl] = useState(null);
+
+  // Deploy to Vercel/Netlify
+  const handleDeploy = async () => {
+    if (!workspaceId) return;
+    
+    const token = localStorage.getItem('session_token');
+    setIsDeploying(true);
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/agents/v2/deploy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          workspace_id: workspaceId,
+          platform: deployPlatform
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Deploy failed');
+      }
+      
+      updateCredits(data.credits_remaining);
+      setDeployUrl(data.url);
+      setShowDeployModal(false);
+      
+      setLogs(prev => [...prev, {
+        agent: 'deploy',
+        type: 'success',
+        message: `Desplegado en ${deployPlatform}: ${data.url}`,
+        timestamp: new Date().toISOString()
+      }]);
+      
+      // Open deployed app
+      if (data.url) {
+        window.open(data.url, '_blank');
+      }
+      
+    } catch (error) {
+      console.error('Deploy error:', error);
+      setLogs(prev => [...prev, {
+        agent: 'deploy',
+        type: 'error',
+        message: `Error deploy: ${error.message}`,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  // Publish to Marketplace
+  const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
+  const [marketplaceName, setMarketplaceName] = useState('');
+  const [marketplaceDesc, setMarketplaceDesc] = useState('');
+  const [marketplacePrice, setMarketplacePrice] = useState(0);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const handlePublishToMarketplace = async () => {
+    if (!workspaceId || !marketplaceName) return;
+    
+    const token = localStorage.getItem('session_token');
+    setIsPublishing(true);
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/agents/v2/marketplace/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          workspace_id: workspaceId,
+          name: marketplaceName,
+          description: marketplaceDesc,
+          price: marketplacePrice
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Publish failed');
+      }
+      
+      updateCredits(data.credits_remaining);
+      setShowMarketplaceModal(false);
+      
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'success',
+        message: `Publicado en Marketplace: ${marketplaceName}`,
+        timestamp: new Date().toISOString()
+      }]);
+      
+    } catch (error) {
+      console.error('Marketplace publish error:', error);
+      setLogs(prev => [...prev, {
+        agent: 'system',
+        type: 'error',
+        message: `Error Marketplace: ${error.message}`,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   // WebSocket connection for real-time updates
   useEffect(() => {
     if (workspaceId) {
