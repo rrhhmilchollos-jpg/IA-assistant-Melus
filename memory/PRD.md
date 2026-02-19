@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Febrero 2026
-> **Versión:** 2.4.0
+> **Versión:** 2.5.0
 
 ---
 
@@ -115,7 +115,7 @@ Objetivo: [Descripción]
 - [x] Sistema de 13 agentes especializados
 - [x] **MODO MOTOR (No Chat)** - Ejecución directa
 - [x] Plantilla de proyecto estructurada
-- [x] Preview en vivo con Sandpack
+- [x] Preview en vivo con Sandpack - **FUNCIONANDO**
 - [x] 12 templates predefinidos
 - [x] Ultra Mode (2x créditos)
 - [x] Debug Agent (30 créditos)
@@ -129,12 +129,15 @@ Objetivo: [Descripción]
 - [x] Botones de sugerencia funcionando
 - [x] Navegación HomePage → WorkspacePage con prompt
 - [x] Sistema de créditos ILIMITADO para Owner
+- [x] **Fix: Generación de código con saltos de línea correctos**
+- [x] **Fix: Dependencias base (lucide-react, prop-types)**
+- [x] **Fix: Prompt mejorado para evitar imports CSS externos**
 
 ### Backlog
 - [ ] Deploy automático (Vercel/Netlify)
 - [ ] Marketplace de templates
 - [ ] Contenedores Docker aislados
-- [ ] **P1: Refactorizar backend a asíncrono** - Evitar timeouts en generación
+- [ ] **P1: Refactorizar backend a asíncrono** - Evitar timeouts en generación larga
 
 ---
 
