@@ -1,62 +1,68 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Diciembre 2025
-> **Versión:** 3.2.0 - MARKETPLACE & EXPERT AGENTS
+> **Versión:** 3.3.0 - ADMIN ONLY MARKETPLACE + VERSIONING
 
 ---
 
 ## 1. Visión del Producto
 
-**Melus AI** es un **Constructor Universal de Aplicaciones** que funciona **idénticamente a Emergent.sh**, proporcionando una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando un sistema de **13 agentes especializados** de IA + **8 Expert Agents** para tipos específicos de proyectos.
+**Melus AI** es un **Constructor Universal de Aplicaciones** idéntico a Emergent.sh, proporcionando una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando **13 agentes especializados** de IA + **8 Expert Agents**.
 
 ### Características Principales
-- **HomePage Completa**: Interfaz principal con todos los controles funcionales
-- **Marketplace Estilo Vercel**: 8 agentes especializados con categorías
-- **Expert Agents**: Agentes especializados por tipo de proyecto
-- **GitHub Deploy**: Push directo de proyectos a GitHub
-- **13 Agentes Core**: Cada uno con rol específico
-- **Preview en Vivo**: CodeSandbox Sandpack integrado
-- **Sistema de Versionado**: Snapshots y rollback
+- **HomePage Completa**: Interfaz principal con todos los controles
+- **Marketplace ADMIN ONLY**: Templates solo para uso interno del owner y agentes
+- **Expert Agents**: 8 agentes especializados por tipo de proyecto
+- **Vercel Deploy**: Flujo GitHub → Vercel
+- **Sistema de Versionado Mejorado**: Snapshots, compare, file-history
+- **Panel de Admin**: `/admin` - Dashboard completo
 
 ---
 
-## 2. Estado Actual - Actualizado Diciembre 2025
+## 2. URLs y Accesos
 
-### ✅ Completado en esta sesión
-
-#### Tareas A, B, C (Todas completadas)
-
-**A) GitHub Deploy:**
-- [x] Endpoint `/api/github/push-workspace` funcional
-- [x] Push de archivos a repositorio GitHub
-- [x] UI de deploy en WorkspacePage
-
-**B) Marketplace Estilo Vercel:**
-- [x] Nueva UI en `/marketplace` con 8 agentes especializados
-- [x] Categorías: Todos, Desarrollo, IA & ML, Backend, Diseño, Seguridad
-- [x] Tabs: "Agentes Especializados" y "Templates de la Comunidad"
-- [x] Botón "Usar" navega a /home con agente seleccionado
-- [x] Publicar Templates desde workspaces
-
-**C) Expert Agents:**
-- [x] 8 agentes especializados con prompts optimizados
-- [x] Endpoint `/api/agents/v2/expert-agents` lista todos
-- [x] Endpoint `/api/agents/v2/generate-expert` genera proyectos
-
-#### Sesión Anterior
-- [x] **HomePage Funcional Completa** (todos los controles)
-- [x] **Ruta /generator OCULTA**
-- [x] **Backend voice/transcribe** - Soporta FormData y JSON
-- [x] **data-testid agregados**
-
-### Testing Completado
-- **Iteration 5:** HomePage 100% (11/11 features)
-- **Iteration 6:** A/B/C features 100% (15/15 backend + UI tests)
-- **Bug corregido:** LlmChat constructor en generate-expert
+- **HomePage:** `/home`
+- **Workspace:** `/workspace?workspace={id}`
+- **Admin Panel:** `/admin` (solo admin/owner)
+- **Marketplace:** `/marketplace` (SOLO ADMIN - templates internos)
 
 ---
 
-## 3. Expert Agents (8 Agentes Especializados)
+## 3. Estado Actual - Completado
+
+### ✅ Sesión Actual - P2 Features
+
+**1) Vercel Deploy (desde GitHub):**
+- [x] Modal detecta si proyecto está en GitHub
+- [x] Si NO está: muestra mensaje y botón "Ir a subir a GitHub"
+- [x] Si ESTÁ: abre `vercel.com/new/import?s={repo_url}`
+
+**2) Marketplace SOLO ADMIN:**
+- [x] Acceso restringido a `is_admin` o `is_owner`
+- [x] Templates son gratuitos (uso interno)
+- [x] Sin opción de compra para usuarios normales
+
+**3) Sistema de Versionado Mejorado:**
+- [x] `POST /workspace/{id}/snapshot` - Crear snapshots con nombre
+- [x] `GET /workspace/{id}/compare/{v1}/{v2}` - Diff entre versiones
+- [x] `GET /workspace/{id}/file-history/{path}` - Historial de archivo
+
+**4) Panel de Admin:**
+- [x] Dashboard con métricas
+- [x] Gestión de usuarios
+- [x] Transacciones
+- [x] Sistema de salud
+
+### ✅ Sesiones Anteriores
+- HomePage funcional completa
+- Ruta /generator oculta
+- Expert Agents (8 tipos)
+- GitHub push-workspace
+- Voice transcription
+
+---
+
+## 4. Expert Agents (8 Agentes Especializados)
 
 | Agente | Costo | Categoría | Capacidades |
 |--------|-------|-----------|-------------|
