@@ -207,6 +207,15 @@ CRITICAL RULES:
 6. Make UI modern, beautiful, and responsive
 7. Use lucide-react for icons
 
+AVAILABLE DEPENDENCIES (DO NOT USE ANY OTHER EXTERNAL LIBRARIES):
+- react, react-dom
+- react-router-dom (v6)
+- lucide-react (for icons)
+- prop-types (optional)
+- Tailwind CSS (via CDN, already included)
+
+DO NOT import from axios, framer-motion, styled-components, or any other library not listed above.
+
 REACT ROUTER V6 SYNTAX:
 - Use <Routes> NOT <Switch>
 - Use <Route path="/" element={<Component />} />
