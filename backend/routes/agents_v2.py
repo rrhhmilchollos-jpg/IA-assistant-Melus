@@ -1845,6 +1845,489 @@ root.render(<App />);"""
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================
+# ASYNC GENERATION SYSTEM
+# ============================================
+
+async def run_generation_background(
+    job_id: str,
+    workspace_id: str,
+    user_id: str,
+    description: str,
+    app_name: str,
+    ultra_mode: bool,
+    include_agents: list,
+    db,
+    total_cost: float
+):
+    """Background task for app generation - prevents timeout issues"""
+    from routes.workspace import get_connection_manager
+    
+    manager = get_connection_manager()
+    
+    # Update job status
+    generation_jobs[job_id] = {
+        "status": "running",
+        "workspace_id": workspace_id,
+        "current_step": "Iniciando generación...",
+        "progress": 0,
+        "started_at": utc_now().isoformat()
+    }
+    
+    total_credits_used = 0
+    all_files = {}
+    agent_results = {}
+    
+    try:
+        mode_label = "ULTRA MODE" if ultra_mode else "Normal"
+        
+        # STEP 1: Classifier
+        if "classifier" in include_agents:
+            generation_jobs[job_id]["current_step"] = "Clasificando proyecto..."
+            generation_jobs[job_id]["progress"] = 10
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "classifier",
+                    "type": "working",
+                    "message": f"[{mode_label}] Analizando requisitos...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            classifier_result = await run_agent_v2(
+                "classifier",
+                f"Classify this app: {description}",
+                {"app_name": app_name, "description": description},
+                db, workspace_id, ultra_mode
+            )
+            total_credits_used += classifier_result["credits_used"]
+            classification = classifier_result["result"]
+            agent_results["classifier"] = classification
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "classifier",
+                    "type": "success",
+                    "message": f"Clasificado: {classification.get('app_type', 'app')} ({classification.get('complexity', 'medium')})",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+        else:
+            classification = {"app_type": "custom", "complexity": "medium"}
+        
+        # STEP 2: Architect
+        if "architect" in include_agents:
+            generation_jobs[job_id]["current_step"] = "Diseñando arquitectura..."
+            generation_jobs[job_id]["progress"] = 25
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "architect",
+                    "type": "working",
+                    "message": "Diseñando arquitectura...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            architect_result = await run_agent_v2(
+                "architect",
+                f"Design architecture for: {description}",
+                {"classification": classification},
+                db, workspace_id, ultra_mode
+            )
+            total_credits_used += architect_result["credits_used"]
+            architecture = architect_result["result"]
+            agent_results["architect"] = architecture
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "architect",
+                    "type": "success",
+                    "message": f"Arquitectura: {len(architecture.get('structure', {}))} archivos planificados",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+        else:
+            architecture = {}
+        
+        # STEP 3: Design
+        if "design" in include_agents:
+            generation_jobs[job_id]["current_step"] = "Creando sistema de diseño..."
+            generation_jobs[job_id]["progress"] = 40
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "design",
+                    "type": "working",
+                    "message": "Creando sistema de diseño...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            design_result = await run_agent_v2(
+                "design",
+                f"Create design system for: {description}",
+                {"classification": classification, "architecture": architecture},
+                db, workspace_id, ultra_mode
+            )
+            total_credits_used += design_result["credits_used"]
+            design_system = design_result["result"]
+            agent_results["design"] = design_system
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "design",
+                    "type": "success",
+                    "message": f"Tema: {design_system.get('theme', {}).get('mode', 'dark')}",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+        else:
+            design_system = {}
+        
+        # STEP 4: Frontend
+        if "frontend" in include_agents:
+            generation_jobs[job_id]["current_step"] = "Generando código React..."
+            generation_jobs[job_id]["progress"] = 60
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "frontend",
+                    "type": "working",
+                    "message": "Generando componentes React...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            frontend_result = await run_agent_v2(
+                "frontend",
+                f"""Generate complete React frontend for: {description}
+                
+Pages: {json.dumps(classification.get('estimated_pages', []))}
+Features: {json.dumps(classification.get('main_features', []))}
+Make it beautiful with Tailwind CSS dark theme.""",
+                {
+                    "classification": classification,
+                    "architecture": architecture,
+                    "design": design_system,
+                    "app_name": app_name
+                },
+                db, workspace_id, ultra_mode
+            )
+            total_credits_used += frontend_result["credits_used"]
+            
+            frontend_files = frontend_result["result"].get("files", {})
+            logger.info(f"Frontend files generated: {len(frontend_files)} files - Keys: {list(frontend_files.keys())[:5]}")
+            all_files.update(frontend_files)
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "frontend",
+                    "type": "success",
+                    "message": f"Generados {len(frontend_files)} archivos frontend",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+        
+        # STEP 5: Integrator
+        if "integrator" in include_agents:
+            generation_jobs[job_id]["current_step"] = "Integrando componentes..."
+            generation_jobs[job_id]["progress"] = 80
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "integrator",
+                    "type": "working",
+                    "message": "Conectando componentes...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            integrator_result = await run_agent_v2(
+                "integrator",
+                "Verify and fix integration",
+                {"files": all_files, "classification": classification},
+                db, workspace_id, ultra_mode
+            )
+            total_credits_used += integrator_result["credits_used"]
+            
+            integration_fixes = integrator_result["result"].get("fixes", {})
+            all_files.update(integration_fixes)
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": "integrator",
+                    "type": "success",
+                    "message": "Integración completada",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+        
+        # Add base files for Sandpack
+        generation_jobs[job_id]["current_step"] = "Finalizando proyecto..."
+        generation_jobs[job_id]["progress"] = 90
+        
+        base_files = {
+            "package.json": json.dumps({
+                "name": app_name.lower().replace(" ", "-"),
+                "private": True,
+                "version": "0.0.1",
+                "dependencies": {
+                    "react": "^18.2.0",
+                    "react-dom": "^18.2.0",
+                    "react-router-dom": "^6.20.0",
+                    "lucide-react": "^0.294.0",
+                    "prop-types": "^15.8.1"
+                }
+            }, indent=2),
+            "public/index.html": f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{app_name}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900">
+    <div id="root"></div>
+</body>
+</html>""",
+            "src/index.js": """import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);"""
+        }
+        
+        for path, content in base_files.items():
+            if path not in all_files:
+                all_files[path] = content
+        
+        # Update workspace in DB
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {
+                "$set": {
+                    "files": all_files,
+                    "status": "completed",
+                    "current_version": 1,
+                    "classification": classification,
+                    "architecture": architecture,
+                    "design_system": design_system,
+                    "agent_results": agent_results,
+                    "updated_at": utc_now()
+                },
+                "$push": {
+                    "versions": {
+                        "version": 1,
+                        "files": all_files,
+                        "created_at": utc_now(),
+                        "message": f"[{mode_label}] Initial generation"
+                    }
+                }
+            }
+        )
+        
+        # Deduct credits
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"credits": -total_credits_used, "credits_used": total_credits_used}}
+        )
+        
+        # Get updated user
+        updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+        
+        # Final broadcast
+        await manager.broadcast(workspace_id, {
+            "type": "generation_complete",
+            "files": all_files,
+            "workspace_id": workspace_id,
+            "credits_used": total_credits_used
+        })
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "success",
+                "message": f"App generada! {len(all_files)} archivos, {total_credits_used} créditos",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        # Update job as completed
+        generation_jobs[job_id] = {
+            "status": "completed",
+            "workspace_id": workspace_id,
+            "current_step": "Completado",
+            "progress": 100,
+            "files": all_files,
+            "classification": classification,
+            "agent_results": agent_results,
+            "credits_used": total_credits_used,
+            "credits_remaining": updated_user.get("credits", 0),
+            "completed_at": utc_now().isoformat()
+        }
+        
+        # Also save to DB for persistence
+        await db.generation_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": generation_jobs[job_id]},
+            upsert=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Background generation failed: {e}")
+        
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "error",
+                "message": f"Error: {str(e)}",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {"$set": {"status": "failed", "error": str(e)}}
+        )
+        
+        generation_jobs[job_id] = {
+            "status": "failed",
+            "workspace_id": workspace_id,
+            "error": str(e),
+            "failed_at": utc_now().isoformat()
+        }
+        
+        await db.generation_jobs.update_one(
+            {"job_id": job_id},
+            {"$set": generation_jobs[job_id]},
+            upsert=True
+        )
+
+
+@router.post("/generate-async")
+async def generate_app_async(request: Request, background_tasks: BackgroundTasks):
+    """Start async app generation - Returns job_id immediately, use /generation-status/{job_id} to poll"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    description = body.get("description", "")
+    app_name = body.get("name", "My App")
+    workspace_id = body.get("workspace_id")
+    ultra_mode = body.get("ultra_mode", False)
+    include_agents = body.get("agents", ["classifier", "architect", "design", "frontend", "integrator"])
+    
+    if not description:
+        raise HTTPException(status_code=400, detail="Description required")
+    
+    # Check if user has unlimited credits
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    
+    # Calculate estimated cost
+    multiplier = ULTRA_MULTIPLIER if ultra_mode else 1
+    total_cost = sum(AGENT_COSTS.get(a, 50) for a in include_agents) * multiplier
+    
+    if not is_unlimited and user_doc["credits"] < total_cost:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Need {total_cost} credits, you have {user_doc['credits']}"
+        )
+    
+    # Create workspace if not provided
+    if not workspace_id:
+        workspace_id = generate_id("ws")
+        workspace = {
+            "workspace_id": workspace_id,
+            "user_id": user_id,
+            "name": app_name,
+            "description": description,
+            "template": "react-vite",
+            "ultra_mode": ultra_mode,
+            "files": {},
+            "versions": [],
+            "current_version": 0,
+            "status": "generating",
+            "build_logs": [],
+            "created_at": utc_now(),
+            "updated_at": utc_now()
+        }
+        await db.workspaces.insert_one(workspace)
+    
+    # Create job
+    job_id = generate_id("job")
+    generation_jobs[job_id] = {
+        "status": "queued",
+        "workspace_id": workspace_id,
+        "current_step": "En cola...",
+        "progress": 0,
+        "created_at": utc_now().isoformat()
+    }
+    
+    # Save job to DB
+    await db.generation_jobs.insert_one({
+        "job_id": job_id,
+        "workspace_id": workspace_id,
+        "user_id": user_id,
+        "status": "queued",
+        "created_at": utc_now()
+    })
+    
+    # Start background task
+    background_tasks.add_task(
+        run_generation_background,
+        job_id,
+        workspace_id,
+        user_id,
+        description,
+        app_name,
+        ultra_mode,
+        include_agents,
+        db,
+        total_cost if not is_unlimited else 0
+    )
+    
+    return {
+        "job_id": job_id,
+        "workspace_id": workspace_id,
+        "status": "queued",
+        "message": "Generation started. Poll /generation-status/{job_id} for updates."
+    }
+
+
+@router.get("/generation-status/{job_id}")
+async def get_generation_status(job_id: str, request: Request):
+    """Get status of async generation job"""
+    db = request.app.state.db
+    
+    # First check in-memory cache
+    if job_id in generation_jobs:
+        return generation_jobs[job_id]
+    
+    # If not in memory, check DB
+    job = await db.generation_jobs.find_one({"job_id": job_id}, {"_id": 0})
+    if job:
+        return job
+    
+    raise HTTPException(status_code=404, detail="Job not found")
+
+
 @router.post("/debug")
 async def debug_code(request: Request):
     """Debug code and fix errors - Costs 30 credits per use"""
