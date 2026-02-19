@@ -100,7 +100,7 @@
 
 ---
 
-## 4. Plantilla de Proyecto (Modo Motor)
+## 5. Plantilla de Proyecto (Modo Motor)
 
 ```
 Proyecto: [Nombre]
