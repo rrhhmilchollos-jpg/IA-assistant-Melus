@@ -13,7 +13,8 @@ import {
   LogOut,
   Receipt,
   Shield,
-  Loader2
+  Loader2,
+  Store
 } from 'lucide-react';
 import {
   DropdownMenu,
