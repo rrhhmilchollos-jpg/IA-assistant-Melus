@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
-> **Última actualización:** Diciembre 2025
-> **Versión:** 2.3.0
+> **Última actualización:** Febrero 2026
+> **Versión:** 2.4.0
 
 ---
 
@@ -124,11 +124,17 @@ Objetivo: [Descripción]
 - [x] GitHub OAuth completo
 - [x] GitHub push desde workspace (50 créditos)
 - [x] Panel de administración
+- [x] **Nueva UI HomePage** - Interfaz simplificada estilo Emergent.sh
+- [x] **Nueva UI WorkspacePage** - Clon exacto de interfaz Emergent.sh
+- [x] Botones de sugerencia funcionando
+- [x] Navegación HomePage → WorkspacePage con prompt
+- [x] Sistema de créditos ILIMITADO para Owner
 
 ### Backlog
 - [ ] Deploy automático (Vercel/Netlify)
 - [ ] Marketplace de templates
 - [ ] Contenedores Docker aislados
+- [ ] **P1: Refactorizar backend a asíncrono** - Evitar timeouts en generación
 
 ---
 
