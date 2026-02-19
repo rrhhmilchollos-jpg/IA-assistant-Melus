@@ -122,7 +122,7 @@ const Pricing = () => {
             Comprar más créditos
           </h1>
           <p className="text-xl text-gray-600 mb-6">
-            Obtén 5 créditos por solo $1! Obtén nuestro mejor paquete con 20% DE DESCUENTO o ingresa un monto personalizado.
+            Obtén 5 créditos por solo 1€! Obtén nuestro mejor paquete con 20% DE DESCUENTO o ingresa un monto personalizado.
           </p>
 
           {/* Promo Banner */}
@@ -131,7 +131,7 @@ const Pricing = () => {
               <div className="flex items-center gap-4">
                 <div className="text-left">
                   <div className="text-sm font-semibold text-gray-600">20% Off</div>
-                  <div className="text-xs text-gray-500">on top-ups over $100</div>
+                  <div className="text-xs text-gray-500">en compras superiores a 100€</div>
                 </div>
                 <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
                   <code className="font-mono font-bold text-purple-600">VALENTINE20</code>
