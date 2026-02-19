@@ -644,6 +644,20 @@ const WorkspacePage = () => {
             Preview
           </button>
           
+          {/* Sandbox/Run Button */}
+          <button
+            onClick={() => setShowSandboxConsole(!showSandboxConsole)}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+              showSandboxConsole 
+                ? 'bg-purple-500 text-white' 
+                : 'bg-[#2a3441] text-white hover:bg-[#3a4451]'
+            }`}
+            data-testid="sandbox-toggle-btn"
+          >
+            <Terminal size={16} />
+            Sandbox
+          </button>
+          
           <button
             onClick={handleDeploy}
             className="flex items-center gap-2 px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded text-sm font-medium text-black transition-colors"
