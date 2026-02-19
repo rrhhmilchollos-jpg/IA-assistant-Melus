@@ -2814,3 +2814,123 @@ async def use_marketplace_template(request: Request, template_id: str):
         "credits_used": price,
         "credits_remaining": updated_user.get("credits", 0)
     }
+
+
+@router.post("/modify")
+async def modify_workspace(request: Request):
+    """
+    Modify an existing workspace based on user instructions.
+    Uses the appropriate agents to make changes.
+    """
+    from routes.workspace import get_connection_manager
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    workspace_id = body.get("workspace_id")
+    instruction = body.get("instruction", "")
+    
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="workspace_id required")
+    
+    if not instruction:
+        raise HTTPException(status_code=400, detail="instruction required")
+    
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    files = workspace.get("files", {})
+    manager = get_connection_manager()
+    
+    MODIFY_COST = 50
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    
+    if not is_unlimited and user_doc["credits"] < MODIFY_COST:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Modificacion requiere {MODIFY_COST} creditos. Tienes {user_doc['credits']}."
+        )
+    
+    await manager.broadcast(workspace_id, {
+        "type": "log",
+        "log": {
+            "agent": "system",
+            "type": "working",
+            "message": "Procesando modificacion...",
+            "timestamp": utc_now().isoformat()
+        }
+    })
+    
+    modify_prompt = f"Modify the existing code based on this instruction: {instruction}. Output modified files in JSON format with 'files' key containing file paths and complete contents."
+    
+    try:
+        result = await run_agent_v2(
+            "frontend",
+            modify_prompt,
+            {"files": files, "instruction": instruction},
+            db, workspace_id
+        )
+        
+        modified_files = result["result"].get("files", {})
+        files.update(modified_files)
+        
+        new_version = workspace.get("current_version", 0) + 1
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {
+                "$set": {
+                    "files": files,
+                    "current_version": new_version,
+                    "updated_at": utc_now()
+                },
+                "$push": {
+                    "versions": {
+                        "version": new_version,
+                        "files": files,
+                        "created_at": utc_now(),
+                        "message": f"Modificacion: {instruction[:50]}"
+                    }
+                }
+            }
+        )
+        
+        if not is_unlimited:
+            await db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"credits": -MODIFY_COST, "credits_used": MODIFY_COST}}
+            )
+        
+        updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+        
+        await manager.broadcast(workspace_id, {
+            "type": "files_updated",
+            "files": files
+        })
+        
+        return {
+            "success": True,
+            "files": files,
+            "modified_files": list(modified_files.keys()),
+            "version": new_version,
+            "credits_used": 0 if is_unlimited else MODIFY_COST,
+            "credits_remaining": updated_user.get("credits", 0)
+        }
+        
+    except Exception as e:
+        logger.error(f"Modification failed: {e}")
+        await manager.broadcast(workspace_id, {
+            "type": "log",
+            "log": {
+                "agent": "system",
+                "type": "error",
+                "message": f"Error: {str(e)}",
+                "timestamp": utc_now().isoformat()
+            }
+        })
+        raise HTTPException(status_code=500, detail=str(e))
