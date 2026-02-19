@@ -241,8 +241,57 @@ const WorkspacePage = () => {
     navigator.clipboard.writeText(text);
   };
 
-  const handleRollback = () => {
-    // TODO: Implementar rollback
+  const [showRollbackModal, setShowRollbackModal] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [rollbackLoading, setRollbackLoading] = useState(false);
+
+  const handleRollback = async () => {
+    if (!workspaceId) {
+      addLog('message', 'No hay proyecto para hacer rollback.');
+      return;
+    }
+    
+    // Load versions
+    const token = localStorage.getItem('session_token');
+    try {
+      const response = await fetch(`${API_BASE}/api/workspace/${workspaceId}/versions`, {
+        headers: { 'X-Session-Token': token }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVersions(data.versions || []);
+        setShowRollbackModal(true);
+      }
+    } catch (error) {
+      addLog('message', `Error cargando versiones: ${error.message}`);
+    }
+  };
+
+  const executeRollback = async (version) => {
+    setRollbackLoading(true);
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/workspace/${workspaceId}/rollback/${version}`, {
+        method: 'POST',
+        headers: { 'X-Session-Token': token }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setFiles(data.files || {});
+        setShowRollbackModal(false);
+        addLog('command', `Rollback a versión ${version}`, '$ git checkout v' + version);
+        addLog('message', `✅ Proyecto restaurado a versión ${version}`);
+      } else {
+        throw new Error(data.detail || 'Error en rollback');
+      }
+    } catch (error) {
+      addLog('message', `Error: ${error.message}`);
+    } finally {
+      setRollbackLoading(false);
+    }
   };
 
   const [showDeployModal, setShowDeployModal] = useState(false);
@@ -250,6 +299,7 @@ const WorkspacePage = () => {
   const [deployLoading, setDeployLoading] = useState(false);
   const [repoName, setRepoName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [deployTarget, setDeployTarget] = useState('github'); // 'github' | 'vercel'
 
   // Check GitHub connection status
   useEffect(() => {
@@ -276,6 +326,7 @@ const WorkspacePage = () => {
       return;
     }
     setRepoName(projectName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 50));
+    setDeployTarget('github');
     setShowDeployModal(true);
   };
 
