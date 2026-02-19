@@ -303,6 +303,7 @@ const WorkspacePage = () => {
   const [repoName, setRepoName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [deployTarget, setDeployTarget] = useState('github'); // 'github' | 'vercel'
+  const [workspaceGithubInfo, setWorkspaceGithubInfo] = useState(null); // Store if workspace is on GitHub
 
   // Check GitHub connection status
   useEffect(() => {
