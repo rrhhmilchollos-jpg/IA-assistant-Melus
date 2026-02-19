@@ -530,6 +530,12 @@ const WorkspacePage = () => {
           </div>
         )}
       </div>
+      
+      {/* Credit Modal */}
+      <CreditModal 
+        isOpen={isCreditModalOpen} 
+        onClose={() => setIsCreditModalOpen(false)} 
+      />
     </div>
   );
 };
