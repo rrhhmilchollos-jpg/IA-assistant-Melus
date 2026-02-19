@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
+import HomePage from "./pages/HomePage";
 import Pricing from "./pages/Pricing";
 import Success from "./pages/Success";
 import AdminPanel from "./pages/AdminPanel";
