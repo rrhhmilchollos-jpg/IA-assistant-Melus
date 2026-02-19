@@ -1,21 +1,22 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Diciembre 2025
-> **Versión:** 3.3.0 - ADMIN ONLY MARKETPLACE + VERSIONING
+> **Versión:** 3.4.0 - SANDBOX EXECUTION COMPLETE
 
 ---
 
 ## 1. Visión del Producto
 
-**Melus AI** es un **Constructor Universal de Aplicaciones** idéntico a Emergent.sh, proporcionando una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando **13 agentes especializados** de IA + **8 Expert Agents**.
+**Melus AI** es un **Constructor Universal de Aplicaciones** idéntico a Emergent.sh, con ejecución aislada de código (sandbox), 13 agentes core + 8 Expert Agents.
 
 ### Características Principales
-- **HomePage Completa**: Interfaz principal con todos los controles
-- **Marketplace ADMIN ONLY**: Templates solo para uso interno del owner y agentes
-- **Expert Agents**: 8 agentes especializados por tipo de proyecto
+- **HomePage Completa**: Todos los controles funcionales
+- **Sandbox Execution**: 3 métodos (CodeSandbox, Node.js, Docker)
+- **Marketplace ADMIN ONLY**: Templates internos
+- **Expert Agents**: 8 tipos especializados
 - **Vercel Deploy**: Flujo GitHub → Vercel
-- **Sistema de Versionado Mejorado**: Snapshots, compare, file-history
-- **Panel de Admin**: `/admin` - Dashboard completo
+- **Sistema de Versionado**: Snapshots, compare, file-history
+- **Panel de Admin**: `/admin`
 
 ---
 
@@ -24,11 +25,45 @@
 - **HomePage:** `/home`
 - **Workspace:** `/workspace?workspace={id}`
 - **Admin Panel:** `/admin` (solo admin/owner)
-- **Marketplace:** `/marketplace` (SOLO ADMIN - templates internos)
+- **Marketplace:** `/marketplace` (SOLO ADMIN)
 
 ---
 
-## 3. Estado Actual - Completado
+## 3. Sandbox Execution System
+
+### 3 Métodos Implementados:
+
+**A) CodeSandbox API**
+- `POST /api/sandbox/codesandbox/create` - Crear sandbox remoto
+- `GET /api/sandbox/codesandbox/{id}/status` - Estado del sandbox
+- Features: Full React app, Live preview, URL persistente
+
+**B) Node.js Process Sandbox**
+- `POST /api/sandbox/node/execute` - Ejecutar código JS
+- `POST /api/sandbox/node/evaluate` - Evaluar expresión
+- Features: Ejecución rápida, Timeout, Output capturado
+
+**C) Docker Container (Requiere Docker)**
+- `GET /api/sandbox/docker/status` - Verificar Docker
+- `POST /api/sandbox/docker/execute` - Ejecutar en container
+- Features: Aislamiento completo, Sin red, Límites de memoria
+
+**Endpoints universales:**
+- `POST /api/sandbox/run` - Auto-selecciona mejor método
+- `GET /api/sandbox/methods` - Lista métodos disponibles
+- `GET /api/sandbox/executions` - Historial de ejecuciones
+
+### UI en WorkspacePage:
+- Botón "Sandbox" en header (púrpura)
+- Panel lateral con:
+  - Botón CodeSandbox
+  - Botón Run Node
+  - Console output
+  - Crear Snapshot
+
+---
+
+## 4. Estado Actual - Completado
 
 ### ✅ Sesión Actual - P2 Features
 
