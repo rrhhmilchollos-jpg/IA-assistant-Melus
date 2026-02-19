@@ -658,6 +658,97 @@ const WorkspacePage = () => {
         isOpen={isCreditModalOpen} 
         onClose={() => setIsCreditModalOpen(false)} 
       />
+      
+      {/* Deploy Modal */}
+      {showDeployModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-[#1a1f26] border border-gray-700 rounded-xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Subir a GitHub</h3>
+              <button 
+                onClick={() => setShowDeployModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {!githubStatus?.connected ? (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                  </svg>
+                </div>
+                <p className="text-gray-300 mb-4">Conecta tu cuenta de GitHub para subir proyectos</p>
+                <button
+                  onClick={handleGithubConnect}
+                  className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center gap-2 mx-auto"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                  </svg>
+                  Conectar GitHub
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <img src={githubStatus.avatar} alt="" className="w-8 h-8 rounded-full" />
+                  <div>
+                    <p className="text-green-400 text-sm font-medium">Conectado como</p>
+                    <p className="text-white">{githubStatus.username}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Nombre del repositorio</label>
+                  <input
+                    type="text"
+                    value={repoName}
+                    onChange={(e) => setRepoName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 outline-none"
+                    placeholder="mi-proyecto"
+                  />
+                </div>
+                
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={(e) => setIsPrivate(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-cyan-500"
+                  />
+                  <span className="text-gray-300">Repositorio privado</span>
+                </label>
+                
+                <div className="flex items-center justify-between text-sm text-gray-400 border-t border-gray-700 pt-4">
+                  <span>Costo: 50 créditos</span>
+                  <span>{Object.keys(files).length} archivos</span>
+                </div>
+                
+                <button
+                  onClick={handlePushToGithub}
+                  disabled={deployLoading || !repoName.trim()}
+                  className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                >
+                  {deployLoading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Subiendo...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket size={18} />
+                      Subir a GitHub
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
