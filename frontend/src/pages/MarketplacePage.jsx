@@ -737,6 +737,57 @@ const PublishTemplateModal = ({ workspaces, onClose, onSuccess }) => {
                 />
               </div>
               
+              {/* Pricing Section */}
+              <div className="border-t border-gray-800 pt-5">
+                <label className="block text-sm text-gray-400 mb-3">Precio del Template</label>
+                <div className="flex gap-3 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(f => ({ ...f, is_free: true }))}
+                    className={`flex-1 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                      formData.is_free 
+                        ? 'bg-green-500/20 border border-green-500/40 text-green-400' 
+                        : 'bg-[#111] border border-gray-800 text-gray-400 hover:border-gray-700'
+                    }`}
+                  >
+                    <Check size={18} />
+                    Gratis
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(f => ({ ...f, is_free: false }))}
+                    className={`flex-1 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                      !formData.is_free 
+                        ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400' 
+                        : 'bg-[#111] border border-gray-800 text-gray-400 hover:border-gray-700'
+                    }`}
+                  >
+                    <Zap size={18} />
+                    De pago
+                  </button>
+                </div>
+                
+                {!formData.is_free && (
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      value={formData.price}
+                      onChange={(e) => setFormData(f => ({ ...f, price: Math.max(10, parseInt(e.target.value) || 0) }))}
+                      min="10"
+                      step="10"
+                      className="flex-1 px-4 py-3 bg-[#111] border border-gray-800 rounded-xl focus:border-gray-600 outline-none"
+                    />
+                    <span className="text-gray-400">créditos</span>
+                  </div>
+                )}
+                
+                {!formData.is_free && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Recibirás el 80% ({(formData.price * 0.8).toFixed(0)} créditos) por cada venta
+                  </p>
+                )}
+              </div>
+              
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
