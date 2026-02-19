@@ -196,7 +196,7 @@ async def create_checkout_session(request: Request, checkout_req: CheckoutReques
         "stripe_session_id": session.session_id,
         "package_id": package_id,
         "amount": amount,
-        "currency": "usd",
+        "currency": CURRENCY,
         "credits": credits,
         "promo_code": promo_code,
         "discount": discount,
