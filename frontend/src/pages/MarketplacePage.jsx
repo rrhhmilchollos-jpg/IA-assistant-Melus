@@ -468,15 +468,32 @@ const MarketplacePage = () => {
                   <div
                     key={template.template_id}
                     className="bg-[#111] border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-colors"
+                    data-testid={`template-card-${template.template_id}`}
                   >
                     {/* Preview */}
-                    <div className="h-40 bg-gradient-to-br from-purple-600/20 to-cyan-600/20 flex items-center justify-center">
+                    <div className="h-40 bg-gradient-to-br from-purple-600/20 to-cyan-600/20 flex items-center justify-center relative">
                       <Layout size={48} className="text-gray-600" />
+                      {/* Price badge */}
+                      {!template.is_free && template.price > 0 && (
+                        <div className="absolute top-3 right-3 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full text-xs font-bold text-black">
+                          {template.price} créditos
+                        </div>
+                      )}
+                      {template.is_free && (
+                        <div className="absolute top-3 right-3 px-2 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-xs font-medium text-green-400">
+                          Gratis
+                        </div>
+                      )}
                     </div>
                     
                     {/* Content */}
                     <div className="p-5">
-                      <h3 className="font-semibold mb-2">{template.name}</h3>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold">{template.name}</h3>
+                        <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
+                          {template.category}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-400 line-clamp-2 mb-4">{template.description}</p>
                       
                       {/* Stats */}
@@ -489,14 +506,32 @@ const MarketplacePage = () => {
                           <Heart size={14} />
                           {template.likes || 0}
                         </span>
+                        {template.purchases > 0 && (
+                          <span className="flex items-center gap-1 text-amber-500">
+                            <Star size={14} />
+                            {template.purchases} ventas
+                          </span>
+                        )}
                       </div>
                       
-                      <button
-                        onClick={() => handleUseTemplate(template.template_id)}
-                        className="w-full py-2.5 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                      >
-                        Usar Template
-                      </button>
+                      {template.is_free ? (
+                        <button
+                          onClick={() => handleUseTemplate(template.template_id)}
+                          className="w-full py-2.5 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                          data-testid={`use-template-${template.template_id}`}
+                        >
+                          Usar Template
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handlePurchaseTemplate(template)}
+                          className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black rounded-lg font-medium hover:from-amber-600 hover:to-orange-600 transition-colors flex items-center justify-center gap-2"
+                          data-testid={`buy-template-${template.template_id}`}
+                        >
+                          <Zap size={16} />
+                          Comprar por {template.price} créditos
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
