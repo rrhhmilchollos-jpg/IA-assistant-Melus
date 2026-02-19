@@ -278,8 +278,19 @@ const WorkspacePage = () => {
           </div>
         </div>
         
-        {/* Secondary bar con Code/Preview/Redeploy */}
+        {/* Secondary bar con Comprar créditos/Code/Preview/Deploy */}
         <div className="flex items-center justify-end gap-2 px-4 py-2 border-t border-gray-700/30">
+          {/* Comprar créditos - PRINCIPAL */}
+          <button
+            onClick={() => setIsCreditModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded text-sm font-medium text-white transition-colors"
+          >
+            <ShoppingCart size={16} />
+            Comprar créditos
+          </button>
+          
+          <div className="w-px h-6 bg-gray-700 mx-1"></div>
+          
           <button
             onClick={() => setActiveView(activeView === 'code' ? null : 'code')}
             className={`flex items-center gap-2 px-4 py-1.5 rounded text-sm font-medium transition-colors ${
@@ -305,7 +316,7 @@ const WorkspacePage = () => {
           </button>
           
           <button
-            onClick={handleRedeploy}
+            onClick={handleDeploy}
             className="flex items-center gap-2 px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded text-sm font-medium text-black transition-colors"
           >
             <RotateCcw size={16} />
