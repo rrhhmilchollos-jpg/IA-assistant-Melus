@@ -868,78 +868,89 @@ const WorkspacePage = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-2 text-sm text-gray-300">
-                  <p className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">1</span>
-                    Descarga el ZIP del proyecto
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">2</span>
-                    Ve a vercel.com/new
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">3</span>
-                    Sube la carpeta y despliega
-                  </p>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm text-gray-400 border-t border-gray-700 pt-4">
-                  <span>Costo: 100 créditos</span>
-                  <span>{Object.keys(files).length} archivos</span>
-                </div>
-                
-                <button
-                  onClick={async () => {
-                    setDeployLoading(true);
-                    const token = localStorage.getItem('session_token');
-                    try {
-                      const response = await fetch(`${API_BASE}/api/deploy/vercel`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'X-Session-Token': token
-                        },
-                        body: JSON.stringify({
-                          workspace_id: workspaceId,
-                          project_name: projectName
-                        })
-                      });
-                      
-                      const data = await response.json();
-                      
-                      if (response.ok) {
-                        // Download ZIP
-                        window.open(`${API_BASE}${data.download_url}&token=${token}`, '_blank');
+                {workspaceGithubInfo ? (
+                  // Project is on GitHub - can deploy to Vercel
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                      <Check size={20} className="text-green-400" />
+                      <div>
+                        <p className="text-green-400 text-sm font-medium">Proyecto en GitHub</p>
+                        <a 
+                          href={workspaceGithubInfo.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-white hover:underline text-sm"
+                        >
+                          {workspaceGithubInfo.username}/{workspaceGithubInfo.repo}
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-gray-300">
+                      <p className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">1</span>
+                        Haz clic en "Deploy a Vercel"
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">2</span>
+                        Vercel importará tu repositorio
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">3</span>
+                        ¡Tu app estará en vivo!
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        // Open Vercel import with GitHub repo
+                        const vercelImportUrl = `https://vercel.com/new/import?s=${encodeURIComponent(workspaceGithubInfo.url)}`;
+                        window.open(vercelImportUrl, '_blank');
                         setShowDeployModal(false);
-                        addLog('command', 'Proyecto preparado para Vercel', '$ vercel --prod');
-                        addLog('message', `✅ Descarga el ZIP y súbelo a vercel.com/new`);
-                        if (data.credits_used > 0) {
-                          updateCredits(data.credits_remaining);
-                        }
-                      } else {
-                        throw new Error(data.detail || 'Error al preparar deploy');
-                      }
-                    } catch (error) {
-                      addLog('message', `Error: ${error.message}`);
-                    } finally {
-                      setDeployLoading(false);
-                    }
-                  }}
-                  disabled={deployLoading}
-                  className="w-full py-3 bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 disabled:opacity-50 text-black rounded-lg font-medium flex items-center justify-center gap-2"
-                >
-                  {deployLoading ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Preparando...
-                    </>
-                  ) : (
-                    <>
-                      <Download size={18} />
-                      Descargar para Vercel
-                    </>
-                  )}
-                </button>
+                        addLog('command', 'Abriendo Vercel...', '$ vercel --import');
+                        addLog('message', `✅ Vercel abierto con tu repositorio. Sigue las instrucciones para desplegar.`);
+                      }}
+                      className="w-full py-3 bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black rounded-lg font-medium flex items-center justify-center gap-2"
+                    >
+                      <Rocket size={18} />
+                      Deploy a Vercel
+                    </button>
+                  </div>
+                ) : (
+                  // Project NOT on GitHub - need to push first
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-yellow-400">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                      </svg>
+                      <div>
+                        <p className="text-yellow-400 text-sm font-medium">Proyecto no está en GitHub</p>
+                        <p className="text-gray-400 text-sm">Primero sube a GitHub para desplegar en Vercel</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-gray-300">
+                      <p className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-gray-600 text-gray-400 flex items-center justify-center text-xs">1</span>
+                        Sube tu proyecto a GitHub
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-gray-600 text-gray-400 flex items-center justify-center text-xs">2</span>
+                        Regresa aquí para desplegar en Vercel
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={() => setDeployTarget('github')}
+                      className="w-full py-3 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                    >
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                      </svg>
+                      Ir a subir a GitHub
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
