@@ -715,7 +715,7 @@ const WorkspacePage = () => {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-[#1a1f26] border border-gray-700 rounded-xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-white">Subir a GitHub</h3>
+              <h3 className="text-xl font-bold text-white">Desplegar Proyecto</h3>
               <button 
                 onClick={() => setShowDeployModal(false)}
                 className="text-gray-400 hover:text-white"
@@ -724,77 +724,246 @@ const WorkspacePage = () => {
               </button>
             </div>
             
-            {!githubStatus?.connected ? (
-              <div className="text-center py-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white">
-                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                  </svg>
+            {/* Deploy Target Tabs */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setDeployTarget('github')}
+                className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 ${
+                  deployTarget === 'github' 
+                    ? 'bg-gray-800 border border-cyan-500 text-white' 
+                    : 'bg-gray-800/50 text-gray-400 hover:text-white'
+                }`}
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                GitHub
+              </button>
+              <button
+                onClick={() => setDeployTarget('vercel')}
+                className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 ${
+                  deployTarget === 'vercel' 
+                    ? 'bg-gray-800 border border-cyan-500 text-white' 
+                    : 'bg-gray-800/50 text-gray-400 hover:text-white'
+                }`}
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                  <path d="M24 22.525H0l12-21.05 12 21.05z"/>
+                </svg>
+                Vercel
+              </button>
+            </div>
+            
+            {deployTarget === 'github' ? (
+              // GitHub Deploy Content
+              !githubStatus?.connected ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white">
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                  </div>
+                  <p className="text-gray-300 mb-4">Conecta tu cuenta de GitHub para subir proyectos</p>
+                  <button
+                    onClick={handleGithubConnect}
+                    className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center gap-2 mx-auto"
+                  >
+                    Conectar GitHub
+                  </button>
                 </div>
-                <p className="text-gray-300 mb-4">Conecta tu cuenta de GitHub para subir proyectos</p>
-                <button
-                  onClick={handleGithubConnect}
-                  className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center gap-2 mx-auto"
-                >
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                  </svg>
-                  Conectar GitHub
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                  <img src={githubStatus.avatar} alt="" className="w-8 h-8 rounded-full" />
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <img src={githubStatus.avatar} alt="" className="w-8 h-8 rounded-full" />
+                    <div>
+                      <p className="text-green-400 text-sm font-medium">Conectado como</p>
+                      <p className="text-white">{githubStatus.username}</p>
+                    </div>
+                  </div>
+                  
                   <div>
-                    <p className="text-green-400 text-sm font-medium">Conectado como</p>
-                    <p className="text-white">{githubStatus.username}</p>
+                    <label className="block text-gray-400 text-sm mb-2">Nombre del repositorio</label>
+                    <input
+                      type="text"
+                      value={repoName}
+                      onChange={(e) => setRepoName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 outline-none"
+                      placeholder="mi-proyecto"
+                    />
+                  </div>
+                  
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isPrivate}
+                      onChange={(e) => setIsPrivate(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-cyan-500"
+                    />
+                    <span className="text-gray-300">Repositorio privado</span>
+                  </label>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-400 border-t border-gray-700 pt-4">
+                    <span>Costo: 50 créditos</span>
+                    <span>{Object.keys(files).length} archivos</span>
+                  </div>
+                  
+                  <button
+                    onClick={handlePushToGithub}
+                    disabled={deployLoading || !repoName.trim()}
+                    className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                  >
+                    {deployLoading ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        Subiendo...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket size={18} />
+                        Subir a GitHub
+                      </>
+                    )}
+                  </button>
+                </div>
+              )
+            ) : (
+              // Vercel Deploy Content
+              <div className="space-y-4">
+                <div className="p-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg border border-gray-700">
+                  <div className="flex items-center gap-3 mb-3">
+                    <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white">
+                      <path d="M24 22.525H0l12-21.05 12 21.05z"/>
+                    </svg>
+                    <div>
+                      <p className="text-white font-medium">Deploy a Vercel</p>
+                      <p className="text-gray-400 text-sm">Hosting gratuito y rápido</p>
+                    </div>
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Nombre del repositorio</label>
-                  <input
-                    type="text"
-                    value={repoName}
-                    onChange={(e) => setRepoName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 outline-none"
-                    placeholder="mi-proyecto"
-                  />
+                <div className="space-y-2 text-sm text-gray-300">
+                  <p className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">1</span>
+                    Descarga el ZIP del proyecto
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">2</span>
+                    Ve a vercel.com/new
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">3</span>
+                    Sube la carpeta y despliega
+                  </p>
                 </div>
                 
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isPrivate}
-                    onChange={(e) => setIsPrivate(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-cyan-500"
-                  />
-                  <span className="text-gray-300">Repositorio privado</span>
-                </label>
-                
                 <div className="flex items-center justify-between text-sm text-gray-400 border-t border-gray-700 pt-4">
-                  <span>Costo: 50 créditos</span>
+                  <span>Costo: 100 créditos</span>
                   <span>{Object.keys(files).length} archivos</span>
                 </div>
                 
                 <button
-                  onClick={handlePushToGithub}
-                  disabled={deployLoading || !repoName.trim()}
-                  className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                  onClick={async () => {
+                    setDeployLoading(true);
+                    const token = localStorage.getItem('session_token');
+                    try {
+                      const response = await fetch(`${API_BASE}/api/deploy/vercel`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'X-Session-Token': token
+                        },
+                        body: JSON.stringify({
+                          workspace_id: workspaceId,
+                          project_name: projectName
+                        })
+                      });
+                      
+                      const data = await response.json();
+                      
+                      if (response.ok) {
+                        // Download ZIP
+                        window.open(`${API_BASE}${data.download_url}&token=${token}`, '_blank');
+                        setShowDeployModal(false);
+                        addLog('command', 'Proyecto preparado para Vercel', '$ vercel --prod');
+                        addLog('message', `✅ Descarga el ZIP y súbelo a vercel.com/new`);
+                        if (data.credits_used > 0) {
+                          updateCredits(data.credits_remaining);
+                        }
+                      } else {
+                        throw new Error(data.detail || 'Error al preparar deploy');
+                      }
+                    } catch (error) {
+                      addLog('message', `Error: ${error.message}`);
+                    } finally {
+                      setDeployLoading(false);
+                    }
+                  }}
+                  disabled={deployLoading}
+                  className="w-full py-3 bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 disabled:opacity-50 text-black rounded-lg font-medium flex items-center justify-center gap-2"
                 >
                   {deployLoading ? (
                     <>
                       <Loader2 size={18} className="animate-spin" />
-                      Subiendo...
+                      Preparando...
                     </>
                   ) : (
                     <>
-                      <Rocket size={18} />
-                      Subir a GitHub
+                      <Download size={18} />
+                      Descargar para Vercel
                     </>
                   )}
                 </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Rollback Modal */}
+      {showRollbackModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-[#1a1f26] border border-gray-700 rounded-xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Historial de Versiones</h3>
+              <button 
+                onClick={() => setShowRollbackModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {versions.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <History size={48} className="mx-auto mb-3 opacity-50" />
+                <p>No hay versiones anteriores</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {versions.map((v, i) => (
+                  <div 
+                    key={v.version}
+                    className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800"
+                  >
+                    <div>
+                      <p className="text-white font-medium">Versión {v.version}</p>
+                      <p className="text-gray-400 text-sm">{v.message || 'Sin mensaje'}</p>
+                      <p className="text-gray-500 text-xs">{new Date(v.created_at).toLocaleString()}</p>
+                    </div>
+                    <button
+                      onClick={() => executeRollback(v.version)}
+                      disabled={rollbackLoading}
+                      className="px-3 py-1.5 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 rounded-lg text-sm flex items-center gap-1"
+                    >
+                      {rollbackLoading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <RotateCcw size={14} />
+                      )}
+                      Restaurar
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
