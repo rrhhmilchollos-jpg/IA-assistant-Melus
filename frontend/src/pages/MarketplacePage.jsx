@@ -155,6 +155,14 @@ const MarketplacePage = () => {
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [userWorkspaces, setUserWorkspaces] = useState([]);
 
+  // Only admin/owner can access marketplace
+  useEffect(() => {
+    if (user && !user.is_admin && !user.is_owner) {
+      toast.error('Acceso restringido - Solo administradores');
+      navigate('/home');
+    }
+  }, [user, navigate]);
+
   useEffect(() => {
     if (activeTab === 'templates') {
       loadTemplates();
