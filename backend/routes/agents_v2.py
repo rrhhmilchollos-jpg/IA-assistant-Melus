@@ -201,20 +201,25 @@ Create a cohesive, modern design system. Focus on dark theme with purple accents
 CRITICAL RULES:
 1. Generate COMPLETE, WORKING code - NO placeholders, NO "// TODO", NO "..."
 2. Use React 18 with functional components and hooks
-3. Use Tailwind CSS for all styling - DARK THEME (bg-gray-900, text-white)
+3. Use Tailwind CSS classes directly in JSX - DO NOT import CSS files
 4. Use React Router v6 syntax: Routes, Route, useNavigate
 5. Include proper error handling and loading states
-6. Make UI modern, beautiful, and responsive
+6. Make UI modern, beautiful, and responsive with dark theme (bg-gray-900, text-white)
 7. Use lucide-react for icons
+
+STYLING (IMPORTANT):
+- Tailwind CSS is loaded via CDN in index.html - use classes directly in JSX
+- DO NOT import or create CSS files (no import './styles/*.css')
+- Use Tailwind classes for ALL styling: className="bg-gray-900 text-white p-4"
 
 AVAILABLE DEPENDENCIES (DO NOT USE ANY OTHER EXTERNAL LIBRARIES):
 - react, react-dom
 - react-router-dom (v6)
 - lucide-react (for icons)
-- prop-types (optional)
-- Tailwind CSS (via CDN, already included)
+- Tailwind CSS (via CDN, already included - just use classes)
 
 DO NOT import from axios, framer-motion, styled-components, or any other library not listed above.
+DO NOT import any CSS files.
 
 REACT ROUTER V6 SYNTAX:
 - Use <Routes> NOT <Switch>
@@ -222,19 +227,12 @@ REACT ROUTER V6 SYNTAX:
 - Use useNavigate() NOT useHistory()
 - Use useParams() for route params
 
-STATE MANAGEMENT:
-- Use useState for local state
-- Use useContext for global state
-- Use useReducer for complex state
-
 OUTPUT JSON FORMAT:
 {
     "files": {
         "src/App.jsx": "COMPLETE REACT CODE",
         "src/components/Header.jsx": "COMPLETE COMPONENT CODE",
-        "src/pages/Home.jsx": "COMPLETE PAGE CODE",
-        "src/context/AppContext.jsx": "COMPLETE CONTEXT CODE",
-        "src/hooks/useApi.js": "COMPLETE HOOK CODE"
+        "src/pages/Home.jsx": "COMPLETE PAGE CODE"
     }
 }
 
