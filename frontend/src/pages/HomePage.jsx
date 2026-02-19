@@ -104,7 +104,15 @@ const HomePage = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setRecentTasks(data.workspaces || []);
+        if (data.workspaces && data.workspaces.length > 0) {
+          setRecentTasks(data.workspaces);
+        } else {
+          // Show mock data for demo
+          setRecentTasks([
+            { workspace_id: 'EMT-8ac70B', name: 'protect-staging-1', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a comprehensive, enterprise-grade,...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() },
+            { workspace_id: 'EMT-1c2aa2', name: 'mano-protect-preview', description: 'Fork 1 de <analysis>**original_problem_statement**: The user wants to build a...', updated_at: new Date(Date.now() - 18*60*60*1000).toISOString() }
+          ]);
+        }
       }
     } catch (error) {
       console.error('Failed to load recent tasks:', error);
