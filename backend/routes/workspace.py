@@ -518,65 +518,6 @@ async def websocket_endpoint(websocket: WebSocket, workspace_id: str):
         manager.disconnect(websocket, workspace_id)
 
 
-# ============================================
-# LIST ENDPOINTS - For Home Page
-# ============================================
-
-@router.get("/list")
-async def list_workspaces(request: Request):
-    """List all workspaces for current user"""
-    db = request.app.state.db
-    user_doc = await get_authenticated_user(request, db)
-    user_id = user_doc["user_id"]
-    
-    workspaces = await db.workspaces.find(
-        {"user_id": user_id},
-        {"_id": 0, "workspace_id": 1, "name": 1, "description": 1, "status": 1, "created_at": 1, "updated_at": 1}
-    ).sort("updated_at", -1).limit(50).to_list(50)
-    
-    return {"workspaces": workspaces}
-
-
-@router.get("/recent")
-async def get_recent_tasks(request: Request):
-    """Get recent tasks/workspaces for the home page"""
-    db = request.app.state.db
-    user_doc = await get_authenticated_user(request, db)
-    user_id = user_doc["user_id"]
-    
-    workspaces = await db.workspaces.find(
-        {"user_id": user_id},
-        {"_id": 0, "workspace_id": 1, "name": 1, "description": 1, "status": 1, "updated_at": 1}
-    ).sort("updated_at", -1).limit(10).to_list(10)
-    
-    return {"workspaces": workspaces}
-
-
-@router.get("/deployed")
-async def get_deployed_apps(request: Request):
-    """Get deployed apps for the home page"""
-    db = request.app.state.db
-    user_doc = await get_authenticated_user(request, db)
-    user_id = user_doc["user_id"]
-    
-    # Find workspaces with deployment info
-    workspaces = await db.workspaces.find(
-        {"user_id": user_id, "deployed": True},
-        {"_id": 0, "workspace_id": 1, "name": 1, "deploy_url": 1, "deployed_at": 1}
-    ).sort("deployed_at", -1).limit(10).to_list(10)
-    
-    apps = []
-    for ws in workspaces:
-        apps.append({
-            "workspace_id": ws.get("workspace_id"),
-            "name": ws.get("name"),
-            "url": ws.get("deploy_url", ""),
-            "deployed_at": ws.get("deployed_at", ws.get("updated_at"))
-        })
-    
-    return {"apps": apps}
-
-
 # Export manager for use in other modules
 def get_connection_manager():
     return manager
