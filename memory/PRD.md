@@ -181,9 +181,9 @@ Objetivo: [Descripción]
 
 ## 9. URLs
 
-- **Frontend:** https://agent-labs.preview.emergentagent.com
-- **Generador:** https://agent-labs.preview.emergentagent.com/generator
-- **API:** https://agent-labs.preview.emergentagent.com/api
+- **Frontend:** https://motor-no-chat.preview.emergentagent.com
+- **Generador:** https://motor-no-chat.preview.emergentagent.com/generator
+- **API:** https://motor-no-chat.preview.emergentagent.com/api
 
 ---
 

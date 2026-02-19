@@ -15,7 +15,7 @@ import asyncio
 import traceback
 
 # Configuration
-BASE_URL = "https://agent-labs.preview.emergentagent.com/api"
+BASE_URL = "https://motor-no-chat.preview.emergentagent.com/api"
 MONGO_URL = "mongodb://localhost:27017"
 DB_NAME = "test_database"
 

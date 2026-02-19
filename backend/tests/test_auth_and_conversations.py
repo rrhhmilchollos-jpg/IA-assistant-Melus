@@ -9,7 +9,7 @@ import uuid
 import time
 
 # Base URL from environment - using external URL for e2e testing
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://agent-labs.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://motor-no-chat.preview.emergentagent.com')
 
 # Test data
 TEST_EMAIL_PREFIX = "TEST_"
