@@ -64,6 +64,12 @@ function AppRouter() {
           <AdminPanel />
         </ProtectedRoute>
       } />
+      {/* Marketplace */}
+      <Route path="/marketplace" element={
+        <ProtectedRoute>
+          <MarketplacePage />
+        </ProtectedRoute>
+      } />
       {/* Default redirect to home */}
       <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
