@@ -665,6 +665,7 @@ Generate your response as valid JSON."""
                 
         except Exception as parse_error:
             logger.warning(f"JSON parse error in {agent_type}: {parse_error}")
+            logger.warning(f"Raw response (first 1000 chars): {response[:1000]}")
             result = {"raw_response": response[:5000], "parse_error": str(parse_error)}
         
         # Broadcast completion
