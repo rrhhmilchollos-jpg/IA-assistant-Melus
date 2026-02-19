@@ -319,8 +319,8 @@ const WorkspacePage = () => {
             onClick={handleDeploy}
             className="flex items-center gap-2 px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded text-sm font-medium text-black transition-colors"
           >
-            <RotateCcw size={16} />
-            Redeploy
+            <Rocket size={16} />
+            Deploy
           </button>
         </div>
       </header>
