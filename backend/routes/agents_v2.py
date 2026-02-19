@@ -786,7 +786,10 @@ async def execute_project_no_chat(request: Request):
     multiplier = ULTRA_MULTIPLIER if ultra_mode else 1
     total_cost = sum(AGENT_COSTS.get(a, 50) for a in agents_to_run) * multiplier
     
-    if user_doc["credits"] < total_cost:
+    # Check if user has unlimited credits (owner)
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    
+    if not is_unlimited and user_doc["credits"] < total_cost:
         raise HTTPException(
             status_code=402,
             detail=f"Proyecto completo requiere {total_cost} créditos. Tienes {user_doc['credits']}."
