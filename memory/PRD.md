@@ -91,7 +91,7 @@
 | Security | 50 | Análisis de vulnerabilidades |
 | Deploy | 50 | Configuración de despliegue |
 
-### 3.3 Agentes de Utilidad
+### 4.3 Agentes de Utilidad
 | Agente | Costo | Función |
 |--------|-------|---------|
 | Debugger | 30 | Corrección de errores (monetización) |
