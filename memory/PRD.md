@@ -1,22 +1,27 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Diciembre 2025
-> **Versión:** 3.4.0 - SANDBOX EXECUTION COMPLETE
+> **Versión:** 3.5.0 - ADMIN PANEL + 15 EXPERT AGENTS + WEBSOCKET
 
 ---
 
 ## 1. Visión del Producto
 
-**Melus AI** es un **Constructor Universal de Aplicaciones** idéntico a Emergent.sh, con ejecución aislada de código (sandbox), 13 agentes core + 8 Expert Agents.
+**Melus AI** es un **Constructor Universal de Aplicaciones** idéntico a Emergent.sh, con:
+- Ejecución aislada de código (sandbox)
+- 13 agentes core
+- **15 Expert Agents** especializados
+- Panel de Admin completo con métricas
+- WebSocket para output en tiempo real
 
 ### Características Principales
 - **HomePage Completa**: Todos los controles funcionales
-- **Sandbox Execution**: 3 métodos (CodeSandbox, Node.js, Docker)
+- **Sandbox Execution**: 3 métodos + WebSocket real-time
 - **Marketplace ADMIN ONLY**: Templates internos
-- **Expert Agents**: 8 tipos especializados
+- **Expert Agents**: 15 tipos especializados
 - **Vercel Deploy**: Flujo GitHub → Vercel
 - **Sistema de Versionado**: Snapshots, compare, file-history
-- **Panel de Admin**: `/admin`
+- **Panel de Admin Mejorado**: Dashboard personalizable con widgets
 
 ---
 
@@ -29,7 +34,27 @@
 
 ---
 
-## 3. Sandbox Execution System
+## 3. Panel de Admin (Mejorado)
+
+### Dashboard con Widgets Personalizables:
+- **Stats**: Total usuarios, activos 24h, ingresos
+- **Proyectos Generados**: Total, hoy, semana, por tipo
+- **Ejecuciones Sandbox**: Total, exitosos, fallidos, por método
+- **Consumo de Créditos**: Gráfico 7 días
+- **Uso de Agentes**: Métricas por tipo
+- **Actividad Reciente**: Timeline de acciones
+
+### Secciones:
+- Dashboard, Usuarios, Transacciones, Proyectos, Agentes, Sandbox, Ingresos, Sistema, Configuración
+
+### Endpoints de Métricas:
+- `GET /api/admin/metrics/projects` - Métricas de proyectos
+- `GET /api/admin/metrics/sandbox` - Métricas de sandbox
+- `GET /api/admin/metrics/credits` - Consumo de créditos
+
+---
+
+## 4. Sandbox Execution System
 
 ### 3 Métodos Implementados:
 
