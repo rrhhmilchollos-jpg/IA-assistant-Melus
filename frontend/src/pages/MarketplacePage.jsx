@@ -268,6 +268,26 @@ const MarketplacePage = () => {
     }
   };
 
+  // If not admin/owner, show access denied
+  if (user && !user.is_admin && !user.is_owner) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <Toaster />
+        <div className="text-center">
+          <Lock size={64} className="mx-auto mb-6 text-gray-600" />
+          <h1 className="text-2xl font-bold mb-2">Acceso Restringido</h1>
+          <p className="text-gray-400 mb-6">Esta sección es solo para administradores</p>
+          <button
+            onClick={() => navigate('/home')}
+            className="px-6 py-2 bg-white text-black rounded-lg font-medium"
+          >
+            Volver al inicio
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Toaster />
@@ -284,8 +304,8 @@ const MarketplacePage = () => {
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-xl font-semibold">Marketplace</h1>
-              <p className="text-sm text-gray-500">Agentes y servicios nativos</p>
+              <h1 className="text-xl font-semibold">Marketplace (Admin)</h1>
+              <p className="text-sm text-gray-500">Agentes y templates internos</p>
             </div>
           </div>
           
