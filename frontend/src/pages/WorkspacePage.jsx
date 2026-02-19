@@ -258,6 +258,125 @@ const WorkspacePage = () => {
   const [versions, setVersions] = useState([]);
   const [rollbackLoading, setRollbackLoading] = useState(false);
 
+  // Sandbox execution functions
+  const runInSandbox = async (method = 'auto') => {
+    if (!workspaceId || Object.keys(files).length === 0) {
+      addLog('message', 'No hay proyecto para ejecutar.');
+      return;
+    }
+    
+    setSandboxRunning(true);
+    setSandboxOutput(prev => [...prev, { type: 'info', text: `Iniciando sandbox (${method})...`, time: new Date().toLocaleTimeString() }]);
+    
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/sandbox/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          workspace_id: workspaceId,
+          method: method
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.url) {
+        // CodeSandbox created
+        setCodesandboxUrl(data.url);
+        setSandboxOutput(prev => [...prev, 
+          { type: 'success', text: `CodeSandbox creado!`, time: new Date().toLocaleTimeString() },
+          { type: 'link', text: data.url, url: data.url }
+        ]);
+      } else if (data.stdout || data.output) {
+        // Node/Docker execution
+        setSandboxOutput(prev => [...prev, 
+          { type: data.success ? 'success' : 'error', text: data.stdout || JSON.stringify(data.output), time: new Date().toLocaleTimeString() }
+        ]);
+        if (data.stderr) {
+          setSandboxOutput(prev => [...prev, { type: 'error', text: data.stderr }]);
+        }
+      } else if (data.error) {
+        setSandboxOutput(prev => [...prev, { type: 'error', text: data.error, time: new Date().toLocaleTimeString() }]);
+      }
+    } catch (error) {
+      setSandboxOutput(prev => [...prev, { type: 'error', text: error.message, time: new Date().toLocaleTimeString() }]);
+    } finally {
+      setSandboxRunning(false);
+    }
+  };
+
+  const runNodeCode = async (code) => {
+    setSandboxRunning(true);
+    setSandboxOutput(prev => [...prev, { type: 'info', text: 'Ejecutando código...', time: new Date().toLocaleTimeString() }]);
+    
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/sandbox/node/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({ code, timeout: 10 })
+      });
+      
+      const data = await response.json();
+      
+      if (data.output) {
+        const outputs = data.output.output || [data.output];
+        outputs.forEach(out => {
+          setSandboxOutput(prev => [...prev, { 
+            type: out.type === 'error' ? 'error' : 'log', 
+            text: out.data || JSON.stringify(out) 
+          }]);
+        });
+      }
+      
+      if (data.stderr) {
+        setSandboxOutput(prev => [...prev, { type: 'error', text: data.stderr }]);
+      }
+    } catch (error) {
+      setSandboxOutput(prev => [...prev, { type: 'error', text: error.message }]);
+    } finally {
+      setSandboxRunning(false);
+    }
+  };
+
+  const createSnapshot = async () => {
+    if (!workspaceId) return;
+    
+    const name = prompt('Nombre del snapshot:', `Snapshot ${new Date().toLocaleString()}`);
+    if (!name) return;
+    
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/workspace/${workspaceId}/snapshot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({ name })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        addLog('command', `Snapshot creado: ${name}`, '$ git commit -m "' + name + '"');
+        addLog('message', `✅ Versión ${data.version} guardada`);
+      }
+    } catch (error) {
+      addLog('message', `Error: ${error.message}`);
+    }
+  };
+
   const handleRollback = async () => {
     if (!workspaceId) {
       addLog('message', 'No hay proyecto para hacer rollback.');
