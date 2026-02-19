@@ -872,6 +872,117 @@ const WorkspacePage = () => {
             )}
           </div>
         )}
+        
+        {/* Sandbox Console Panel */}
+        {showSandboxConsole && (
+          <div className="w-96 border-l border-gray-700/50 bg-[#0d1117] flex flex-col" data-testid="sandbox-console">
+            {/* Console Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/50 bg-[#161b22]">
+              <div className="flex items-center gap-2">
+                <Terminal size={16} className="text-purple-400" />
+                <span className="font-medium">Sandbox Console</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => runInSandbox('codesandbox')}
+                  disabled={sandboxRunning || !hasFiles}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-medium"
+                  data-testid="run-codesandbox-btn"
+                >
+                  <ExternalLink size={12} />
+                  CodeSandbox
+                </button>
+                <button
+                  onClick={() => runInSandbox('node')}
+                  disabled={sandboxRunning || !hasFiles}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-medium"
+                  data-testid="run-node-btn"
+                >
+                  <Play size={12} />
+                  Run Node
+                </button>
+                <button
+                  onClick={() => setShowSandboxConsole(false)}
+                  className="p-1 hover:bg-gray-700 rounded"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+            
+            {/* Console Output */}
+            <div className="flex-1 overflow-y-auto p-3 font-mono text-xs space-y-1">
+              {sandboxOutput.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">
+                  <Box size={32} className="mx-auto mb-2 opacity-50" />
+                  <p>No hay output aún</p>
+                  <p className="text-xs mt-1">Haz clic en "CodeSandbox" o "Run Node" para ejecutar</p>
+                </div>
+              ) : (
+                sandboxOutput.map((line, i) => (
+                  <div key={i} className={`flex gap-2 ${
+                    line.type === 'error' ? 'text-red-400' :
+                    line.type === 'success' ? 'text-green-400' :
+                    line.type === 'info' ? 'text-blue-400' :
+                    line.type === 'link' ? 'text-cyan-400' :
+                    'text-gray-300'
+                  }`}>
+                    {line.time && <span className="text-gray-600">[{line.time}]</span>}
+                    {line.url ? (
+                      <a href={line.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        {line.text}
+                      </a>
+                    ) : (
+                      <span className="whitespace-pre-wrap">{line.text}</span>
+                    )}
+                  </div>
+                ))
+              )}
+              {sandboxRunning && (
+                <div className="flex items-center gap-2 text-yellow-400">
+                  <Loader2 size={12} className="animate-spin" />
+                  <span>Ejecutando...</span>
+                </div>
+              )}
+            </div>
+            
+            {/* CodeSandbox URL */}
+            {codesandboxUrl && (
+              <div className="px-3 py-2 border-t border-gray-700/50 bg-[#161b22]">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">CodeSandbox:</span>
+                  <a 
+                    href={codesandboxUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    Abrir <ExternalLink size={10} />
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            {/* Quick Actions */}
+            <div className="px-3 py-2 border-t border-gray-700/50 bg-[#161b22] flex items-center gap-2">
+              <button
+                onClick={createSnapshot}
+                disabled={!workspaceId}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded text-xs"
+                data-testid="create-snapshot-btn"
+              >
+                <Save size={12} />
+                Crear Snapshot
+              </button>
+              <button
+                onClick={() => setSandboxOutput([])}
+                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs"
+              >
+                Limpiar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Credit Modal */}
