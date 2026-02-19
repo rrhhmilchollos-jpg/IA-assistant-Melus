@@ -52,6 +52,12 @@ function AppRouter() {
           <GeneratorPage />
         </ProtectedRoute>
       } />
+      {/* Workspace - New IDE interface */}
+      <Route path="/workspace" element={
+        <ProtectedRoute>
+          <WorkspacePage />
+        </ProtectedRoute>
+      } />
       <Route path="/admin" element={
         <ProtectedRoute>
           <AdminPanel />
