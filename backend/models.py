@@ -12,6 +12,8 @@ class User(BaseModel):
     credits: int = 10000
     credits_used: int = 0
     is_admin: bool = False
+    is_owner: bool = False
+    unlimited_credits: bool = False
     subscription_tier: str = "free"
     created_at: datetime
     updated_at: datetime
