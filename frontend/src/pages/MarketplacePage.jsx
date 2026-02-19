@@ -561,38 +561,21 @@ const MarketplacePage = () => {
                       <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                         <span className="flex items-center gap-1">
                           <Download size={14} />
-                          {template.downloads || 0}
+                          {template.downloads || 0} usos
                         </span>
                         <span className="flex items-center gap-1">
-                          <Heart size={14} />
-                          {template.likes || 0}
+                          {Object.keys(template.files || {}).length} archivos
                         </span>
-                        {template.purchases > 0 && (
-                          <span className="flex items-center gap-1 text-amber-500">
-                            <Star size={14} />
-                            {template.purchases} ventas
-                          </span>
-                        )}
                       </div>
                       
-                      {template.is_free ? (
-                        <button
-                          onClick={() => handleUseTemplate(template.template_id)}
-                          className="w-full py-2.5 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                          data-testid={`use-template-${template.template_id}`}
-                        >
-                          Usar Template
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handlePurchaseTemplate(template)}
-                          className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black rounded-lg font-medium hover:from-amber-600 hover:to-orange-600 transition-colors flex items-center justify-center gap-2"
-                          data-testid={`buy-template-${template.template_id}`}
-                        >
-                          <Zap size={16} />
-                          Comprar por {template.price} créditos
-                        </button>
-                      )}
+                      {/* Admin always has free access */}
+                      <button
+                        onClick={() => handleUseTemplate(template.template_id)}
+                        className="w-full py-2.5 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                        data-testid={`use-template-${template.template_id}`}
+                      >
+                        Usar Template
+                      </button>
                     </div>
                   </div>
                 ))}
