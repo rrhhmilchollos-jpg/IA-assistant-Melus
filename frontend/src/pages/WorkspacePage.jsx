@@ -245,8 +245,96 @@ const WorkspacePage = () => {
     // TODO: Implementar rollback
   };
 
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [githubStatus, setGithubStatus] = useState(null);
+  const [deployLoading, setDeployLoading] = useState(false);
+  const [repoName, setRepoName] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
+
+  // Check GitHub connection status
+  useEffect(() => {
+    const checkGithubStatus = async () => {
+      const token = localStorage.getItem('session_token');
+      try {
+        const response = await fetch(`${API_BASE}/api/github/status`, {
+          headers: { 'X-Session-Token': token }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setGithubStatus(data);
+        }
+      } catch (error) {
+        console.error('Error checking GitHub status:', error);
+      }
+    };
+    checkGithubStatus();
+  }, []);
+
   const handleDeploy = () => {
-    addLog('message', 'Función de deploy próximamente disponible.');
+    if (!workspaceId || Object.keys(files).length === 0) {
+      addLog('message', 'No hay proyecto para desplegar. Genera un proyecto primero.');
+      return;
+    }
+    setRepoName(projectName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 50));
+    setShowDeployModal(true);
+  };
+
+  const handleGithubConnect = async () => {
+    const token = localStorage.getItem('session_token');
+    try {
+      const response = await fetch(`${API_BASE}/api/github/auth/login`, {
+        headers: { 'X-Session-Token': token }
+      });
+      const data = await response.json();
+      if (data.auth_url) {
+        window.open(data.auth_url, '_blank');
+      }
+    } catch (error) {
+      addLog('message', `Error conectando GitHub: ${error.message}`);
+    }
+  };
+
+  const handlePushToGithub = async () => {
+    if (!repoName.trim()) {
+      addLog('message', 'Por favor ingresa un nombre para el repositorio.');
+      return;
+    }
+
+    setDeployLoading(true);
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/github/push-workspace`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          workspace_id: workspaceId,
+          repo_name: repoName,
+          create_new: true,
+          private: isPrivate
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setShowDeployModal(false);
+        addLog('command', `Subido a GitHub: ${data.repo_name}`, '$ git push origin main');
+        addLog('message', `✅ Proyecto subido exitosamente! URL: ${data.repo_url}`);
+        if (data.credits_used > 0) {
+          updateCredits(data.credits_remaining);
+        }
+      } else {
+        throw new Error(data.detail || 'Error al subir a GitHub');
+      }
+    } catch (error) {
+      addLog('message', `Error: ${error.message}`);
+    } finally {
+      setDeployLoading(false);
+    }
   };
 
   // Format files for Sandpack
