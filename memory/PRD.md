@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Febrero 2026
-> **Versión:** 2.5.0
+> **Versión:** 2.6.0
 
 ---
 
@@ -132,12 +132,14 @@ Objetivo: [Descripción]
 - [x] **Fix: Generación de código con saltos de línea correctos**
 - [x] **Fix: Dependencias base (lucide-react, prop-types)**
 - [x] **Fix: Prompt mejorado para evitar imports CSS externos**
+- [x] **Backend Asíncrono** - Generación con BackgroundTasks + polling
+- [x] **GitHub Deploy Modal** - UI completa para subir a GitHub
 
 ### Backlog
 - [ ] Deploy automático (Vercel/Netlify)
 - [ ] Marketplace de templates
 - [ ] Contenedores Docker aislados
-- [ ] **P1: Refactorizar backend a asíncrono** - Evitar timeouts en generación larga
+- [ ] Sistema de rollback funcional
 
 ---
 
