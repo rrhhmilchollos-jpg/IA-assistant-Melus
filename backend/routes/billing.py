@@ -9,7 +9,7 @@ from models import (
     CreditBalance, CreditPackage, CheckoutRequest,
     TransactionHistory, SubscriptionPlan, SubscriptionResponse
 )
-from config import CREDIT_PACKAGES, PROMO_CODES, CREDITS_PER_DOLLAR, SUBSCRIPTION_PLANS
+from config import CREDIT_PACKAGES, PROMO_CODES, CREDITS_PER_DOLLAR, SUBSCRIPTION_PLANS, CURRENCY
 from utils import generate_id, utc_now, get_authenticated_user
 
 from emergentintegrations.payments.stripe.checkout import (
