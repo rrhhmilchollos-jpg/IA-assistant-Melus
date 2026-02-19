@@ -598,7 +598,9 @@ const PublishTemplateModal = ({ workspaces, onClose, onSuccess }) => {
     name: '',
     description: '',
     category: 'other',
-    tags: ''
+    tags: '',
+    is_free: true,
+    price: 50
   });
 
   const categories = [
