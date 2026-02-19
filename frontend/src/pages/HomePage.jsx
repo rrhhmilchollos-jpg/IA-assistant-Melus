@@ -236,24 +236,39 @@ const HomePage = () => {
             {/* Credits */}
             <button
               onClick={() => setIsCreditModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-full hover:bg-red-500/30 transition-colors"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full hover:opacity-80 transition-colors ${
+                user?.unlimited_credits || user?.is_owner 
+                  ? 'bg-gradient-to-r from-yellow-500/30 to-orange-500/30 border border-yellow-500/50' 
+                  : 'bg-red-500/20 border border-red-500/30'
+              }`}
               data-testid="credits-display"
             >
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-red-400 font-bold text-sm">
-                {user?.credits?.toLocaleString() || 0}
+              <div className={`w-2 h-2 rounded-full animate-pulse ${
+                user?.unlimited_credits || user?.is_owner ? 'bg-yellow-400' : 'bg-red-500'
+              }`} />
+              <span className={`font-bold text-sm ${
+                user?.unlimited_credits || user?.is_owner ? 'text-yellow-400' : 'text-red-400'
+              }`}>
+                {user?.unlimited_credits || user?.is_owner 
+                  ? '∞ ILIMITADO' 
+                  : user?.credits?.toLocaleString() || 0}
               </span>
+              {(user?.unlimited_credits || user?.is_owner) && (
+                <span className="text-xs text-yellow-500">👑 Owner</span>
+              )}
             </button>
 
-            {/* Buy Credits */}
-            <button
-              onClick={() => setIsCreditModalOpen(true)}
-              className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all"
-              data-testid="buy-credits-btn"
-            >
-              <Zap size={14} className="inline mr-1" />
-              Comprar
-            </button>
+            {/* Buy Credits - Hide for unlimited users */}
+            {!(user?.unlimited_credits || user?.is_owner) && (
+              <button
+                onClick={() => setIsCreditModalOpen(true)}
+                className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all"
+                data-testid="buy-credits-btn"
+              >
+                <Zap size={14} className="inline mr-1" />
+                Comprar
+              </button>
+            )}
 
             {/* User Avatar */}
             <DropdownMenu>
