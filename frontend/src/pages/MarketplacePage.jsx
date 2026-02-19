@@ -34,7 +34,8 @@ import {
   Briefcase,
   Star,
   ChevronRight,
-  Check
+  Check,
+  Lock
 } from 'lucide-react';
 import { Toaster, toast } from '../components/ui/sonner';
 
