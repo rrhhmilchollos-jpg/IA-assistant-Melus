@@ -14,6 +14,7 @@ import Success from "./pages/Success";
 import AdminPanel from "./pages/AdminPanel";
 import GeneratorPage from "./pages/GeneratorPage";
 import WorkspacePage from "./pages/WorkspacePage";
+import MarketplacePage from "./pages/MarketplacePage";
 
 // AppRouter component to handle session_id detection
 function AppRouter() {
