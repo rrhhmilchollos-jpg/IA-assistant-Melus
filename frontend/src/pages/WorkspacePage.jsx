@@ -15,7 +15,7 @@ import {
   X,
   Code,
   Eye,
-  RotateCcw,
+  Rocket,
   Check,
   ChevronRight,
   Copy,
@@ -27,8 +27,10 @@ import {
   Square,
   Loader2,
   CreditCard,
-  Zap
+  Zap,
+  ShoppingCart
 } from 'lucide-react';
+import CreditModal from '../components/CreditModal';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
