@@ -132,16 +132,10 @@ const WorkspacePage = () => {
     
     try {
       if (!workspaceId) {
-        // Simular pasos del agente
-        addLog('command', 'Clasificando tipo de proyecto...', '$ classify --type auto');
-        await new Promise(r => setTimeout(r, 1000));
+        // Start async generation
+        addLog('command', 'Iniciando generación asíncrona...', '$ generate --async');
         
-        addLog('command', 'Diseñando arquitectura...', '$ architect --analyze');
-        await new Promise(r => setTimeout(r, 800));
-        
-        setCurrentStep('Generando código...');
-        
-        const response = await fetch(`${API_BASE}/api/agents/v2/generate`, {
+        const startResponse = await fetch(`${API_BASE}/api/agents/v2/generate-async`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -154,23 +148,60 @@ const WorkspacePage = () => {
           })
         });
         
-        const data = await response.json();
+        const startData = await startResponse.json();
         
-        if (response.ok) {
-          setWorkspaceId(data.workspace_id);
-          setFiles(data.files || {});
-          setProjectName(data.name || 'Mi Proyecto');
+        if (!startResponse.ok) {
+          throw new Error(startData.detail || 'Error al iniciar generación');
+        }
+        
+        const jobId = startData.job_id;
+        const wsId = startData.workspace_id;
+        
+        setWorkspaceId(wsId);
+        window.history.replaceState(null, '', `/workspace?workspace=${wsId}`);
+        
+        addLog('command', 'Clasificando tipo de proyecto...', '$ classify --type auto');
+        
+        // Poll for status
+        let completed = false;
+        while (!completed) {
+          await new Promise(r => setTimeout(r, 2000)); // Poll every 2 seconds
           
-          if (data.credits_remaining !== undefined) {
-            updateCredits(data.credits_remaining);
+          const statusResponse = await fetch(`${API_BASE}/api/agents/v2/generation-status/${jobId}`, {
+            headers: { 'X-Session-Token': token }
+          });
+          
+          const statusData = await statusResponse.json();
+          
+          if (statusData.current_step) {
+            setCurrentStep(statusData.current_step);
           }
           
-          window.history.replaceState(null, '', `/workspace?workspace=${data.workspace_id}`);
+          // Update logs based on progress
+          if (statusData.progress >= 25 && !logs.find(l => l.content?.includes('arquitectura'))) {
+            addLog('command', 'Diseñando arquitectura...', '$ architect --analyze');
+          }
+          if (statusData.progress >= 60 && !logs.find(l => l.content?.includes('React'))) {
+            addLog('command', 'Generando código React...', '$ frontend --generate');
+          }
+          if (statusData.progress >= 80 && !logs.find(l => l.content?.includes('Integrando'))) {
+            addLog('command', 'Integrando componentes...', '$ integrator --connect');
+          }
           
-          addLog('command', `Proyecto generado: ${Object.keys(data.files || {}).length} archivos`, '$ generate --complete');
-          addLog('message', 'Proyecto creado exitosamente. Puedes ver el código o el preview usando los botones de arriba.');
-        } else {
-          throw new Error(data.detail || 'Error al generar');
+          if (statusData.status === 'completed') {
+            completed = true;
+            setFiles(statusData.files || {});
+            setProjectName(startData.name || 'Mi Proyecto');
+            
+            if (statusData.credits_remaining !== undefined) {
+              updateCredits(statusData.credits_remaining);
+            }
+            
+            addLog('command', `Proyecto generado: ${Object.keys(statusData.files || {}).length} archivos`, '$ generate --complete');
+            addLog('message', 'Proyecto creado exitosamente. Puedes ver el código o el preview usando los botones de arriba.');
+          } else if (statusData.status === 'failed') {
+            throw new Error(statusData.error || 'Error en la generación');
+          }
         }
       } else {
         // Modificar proyecto existente
