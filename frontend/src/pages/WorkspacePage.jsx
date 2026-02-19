@@ -265,8 +265,11 @@ const WorkspacePage = () => {
               </span>
             </div>
             
-            {/* Comprar créditos */}
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded-full text-sm font-medium transition-colors">
+            {/* Comprar créditos - Header button */}
+            <button 
+              onClick={() => setIsCreditModalOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded-full text-sm font-medium text-white transition-colors"
+            >
               <CreditCard size={14} />
               Comprar créditos
             </button>
