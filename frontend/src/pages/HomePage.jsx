@@ -323,6 +323,7 @@ const HomePage = () => {
             <button
               key={mode.id}
               onClick={() => setAgentMode(mode.id)}
+              data-testid={`agent-mode-${mode.id}`}
               className={`px-6 py-2 rounded-full font-medium transition-all ${
                 agentMode === mode.id
                   ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30'
@@ -341,6 +342,7 @@ const HomePage = () => {
               setUltraMode(!ultraMode);
               toast.info(ultraMode ? 'Ultra Mode desactivado' : 'Ultra Mode activado - 2x créditos, máxima calidad');
             }}
+            data-testid="ultra-mode-toggle"
             className={`px-4 py-2 rounded-full font-medium transition-all flex items-center gap-2 ${
               ultraMode
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
@@ -369,6 +371,7 @@ const HomePage = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowModelDropdown(!showModelDropdown)}
+                  data-testid="model-selector-btn"
                   className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors"
                 >
                   <Brain size={16} className="text-purple-400" />
@@ -410,6 +413,7 @@ const HomePage = () => {
                   setShowSettings(!showSettings);
                   toast.info(showSettings ? 'Configuración cerrada' : 'Configuración abierta');
                 }}
+                data-testid="settings-btn"
                 className={`p-2 rounded-lg transition-colors ${
                   showSettings ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-gray-800 text-gray-400'
                 }`}
@@ -484,6 +488,7 @@ const HomePage = () => {
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
+                  data-testid="file-attach-btn"
                   className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
                   title="Adjuntar archivo"
                 >
@@ -493,6 +498,7 @@ const HomePage = () => {
                 {/* Voice input */}
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
+                  data-testid="mic-btn"
                   className={`p-2 rounded-lg transition-colors ${
                     isRecording 
                       ? 'bg-red-500/20 text-red-400 animate-pulse' 
@@ -506,6 +512,7 @@ const HomePage = () => {
                 {/* Expand/Collapse */}
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
+                  data-testid="expand-collapse-btn"
                   className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
                   title={isExpanded ? 'Colapsar' : 'Expandir'}
                 >
