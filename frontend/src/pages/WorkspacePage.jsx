@@ -62,10 +62,13 @@ const WorkspacePage = () => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
 
-  // Handle initial prompt
+  // Handle initial prompt - with guard to prevent duplicate execution
+  const hasInitialized = useRef(false);
   useEffect(() => {
+    if (hasInitialized.current) return;
     const initialPrompt = searchParams.get('prompt');
     if (initialPrompt && !workspaceId) {
+      hasInitialized.current = true;
       handleSendMessage(initialPrompt);
     }
   }, []);
