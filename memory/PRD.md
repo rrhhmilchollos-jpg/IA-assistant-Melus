@@ -1,47 +1,77 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Diciembre 2025
-> **Versión:** 3.1.0 - HOMEPAGE COMPLETE
+> **Versión:** 3.2.0 - MARKETPLACE & EXPERT AGENTS
 
 ---
 
 ## 1. Visión del Producto
 
-**Melus AI** es un **Constructor Universal de Aplicaciones** que funciona **idénticamente a Emergent.sh**, proporcionando una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando un sistema de **13 agentes especializados** de IA.
+**Melus AI** es un **Constructor Universal de Aplicaciones** que funciona **idénticamente a Emergent.sh**, proporcionando una plataforma de desarrollo autónoma que genera aplicaciones full-stack completas usando un sistema de **13 agentes especializados** de IA + **8 Expert Agents** para tipos específicos de proyectos.
 
 ### Características Principales
 - **HomePage Completa**: Interfaz principal con todos los controles funcionales
-- **13 Agentes Especializados**: Cada uno con rol específico
+- **Marketplace Estilo Vercel**: 8 agentes especializados con categorías
+- **Expert Agents**: Agentes especializados por tipo de proyecto
+- **GitHub Deploy**: Push directo de proyectos a GitHub
+- **13 Agentes Core**: Cada uno con rol específico
 - **Preview en Vivo**: CodeSandbox Sandpack integrado
 - **Sistema de Versionado**: Snapshots y rollback
-- **GitHub Integration**: OAuth y push de proyectos
 
 ---
 
 ## 2. Estado Actual - Actualizado Diciembre 2025
 
 ### ✅ Completado en esta sesión
-- [x] **HomePage Funcional Completa**:
-  - Botón de adjuntar archivos (clip) - abre selector de archivos
-  - Botón de micrófono - grabación de voz
-  - Selectores de agente E1/E2 - cambian estado activo
-  - Ultra Mode toggle - activa/desactiva con toast
-  - Selector de modelos dropdown (GPT-4o, Claude 4.5 Opus, Claude 4.5 Sonnet, Gemini 3 Pro)
-  - Botón de configuración - muestra panel con Temperatura y Max Tokens
-  - Botón expand/collapse - oculta/muestra proyectos recientes
-  - Botones de sugerencias - rellenan el prompt
-  - Botón Crear App - navega a workspace con parámetros
-- [x] **Ruta /generator OCULTA** - Redirige a /home (por solicitud del usuario)
+
+#### Tareas A, B, C (Todas completadas)
+
+**A) GitHub Deploy:**
+- [x] Endpoint `/api/github/push-workspace` funcional
+- [x] Push de archivos a repositorio GitHub
+- [x] UI de deploy en WorkspacePage
+
+**B) Marketplace Estilo Vercel:**
+- [x] Nueva UI en `/marketplace` con 8 agentes especializados
+- [x] Categorías: Todos, Desarrollo, IA & ML, Backend, Diseño, Seguridad
+- [x] Tabs: "Agentes Especializados" y "Templates de la Comunidad"
+- [x] Botón "Usar" navega a /home con agente seleccionado
+- [x] Publicar Templates desde workspaces
+
+**C) Expert Agents:**
+- [x] 8 agentes especializados con prompts optimizados
+- [x] Endpoint `/api/agents/v2/expert-agents` lista todos
+- [x] Endpoint `/api/agents/v2/generate-expert` genera proyectos
+
+#### Sesión Anterior
+- [x] **HomePage Funcional Completa** (todos los controles)
+- [x] **Ruta /generator OCULTA**
 - [x] **Backend voice/transcribe** - Soporta FormData y JSON
-- [x] **data-testid agregados** - Todos los elementos interactivos identificados
+- [x] **data-testid agregados**
 
 ### Testing Completado
-- **Frontend:** 100% (11/11 features probadas)
-- **Archivo de test:** `/app/test_reports/iteration_5.json`
+- **Iteration 5:** HomePage 100% (11/11 features)
+- **Iteration 6:** A/B/C features 100% (15/15 backend + UI tests)
+- **Bug corregido:** LlmChat constructor en generate-expert
 
 ---
 
-## 3. Sistema de 13 Agentes Especializados
+## 3. Expert Agents (8 Agentes Especializados)
+
+| Agente | Costo | Categoría | Capacidades |
+|--------|-------|-----------|-------------|
+| Game Developer | 200 | Desarrollo | Canvas, Física, Animaciones |
+| Mobile App | 250 | Desarrollo | PWA, Responsive, Touch, Offline |
+| E-commerce | 300 | Desarrollo | Carrito, Productos, Checkout |
+| Dashboard Admin | 250 | Desarrollo | Gráficos, Tablas, Analytics |
+| SaaS App | 350 | Desarrollo | Auth, Suscripciones, API |
+| AI Application | 300 | IA & ML | Chat LLM, Embeddings, Prompts |
+| Portfolio Creator | 150 | Desarrollo | Animaciones, Galería, Contacto |
+| API Builder | 200 | Backend | REST, GraphQL, Swagger |
+
+---
+
+## 4. Sistema de 13 Agentes Core
 
 ### 3.1 Agentes Core (Generación)
 | Agente | Costo | Función |
