@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Copy,
   RotateCw,
+  RotateCcw,
   Paperclip,
   Save,
   Sparkles,
@@ -28,7 +29,9 @@ import {
   Loader2,
   CreditCard,
   Zap,
-  ShoppingCart
+  ShoppingCart,
+  History,
+  Download
 } from 'lucide-react';
 import CreditModal from '../components/CreditModal';
 
