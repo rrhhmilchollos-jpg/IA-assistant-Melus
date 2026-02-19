@@ -32,7 +32,7 @@ const Login = () => {
     try {
       const response = await authAPI.login(email, password);
       login(response.user);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (error) {
       console.error('Login error:', error);
       toast({
