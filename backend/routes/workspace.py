@@ -461,6 +461,164 @@ async def rollback_version(request: Request, workspace_id: str, version: int):
     }
 
 
+@router.post("/{workspace_id}/snapshot")
+async def create_snapshot(request: Request, workspace_id: str):
+    """Create a named snapshot of current workspace state"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    name = body.get("name", "Snapshot")
+    description = body.get("description", "")
+    
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    # Create snapshot version
+    new_version_num = workspace.get("current_version", 0) + 1
+    
+    await db.workspaces.update_one(
+        {"workspace_id": workspace_id},
+        {
+            "$set": {
+                "current_version": new_version_num,
+                "updated_at": utc_now()
+            },
+            "$push": {
+                "versions": {
+                    "version": new_version_num,
+                    "files": workspace.get("files", {}),
+                    "created_at": utc_now(),
+                    "message": name,
+                    "description": description,
+                    "is_snapshot": True,
+                    "file_count": len(workspace.get("files", {}))
+                }
+            }
+        }
+    )
+    
+    return {
+        "version": new_version_num,
+        "name": name,
+        "message": "Snapshot creado exitosamente"
+    }
+
+
+@router.get("/{workspace_id}/compare/{version1}/{version2}")
+async def compare_versions(request: Request, workspace_id: str, version1: int, version2: int):
+    """Compare two versions and return diff"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id},
+        {"versions": 1}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    # Find both versions
+    v1_files = None
+    v2_files = None
+    
+    for v in workspace.get("versions", []):
+        if v.get("version") == version1:
+            v1_files = v.get("files", {})
+        if v.get("version") == version2:
+            v2_files = v.get("files", {})
+    
+    if v1_files is None or v2_files is None:
+        raise HTTPException(status_code=404, detail="One or both versions not found")
+    
+    # Calculate diff
+    all_files = set(v1_files.keys()) | set(v2_files.keys())
+    diff = {
+        "added": [],      # Files in v2 but not in v1
+        "removed": [],    # Files in v1 but not in v2
+        "modified": [],   # Files in both but different
+        "unchanged": []   # Files in both and same
+    }
+    
+    for file_path in all_files:
+        in_v1 = file_path in v1_files
+        in_v2 = file_path in v2_files
+        
+        if in_v1 and in_v2:
+            if v1_files[file_path] != v2_files[file_path]:
+                diff["modified"].append({
+                    "path": file_path,
+                    "old_lines": len(v1_files[file_path].split('\n')),
+                    "new_lines": len(v2_files[file_path].split('\n'))
+                })
+            else:
+                diff["unchanged"].append(file_path)
+        elif in_v2 and not in_v1:
+            diff["added"].append({
+                "path": file_path,
+                "lines": len(v2_files[file_path].split('\n'))
+            })
+        elif in_v1 and not in_v2:
+            diff["removed"].append({
+                "path": file_path,
+                "lines": len(v1_files[file_path].split('\n'))
+            })
+    
+    return {
+        "version1": version1,
+        "version2": version2,
+        "diff": diff,
+        "summary": {
+            "added": len(diff["added"]),
+            "removed": len(diff["removed"]),
+            "modified": len(diff["modified"]),
+            "unchanged": len(diff["unchanged"])
+        }
+    }
+
+
+@router.get("/{workspace_id}/file-history/{file_path:path}")
+async def get_file_history(request: Request, workspace_id: str, file_path: str):
+    """Get history of a specific file across versions"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id},
+        {"versions": 1}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    # Find file across all versions
+    history = []
+    for v in workspace.get("versions", []):
+        files = v.get("files", {})
+        if file_path in files:
+            history.append({
+                "version": v.get("version"),
+                "message": v.get("message", ""),
+                "created_at": v.get("created_at"),
+                "lines": len(files[file_path].split('\n')),
+                "size": len(files[file_path])
+            })
+    
+    return {
+        "file_path": file_path,
+        "history": history,
+        "total_versions": len(history)
+    }
+
+
 @router.post("/{workspace_id}/log")
 async def add_build_log(request: Request, workspace_id: str):
     """Add a build log entry"""
