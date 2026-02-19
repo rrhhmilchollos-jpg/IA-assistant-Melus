@@ -100,7 +100,7 @@ const CreditModal = ({ isOpen, onClose }) => {
         <div className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-lg p-4 flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <span className="text-white font-semibold">🎁 20% Off</span>
-            <span className="text-white/90 text-sm">on top-ups over $100</span>
+            <span className="text-white/90 text-sm">en compras superiores a 100€</span>
           </div>
           <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
             <code className="font-mono font-bold text-white">VALENTINE20</code>
@@ -120,7 +120,7 @@ const CreditModal = ({ isOpen, onClose }) => {
         {/* Description */}
         <p className="text-gray-300 text-center mb-6">
           Obtén <span className="text-green-400 font-semibold">5 créditos</span> por solo{' '}
-          <span className="text-green-400 font-semibold">$1</span>! Obtén nuestro mejor paquete con{' '}
+          <span className="text-green-400 font-semibold">1€</span>! Obtén nuestro mejor paquete con{' '}
           <span className="text-orange-400 font-semibold">20% DE DESCUENTO</span> o ingresa un monto personalizado.
         </p>
 
