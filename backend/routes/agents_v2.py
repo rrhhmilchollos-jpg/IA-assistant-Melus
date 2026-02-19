@@ -2363,3 +2363,443 @@ async def push_workspace_to_github(request: Request):
     except Exception as e:
         logger.error(f"GitHub push error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# ============================================
+# DEPLOY ENDPOINTS
+# ============================================
+@router.post("/deploy")
+async def deploy_workspace(request: Request):
+    """Deploy workspace to Vercel or Netlify - Costs 100 credits"""
+    from services.deploy_service import deploy_service
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    workspace_id = body.get("workspace_id")
+    platform = body.get("platform", "vercel")  # vercel or netlify
+    
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="workspace_id required")
+    
+    # Deploy costs 100 credits
+    DEPLOY_COST = 100
+    if user_doc["credits"] < DEPLOY_COST:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Deploy requiere {DEPLOY_COST} créditos. Tienes {user_doc['credits']}."
+        )
+    
+    # Get workspace
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    files = workspace.get("files", {})
+    project_name = workspace.get("name", "melus-app")
+    
+    # Add deploy configs if not present
+    deploy_configs = deploy_service.generate_deploy_configs(project_name)
+    for config_path, config_content in deploy_configs.items():
+        if config_path not in files:
+            files[config_path] = config_content
+    
+    # Deploy
+    result = await deploy_service.deploy(
+        platform=platform,
+        project_name=project_name,
+        files=files
+    )
+    
+    if result.success:
+        # Deduct credits
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"credits": -DEPLOY_COST, "credits_used": DEPLOY_COST}}
+        )
+        
+        # Update workspace
+        await db.workspaces.update_one(
+            {"workspace_id": workspace_id},
+            {
+                "$set": {
+                    "deployed": True,
+                    "deploy_platform": platform,
+                    "deploy_url": result.url,
+                    "deploy_id": result.deploy_id,
+                    "deployed_at": utc_now()
+                }
+            }
+        )
+        
+        updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+        
+        return {
+            "success": True,
+            "platform": platform,
+            "url": result.url,
+            "deploy_id": result.deploy_id,
+            "credits_used": DEPLOY_COST,
+            "credits_remaining": updated_user.get("credits", 0)
+        }
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Deploy failed: {result.error}"
+        )
+
+
+@router.get("/deploy/configs/{workspace_id}")
+async def get_deploy_configs(request: Request, workspace_id: str):
+    """Get deployment configuration files for a workspace"""
+    from services.deploy_service import deploy_service
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    project_name = workspace.get("name", "melus-app")
+    configs = deploy_service.generate_deploy_configs(project_name)
+    
+    return {
+        "workspace_id": workspace_id,
+        "configs": configs,
+        "platforms": ["vercel", "netlify", "docker"],
+        "instructions": {
+            "vercel": "Run: vercel deploy",
+            "netlify": "Run: netlify deploy --prod",
+            "docker": "Run: docker-compose up -d"
+        }
+    }
+
+
+# ============================================
+# PARALLEL AGENT EXECUTION (Optimized)
+# ============================================
+@router.post("/execute-parallel")
+async def execute_agents_parallel(request: Request):
+    """
+    Execute multiple independent agents in parallel for faster generation
+    
+    This endpoint runs agents that don't depend on each other simultaneously,
+    significantly reducing total generation time.
+    """
+    from routes.workspace import get_connection_manager
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    workspace_id = body.get("workspace_id")
+    agents = body.get("agents", [])
+    context = body.get("context", {})
+    ultra_mode = body.get("ultra_mode", False)
+    
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="workspace_id required")
+    
+    if not agents:
+        raise HTTPException(status_code=400, detail="agents list required")
+    
+    # Calculate total cost
+    multiplier = ULTRA_MULTIPLIER if ultra_mode else 1
+    total_cost = sum(AGENT_COSTS.get(a, 50) for a in agents) * multiplier
+    
+    if user_doc["credits"] < total_cost:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Parallel execution requires {total_cost} credits"
+        )
+    
+    manager = get_connection_manager()
+    
+    await manager.broadcast(workspace_id, {
+        "type": "log",
+        "log": {
+            "agent": "system",
+            "type": "info",
+            "message": f"Ejecutando {len(agents)} agentes en PARALELO...",
+            "timestamp": utc_now().isoformat()
+        }
+    })
+    
+    # Create async tasks for each agent
+    async def run_single_agent(agent_name):
+        try:
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": agent_name,
+                    "type": "working",
+                    "message": f"Iniciando {agent_name}...",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            result = await run_agent_v2(
+                agent_name,
+                context.get("task", f"Execute {agent_name} task"),
+                context,
+                db,
+                workspace_id,
+                ultra_mode
+            )
+            
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": agent_name,
+                    "type": "success",
+                    "message": f"{agent_name} completado",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            
+            return {agent_name: result}
+        except Exception as e:
+            await manager.broadcast(workspace_id, {
+                "type": "log",
+                "log": {
+                    "agent": agent_name,
+                    "type": "error",
+                    "message": f"{agent_name} error: {str(e)}",
+                    "timestamp": utc_now().isoformat()
+                }
+            })
+            return {agent_name: {"error": str(e)}}
+    
+    # Run all agents in parallel
+    import asyncio
+    tasks = [run_single_agent(agent) for agent in agents]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Combine results
+    combined_results = {}
+    combined_files = {}
+    total_credits_used = 0
+    
+    for result in results:
+        if isinstance(result, dict):
+            for agent_name, agent_result in result.items():
+                combined_results[agent_name] = agent_result
+                if isinstance(agent_result, dict):
+                    total_credits_used += agent_result.get("credits_used", 0)
+                    files = agent_result.get("result", {}).get("files", {})
+                    combined_files.update(files)
+    
+    # Deduct credits
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"credits": -total_credits_used, "credits_used": total_credits_used}}
+    )
+    
+    updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+    
+    await manager.broadcast(workspace_id, {
+        "type": "log",
+        "log": {
+            "agent": "system",
+            "type": "success",
+            "message": f"Ejecución paralela completada: {len(agents)} agentes, {total_credits_used} créditos",
+            "timestamp": utc_now().isoformat()
+        }
+    })
+    
+    return {
+        "agents_executed": agents,
+        "results": combined_results,
+        "files": combined_files,
+        "credits_used": total_credits_used,
+        "credits_remaining": updated_user.get("credits", 0)
+    }
+
+
+# ============================================
+# MARKETPLACE ENDPOINTS
+# ============================================
+@router.get("/marketplace/templates")
+async def get_marketplace_templates(request: Request):
+    """Get community templates from marketplace"""
+    db = request.app.state.db
+    
+    # Get public templates
+    templates = await db.marketplace_templates.find(
+        {"status": "approved", "public": True}
+    ).sort("downloads", -1).limit(50).to_list(50)
+    
+    # Serialize
+    for t in templates:
+        t["_id"] = str(t["_id"])
+    
+    return {
+        "templates": templates,
+        "total": len(templates)
+    }
+
+
+@router.post("/marketplace/publish")
+async def publish_to_marketplace(request: Request):
+    """Publish a workspace as a marketplace template - Costs 50 credits"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    workspace_id = body.get("workspace_id")
+    template_name = body.get("name")
+    description = body.get("description")
+    category = body.get("category", "other")
+    price = body.get("price", 0)  # Free or credits to use
+    
+    if not workspace_id or not template_name:
+        raise HTTPException(status_code=400, detail="workspace_id and name required")
+    
+    PUBLISH_COST = 50
+    if user_doc["credits"] < PUBLISH_COST:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Publishing requires {PUBLISH_COST} credits"
+        )
+    
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    # Create marketplace template
+    template_id = generate_id("mkt")
+    marketplace_template = {
+        "template_id": template_id,
+        "name": template_name,
+        "description": description,
+        "category": category,
+        "price": price,
+        "author_id": user_id,
+        "author_email": user_doc.get("email"),
+        "files": workspace.get("files", {}),
+        "classification": workspace.get("classification", {}),
+        "downloads": 0,
+        "rating": 0,
+        "reviews": [],
+        "status": "pending",  # pending, approved, rejected
+        "public": True,
+        "created_at": utc_now(),
+        "updated_at": utc_now()
+    }
+    
+    await db.marketplace_templates.insert_one(marketplace_template)
+    
+    # Deduct credits
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$inc": {"credits": -PUBLISH_COST, "credits_used": PUBLISH_COST}}
+    )
+    
+    updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+    
+    return {
+        "success": True,
+        "template_id": template_id,
+        "status": "pending",
+        "message": "Template enviado para revisión",
+        "credits_used": PUBLISH_COST,
+        "credits_remaining": updated_user.get("credits", 0)
+    }
+
+
+@router.post("/marketplace/use/{template_id}")
+async def use_marketplace_template(request: Request, template_id: str):
+    """Use a marketplace template to create a new workspace"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    body = await request.json()
+    project_name = body.get("name", "My Project")
+    
+    # Get template
+    template = await db.marketplace_templates.find_one(
+        {"template_id": template_id, "status": "approved"}
+    )
+    
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Check price
+    price = template.get("price", 0)
+    if user_doc["credits"] < price:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Template costs {price} credits"
+        )
+    
+    # Create workspace from template
+    workspace_id = generate_id("ws")
+    workspace = {
+        "workspace_id": workspace_id,
+        "user_id": user_id,
+        "name": project_name,
+        "description": f"Created from marketplace template: {template['name']}",
+        "from_marketplace": True,
+        "marketplace_template_id": template_id,
+        "files": template.get("files", {}),
+        "classification": template.get("classification", {}),
+        "versions": [{
+            "version": 1,
+            "files": template.get("files", {}),
+            "created_at": utc_now(),
+            "message": f"Created from template: {template['name']}"
+        }],
+        "current_version": 1,
+        "status": "completed",
+        "created_at": utc_now(),
+        "updated_at": utc_now()
+    }
+    
+    await db.workspaces.insert_one(workspace)
+    
+    # Update download count
+    await db.marketplace_templates.update_one(
+        {"template_id": template_id},
+        {"$inc": {"downloads": 1}}
+    )
+    
+    # Deduct credits if price > 0
+    if price > 0:
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"credits": -price, "credits_used": price}}
+        )
+        
+        # Give credits to author (80% revenue share)
+        author_share = int(price * 0.8)
+        await db.users.update_one(
+            {"user_id": template["author_id"]},
+            {"$inc": {"credits": author_share, "credits_earned": author_share}}
+        )
+    
+    updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+    
+    return {
+        "success": True,
+        "workspace_id": workspace_id,
+        "files": workspace["files"],
+        "credits_used": price,
+        "credits_remaining": updated_user.get("credits", 0)
+    }
