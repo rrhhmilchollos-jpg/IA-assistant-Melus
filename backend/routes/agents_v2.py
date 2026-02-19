@@ -1722,7 +1722,8 @@ Make it beautiful with Tailwind CSS dark theme.""",
                 "dependencies": {
                     "react": "^18.2.0",
                     "react-dom": "^18.2.0",
-                    "react-router-dom": "^6.20.0"
+                    "react-router-dom": "^6.20.0",
+                    "lucide-react": "^0.294.0"
                 }
             }, indent=2),
             "public/index.html": f"""<!DOCTYPE html>
