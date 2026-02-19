@@ -239,7 +239,7 @@ async def create_subscription(request: Request, subscription_req: dict):
     
     checkout_request = CheckoutSessionRequest(
         amount=plan["price"],
-        currency="usd",
+        currency=CURRENCY,
         success_url=success_url,
         cancel_url=cancel_url,
         mode="subscription",
