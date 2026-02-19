@@ -73,7 +73,7 @@
 
 ## 4. Sistema de 13 Agentes Core
 
-### 3.1 Agentes Core (Generación)
+### 4.1 Agentes Core (Generación)
 | Agente | Costo | Función |
 |--------|-------|---------|
 | Classifier | 25 | Clasifica tipo de aplicación |
