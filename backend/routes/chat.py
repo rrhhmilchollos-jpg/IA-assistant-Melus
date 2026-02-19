@@ -237,14 +237,18 @@ async def send_message(request: Request, conversation_id: str, message_create: M
         await db.messages.insert_one(assistant_message_data)
         assistant_message = Message(**assistant_message_data)
         
-        new_credits = user_doc["credits"] - tokens_used
-        await db.users.update_one(
-            {"user_id": user_id},
-            {
-                "$set": {"credits": new_credits},
-                "$inc": {"credits_used": tokens_used}
-            }
-        )
+        # Deduct credits only if not unlimited
+        if not is_unlimited:
+            new_credits = user_doc["credits"] - tokens_used
+            await db.users.update_one(
+                {"user_id": user_id},
+                {
+                    "$set": {"credits": new_credits},
+                    "$inc": {"credits_used": tokens_used}
+                }
+            )
+        else:
+            new_credits = user_doc["credits"]
         
         # Log usage
         await db.agent_usage.insert_one({
