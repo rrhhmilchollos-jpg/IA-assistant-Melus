@@ -578,9 +578,7 @@ const PublishTemplateModal = ({ workspaces, onClose, onSuccess }) => {
     name: '',
     description: '',
     category: 'other',
-    tags: '',
-    is_free: true,
-    price: 50
+    tags: ''
   });
 
   const categories = [
@@ -614,8 +612,8 @@ const PublishTemplateModal = ({ workspaces, onClose, onSuccess }) => {
           description: formData.description,
           category: formData.category,
           tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
-          is_free: formData.is_free,
-          price: formData.is_free ? 0 : formData.price
+          is_free: true,  // Always free for internal use
+          price: 0
         })
       });
       
