@@ -154,7 +154,7 @@ const CreditModal = ({ isOpen, onClose }) => {
                 </div>
                 
                 <div className="text-xl font-bold text-white mb-3">
-                  ${pkg.price.toLocaleString()}
+                  {pkg.price.toLocaleString()}€
                 </div>
                 
                 <Button
