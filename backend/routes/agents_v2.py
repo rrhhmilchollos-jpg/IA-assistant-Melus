@@ -1288,20 +1288,22 @@ root.render(<App />);"""
             }
         )
         
-        # Deducir créditos
-        await db.users.update_one(
-            {"user_id": user_id},
-            {"$inc": {"credits": -total_credits_used, "credits_used": total_credits_used}}
-        )
+        # Deducir créditos (solo si no es usuario ilimitado)
+        if not is_unlimited:
+            await db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"credits": -total_credits_used, "credits_used": total_credits_used}}
+            )
         
         updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
+        credits_msg = "GRATIS (Owner)" if is_unlimited else f"{total_credits_used} créditos"
         
         # Broadcast final
         await manager.broadcast(workspace_id, {
             "type": "generation_complete",
             "files": all_files,
             "workspace_id": workspace_id,
-            "credits_used": total_credits_used
+            "credits_used": 0 if is_unlimited else total_credits_used
         })
         
         await manager.broadcast(workspace_id, {
@@ -1309,7 +1311,7 @@ root.render(<App />);"""
             "log": {
                 "agent": "system",
                 "type": "success",
-                "message": f"PROYECTO COMPLETO! {len(all_files)} archivos | {total_credits_used} créditos | {len(agents_to_run)} agentes ejecutados",
+                "message": f"PROYECTO COMPLETO! {len(all_files)} archivos | {credits_msg} | {len(agents_to_run)} agentes ejecutados",
                 "timestamp": utc_now().isoformat()
             }
         })
@@ -1322,9 +1324,10 @@ root.render(<App />);"""
             "files_count": len(all_files),
             "agents_executed": agents_to_run,
             "classification": classification,
-            "credits_used": total_credits_used,
+            "credits_used": 0 if is_unlimited else total_credits_used,
             "credits_remaining": updated_user.get("credits", 0),
-            "ultra_mode": ultra_mode
+            "ultra_mode": ultra_mode,
+            "is_unlimited": is_unlimited
         }
         
     except Exception as e:
