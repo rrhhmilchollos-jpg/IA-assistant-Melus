@@ -163,6 +163,16 @@ export const creditsAPI = {
     });
     return response.data;
   },
+  createCheckout: async (packageId, customAmount = null, promoCode = null) => {
+    const originUrl = window.location.origin;
+    const response = await api.post('/api/credits/checkout', {
+      package_id: packageId,
+      custom_amount: customAmount,
+      promo_code: promoCode,
+      origin_url: originUrl
+    });
+    return response.data;
+  },
   subscribe: async (planId, originUrl) => {
     const response = await api.post('/api/credits/subscribe', {
       plan_id: planId,
