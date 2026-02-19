@@ -1389,11 +1389,14 @@ async def run_single_agent(request: Request):
     if not agent_type or agent_type not in AGENT_COSTS:
         raise HTTPException(status_code=400, detail=f"Invalid agent: {agent_type}")
     
+    # Check if user has unlimited credits (owner)
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    
     # Check credits
     multiplier = ULTRA_MULTIPLIER if ultra_mode else 1
     cost = AGENT_COSTS[agent_type] * multiplier
     
-    if user_doc["credits"] < cost:
+    if not is_unlimited and user_doc["credits"] < cost:
         raise HTTPException(
             status_code=402,
             detail=f"Need {cost} credits, you have {user_doc['credits']}"
@@ -1404,18 +1407,20 @@ async def run_single_agent(request: Request):
         agent_type, task, context, db, workspace_id, ultra_mode
     )
     
-    # Deduct credits
-    await db.users.update_one(
-        {"user_id": user_id},
-        {"$inc": {"credits": -cost, "credits_used": cost}}
-    )
+    # Deduct credits (only if not unlimited)
+    if not is_unlimited:
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"credits": -cost, "credits_used": cost}}
+        )
     
     # Get updated credits
     updated_user = await db.users.find_one({"user_id": user_id}, {"credits": 1})
     
     return {
         **result,
-        "credits_remaining": updated_user.get("credits", 0)
+        "credits_remaining": updated_user.get("credits", 0),
+        "is_unlimited": is_unlimited
     }
 
 
