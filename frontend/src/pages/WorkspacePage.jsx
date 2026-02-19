@@ -324,13 +324,36 @@ const WorkspacePage = () => {
     checkGithubStatus();
   }, []);
 
-  const handleDeploy = () => {
+  const handleDeploy = async () => {
     if (!workspaceId || Object.keys(files).length === 0) {
       addLog('message', 'No hay proyecto para desplegar. Genera un proyecto primero.');
       return;
     }
     setRepoName(projectName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 50));
     setDeployTarget('github');
+    
+    // Check if workspace is already on GitHub
+    const token = localStorage.getItem('session_token');
+    try {
+      const response = await fetch(`${API_BASE}/api/workspace/${workspaceId}`, {
+        headers: { 'X-Session-Token': token }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.github_url && data.github_repo) {
+          setWorkspaceGithubInfo({
+            repo: data.github_repo,
+            url: data.github_url,
+            username: githubStatus?.username
+          });
+        } else {
+          setWorkspaceGithubInfo(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking workspace:', error);
+    }
+    
     setShowDeployModal(true);
   };
 
