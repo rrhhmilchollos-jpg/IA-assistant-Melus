@@ -64,6 +64,12 @@ const WorkspacePage = () => {
     { id: 'current', name: projectName, active: true }
   ]);
   
+  // Sandbox state
+  const [showSandboxConsole, setShowSandboxConsole] = useState(false);
+  const [sandboxOutput, setSandboxOutput] = useState([]);
+  const [sandboxRunning, setSandboxRunning] = useState(false);
+  const [codesandboxUrl, setCodesandboxUrl] = useState(null);
+  
   const logsEndRef = useRef(null);
   const wsRef = useRef(null);
 
