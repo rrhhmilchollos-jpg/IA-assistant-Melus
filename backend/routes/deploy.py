@@ -250,6 +250,224 @@ async def redeploy_project(request: Request):
         "created_at": utc_now()
     })
     
+
+
+@router.post("/vercel")
+async def deploy_to_vercel(request: Request):
+    """Deploy workspace to Vercel - Generates deployment package"""
+    import aiohttp
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Check credits
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    DEPLOY_COST = 100  # 100 credits for Vercel deploy
+    
+    if not is_unlimited and user_doc.get("credits", 0) < DEPLOY_COST:
+        raise HTTPException(status_code=402, detail=f"Necesitas {DEPLOY_COST} créditos para desplegar en Vercel")
+    
+    body = await request.json()
+    workspace_id = body.get("workspace_id")
+    project_name = body.get("project_name", "melus-app")
+    
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="workspace_id required")
+    
+    # Get workspace
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    workspace_files = workspace.get("files", {})
+    if not workspace_files:
+        raise HTTPException(status_code=400, detail="No hay archivos para desplegar")
+    
+    # For Vercel, we need to prepare the project structure
+    # Since we don't have direct Vercel API integration yet,
+    # we'll generate a deployment-ready ZIP that can be uploaded manually
+    
+    # Create vercel.json configuration
+    vercel_config = {
+        "version": 2,
+        "name": project_name.lower().replace(" ", "-"),
+        "builds": [
+            {"src": "package.json", "use": "@vercel/static-build", "config": {"distDir": "build"}}
+        ],
+        "routes": [
+            {"handle": "filesystem"},
+            {"src": "/(.*)", "dest": "/index.html"}
+        ]
+    }
+    
+    # Create deployment record
+    deployment_id = generate_id("dep")
+    
+    deployment = {
+        "deployment_id": deployment_id,
+        "workspace_id": workspace_id,
+        "user_id": user_id,
+        "platform": "vercel",
+        "project_name": project_name,
+        "status": "ready_for_upload",
+        "files_count": len(workspace_files),
+        "vercel_config": vercel_config,
+        "created_at": utc_now(),
+        "instructions": [
+            "1. Descarga el archivo ZIP del proyecto",
+            "2. Ve a https://vercel.com/new",
+            "3. Arrastra la carpeta del proyecto o conecta tu GitHub",
+            "4. Vercel detectará automáticamente la configuración",
+            "5. Haz clic en 'Deploy'"
+        ]
+    }
+    
+    await db.deployments.insert_one(deployment)
+    
+    # Update workspace
+    await db.workspaces.update_one(
+        {"workspace_id": workspace_id},
+        {
+            "$set": {
+                "vercel_ready": True,
+                "last_deployment_id": deployment_id,
+                "updated_at": utc_now()
+            }
+        }
+    )
+    
+    # Deduct credits
+    if not is_unlimited:
+        await db.users.update_one(
+            {"user_id": user_id},
+            {
+                "$inc": {"credits": -DEPLOY_COST, "credits_used": DEPLOY_COST}
+            }
+        )
+    
+    return {
+        "deployment_id": deployment_id,
+        "status": "ready_for_upload",
+        "platform": "vercel",
+        "vercel_config": vercel_config,
+        "instructions": deployment["instructions"],
+        "download_url": f"/api/deploy/download-workspace-zip?workspace_id={workspace_id}",
+        "credits_used": 0 if is_unlimited else DEPLOY_COST
+    }
+
+
+@router.get("/download-workspace-zip")
+async def download_workspace_zip(request: Request):
+    """Generate and return a ZIP file with workspace code ready for Vercel"""
+    from fastapi.responses import StreamingResponse
+    
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    workspace_id = request.query_params.get("workspace_id")
+    
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="workspace_id required")
+    
+    # Get workspace
+    workspace = await db.workspaces.find_one(
+        {"workspace_id": workspace_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    
+    workspace_files = workspace.get("files", {})
+    
+    # Create ZIP in memory
+    zip_buffer = io.BytesIO()
+    project_name = workspace.get("name", "app").lower().replace(" ", "-")
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        # Add README
+        readme_content = f"""# {workspace.get('name', 'Generated App')}
+
+## Descripción
+{workspace.get('description', 'Aplicación generada con Melus AI')}
+
+## Desplegar en Vercel
+
+### Opción 1: CLI
+```bash
+npm install -g vercel
+vercel login
+vercel --prod
+```
+
+### Opción 2: Dashboard
+1. Ve a https://vercel.com/new
+2. Arrastra esta carpeta
+3. Haz clic en Deploy
+
+## Instalación Local
+```bash
+npm install
+npm start
+```
+
+## Tecnologías
+- React 18
+- React Router v6
+- Tailwind CSS
+
+---
+Generado por [Melus AI](https://melusai.com)
+"""
+        zip_file.writestr(f"{project_name}/README.md", readme_content)
+        
+        # Add vercel.json
+        vercel_config = json.dumps({
+            "version": 2,
+            "name": project_name,
+            "builds": [
+                {"src": "package.json", "use": "@vercel/static-build", "config": {"distDir": "build"}}
+            ],
+            "routes": [
+                {"handle": "filesystem"},
+                {"src": "/(.*)", "dest": "/index.html"}
+            ]
+        }, indent=2)
+        zip_file.writestr(f"{project_name}/vercel.json", vercel_config)
+        
+        # Add all workspace files
+        for file_path, content in workspace_files.items():
+            zip_file.writestr(f"{project_name}/{file_path}", content)
+        
+        # Ensure package.json has build script
+        if "package.json" in workspace_files:
+            try:
+                pkg = json.loads(workspace_files["package.json"])
+                if "scripts" not in pkg:
+                    pkg["scripts"] = {}
+                pkg["scripts"]["build"] = "react-scripts build"
+                pkg["scripts"]["start"] = "react-scripts start"
+                pkg["dependencies"]["react-scripts"] = "^5.0.1"
+                zip_file.writestr(f"{project_name}/package.json", json.dumps(pkg, indent=2))
+            except:
+                pass
+    
+    zip_buffer.seek(0)
+    
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{project_name}.zip"'
+        }
+    )
+
     # Simulate deployment completion (in production, this would trigger actual deployment)
     await db.deployments.update_one(
         {"deployment_id": deployment_id},
