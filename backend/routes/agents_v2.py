@@ -33,7 +33,15 @@ EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 # In-memory job storage for quick access (also persisted to MongoDB)
 generation_jobs: Dict[str, Dict[str, Any]] = {}
 
-EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+# Import expert agents
+from services.expert_agents import (
+    get_expert_agent,
+    get_all_expert_agents,
+    get_expert_prompt,
+    calculate_expert_cost,
+    detect_project_type,
+    EXPERT_AGENTS
+)
 
 # ============================================
 # AGENT COSTS - Sistema de 13 Agentes
@@ -57,6 +65,16 @@ AGENT_COSTS = {
     "debugger": 30,        # Fixes errors (monetization: 30 credits)
     "optimizer": 50,       # Code optimization
     "docs": 25,            # Documentation generation
+    
+    # Expert Agents (specialized by project type)
+    "expert_game": 200,
+    "expert_mobile": 250,
+    "expert_ecommerce": 300,
+    "expert_dashboard": 250,
+    "expert_saas": 350,
+    "expert_api": 200,
+    "expert_ai_app": 300,
+    "expert_portfolio": 150,
 }
 
 # Ultra mode multiplier
