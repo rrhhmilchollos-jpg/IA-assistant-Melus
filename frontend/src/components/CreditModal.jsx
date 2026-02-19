@@ -179,7 +179,7 @@ const CreditModal = ({ isOpen, onClose }) => {
           <div className="flex items-center gap-3">
             <Input
               type="text"
-              placeholder="+ Ingresar monto personalizado ($)"
+              placeholder="+ Ingresar monto personalizado (€)"
               value={customAmount}
               onChange={(e) => setCustomAmount(e.target.value.replace(/[^0-9.]/g, ''))}
               className="flex-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
