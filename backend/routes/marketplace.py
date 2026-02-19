@@ -313,3 +313,163 @@ async def delete_template(request: Request, template_id: str):
     await db.marketplace_templates.delete_one({"template_id": template_id})
     
     return {"deleted": True, "template_id": template_id}
+
+
+@router.post("/templates/{template_id}/purchase")
+async def purchase_template(request: Request, template_id: str):
+    """Purchase a paid template using credits"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Check if unlimited credits
+    is_unlimited = user_doc.get("unlimited_credits", False) or user_doc.get("is_owner", False)
+    
+    # Get template
+    template = await db.marketplace_templates.find_one(
+        {"template_id": template_id, "status": "approved"},
+        {"_id": 0}
+    )
+    
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Check if template is free
+    if template.get("is_free", True):
+        return {
+            "success": True,
+            "message": "Este template es gratuito",
+            "already_purchased": True
+        }
+    
+    # Check if already purchased
+    existing_purchase = await db.template_purchases.find_one({
+        "user_id": user_id,
+        "template_id": template_id
+    })
+    
+    if existing_purchase:
+        return {
+            "success": True,
+            "message": "Ya tienes este template",
+            "already_purchased": True
+        }
+    
+    template_price = template.get("price", 0)
+    
+    # Check credits
+    if not is_unlimited and user_doc["credits"] < template_price:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Necesitas {template_price} créditos. Tienes {user_doc['credits']:.2f}"
+        )
+    
+    # Deduct credits if not unlimited
+    if not is_unlimited:
+        new_credits = user_doc["credits"] - template_price
+        await db.users.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {"credits": new_credits},
+                "$inc": {"credits_used": template_price}
+            }
+        )
+    else:
+        new_credits = user_doc["credits"]
+    
+    # Record purchase
+    purchase = {
+        "purchase_id": generate_id("pur"),
+        "user_id": user_id,
+        "template_id": template_id,
+        "template_name": template.get("name"),
+        "price": template_price,
+        "author_id": template.get("author_id"),
+        "purchased_at": utc_now()
+    }
+    
+    await db.template_purchases.insert_one(purchase)
+    
+    # Pay author (80% of price goes to author)
+    author_earnings = template_price * 0.80
+    await db.users.update_one(
+        {"user_id": template.get("author_id")},
+        {
+            "$inc": {
+                "credits": author_earnings,
+                "marketplace_earnings": author_earnings
+            }
+        }
+    )
+    
+    # Update template stats
+    await db.marketplace_templates.update_one(
+        {"template_id": template_id},
+        {
+            "$inc": {
+                "purchases": 1,
+                "total_earnings": template_price
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": f"Template comprado por {template_price} créditos",
+        "credits_remaining": new_credits,
+        "purchase_id": purchase["purchase_id"]
+    }
+
+
+@router.get("/my-purchases")
+async def get_my_purchases(request: Request):
+    """Get templates purchased by current user"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    purchases = await db.template_purchases.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("purchased_at", -1).to_list(100)
+    
+    # Get template details for each purchase
+    for purchase in purchases:
+        template = await db.marketplace_templates.find_one(
+            {"template_id": purchase["template_id"]},
+            {"_id": 0, "name": 1, "description": 1, "category": 1, "preview_image": 1}
+        )
+        purchase["template"] = template
+    
+    return {"purchases": purchases}
+
+
+@router.get("/my-earnings")
+async def get_my_earnings(request: Request):
+    """Get marketplace earnings for current user"""
+    db = request.app.state.db
+    user_doc = await get_authenticated_user(request, db)
+    user_id = user_doc["user_id"]
+    
+    # Get total earnings
+    total_earnings = user_doc.get("marketplace_earnings", 0)
+    
+    # Get sales history
+    sales = await db.template_purchases.find(
+        {"author_id": user_id},
+        {"_id": 0}
+    ).sort("purchased_at", -1).limit(50).to_list(50)
+    
+    # Get templates stats
+    templates = await db.marketplace_templates.find(
+        {"author_id": user_id},
+        {"_id": 0, "template_id": 1, "name": 1, "price": 1, "purchases": 1, "total_earnings": 1}
+    ).to_list(100)
+    
+    return {
+        "total_earnings": total_earnings,
+        "sales": sales,
+        "templates": templates,
+        "pending_payout": total_earnings  # For now, all earnings are available
+    }
+
