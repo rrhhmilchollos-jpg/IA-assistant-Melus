@@ -1623,6 +1623,7 @@ Make it beautiful with Tailwind CSS dark theme.""",
             total_credits_used += frontend_result["credits_used"]
             
             frontend_files = frontend_result["result"].get("files", {})
+            logger.info(f"Frontend files generated: {len(frontend_files)} files - Keys: {list(frontend_files.keys())[:5]}")
             all_files.update(frontend_files)
             
             await manager.broadcast(workspace_id, {
