@@ -38,7 +38,8 @@ class VectorMemoryStore:
     def __init__(self, db):
         self.db = db
         self.collection_name = "learning_memory"
-        self.embedding_dim = 1536  # OpenAI ada-002 dimension
+        self.embedding_dim = 1536  # OpenAI text-embedding-3-small dimension
+        self._openai_client = None
         
     async def init_collection(self):
         """Inicializar la colección con índices necesarios"""
@@ -62,38 +63,56 @@ class VectorMemoryStore:
             logger.error(f"Failed to init collection: {e}")
             return False
     
+    def _get_openai_client(self):
+        """Lazy load OpenAI client"""
+        if self._openai_client is None:
+            try:
+                from openai import OpenAI
+                api_key = os.environ.get('EMERGENT_LLM_KEY')
+                if api_key:
+                    self._openai_client = OpenAI(
+                        api_key=api_key,
+                        base_url="https://api.emergent.sh/v1"
+                    )
+            except Exception as e:
+                logger.warning(f"Could not initialize OpenAI client: {e}")
+        return self._openai_client
+    
     async def get_embedding(self, text: str) -> List[float]:
-        """Obtener embedding de texto usando OpenAI"""
+        """Obtener embedding de texto usando OpenAI text-embedding-3-small"""
         try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
-            
-            api_key = os.environ.get('EMERGENT_LLM_KEY')
-            if not api_key:
-                logger.warning("No EMERGENT_LLM_KEY, using hash-based embedding")
+            client = self._get_openai_client()
+            if client is None:
+                logger.warning("No OpenAI client, using fallback embedding")
                 return self._fallback_embedding(text)
             
-            # Usar el modelo de embeddings
-            chat = LlmChat(
-                api_key=api_key,
-                session_id="embedding_gen",
-                system_message="Generate embeddings"
-            ).with_model("openai", "gpt-4o")
+            # Truncar texto si es muy largo (max 8191 tokens aprox)
+            truncated_text = text[:8000].replace("\n", " ").strip()
             
-            # Por ahora usamos un hash como fallback
-            # En producción, usar: openai.embeddings.create(model="text-embedding-ada-002")
-            return self._fallback_embedding(text)
+            if not truncated_text:
+                return self._fallback_embedding(text)
+            
+            # Llamar a OpenAI Embeddings API
+            response = client.embeddings.create(
+                model="text-embedding-3-small",
+                input=truncated_text,
+                encoding_format="float"
+            )
+            
+            embedding = response.data[0].embedding
+            logger.debug(f"Generated embedding with {len(embedding)} dimensions")
+            return embedding
             
         except Exception as e:
-            logger.error(f"Embedding error: {e}")
+            logger.warning(f"OpenAI embedding failed, using fallback: {e}")
             return self._fallback_embedding(text)
     
     def _fallback_embedding(self, text: str) -> List[float]:
-        """Embedding basado en hash para desarrollo"""
-        # Crear un embedding determinístico basado en el contenido
+        """Embedding basado en hash para fallback"""
         import hashlib
         import struct
         
-        # Usar SHA-256 y expandir a dimensión deseada
+        # Crear un embedding determinístico basado en el contenido
         text_hash = hashlib.sha256(text.encode()).digest()
         
         # Expandir a 1536 dimensiones usando el hash como semilla
@@ -111,6 +130,9 @@ class VectorMemoryStore:
     def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         """Calcular similitud coseno entre dos vectores"""
         import math
+        
+        if not vec1 or not vec2 or len(vec1) != len(vec2):
+            return 0.0
         
         dot_product = sum(a * b for a, b in zip(vec1, vec2))
         norm1 = math.sqrt(sum(a * a for a in vec1))
