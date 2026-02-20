@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -29,12 +29,15 @@ import {
   Settings,
   Smartphone,
   Monitor,
-  Tablet
+  Tablet,
+  Star
 } from 'lucide-react';
 import CreditModal from '../components/CreditModal';
+import ProjectRating from '../components/ProjectRating';
 import { Toaster, toast } from '../components/ui/sonner';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
+const WS_BASE = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // Code editor component
 const CodeEditor = ({ code, filename, onChange, readOnly = false }) => {
