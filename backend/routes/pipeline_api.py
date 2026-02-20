@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from pathlib import Path
 import asyncio
+import os
 
 from pipeline_engine import DevelopmentPipeline, ProjectPhase
 
@@ -25,6 +26,10 @@ class IterateProjectRequest(BaseModel):
 class ChatMessage(BaseModel):
     content: str
     role: str = "user"
+
+class RegenerateFileRequest(BaseModel):
+    file_path: str
+    instruction: str = ""
 
 # ============= HELPER FUNCTIONS =============
 
