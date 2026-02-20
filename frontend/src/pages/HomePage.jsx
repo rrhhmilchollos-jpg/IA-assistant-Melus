@@ -18,7 +18,8 @@ import {
   Settings,
   FolderOpen,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Bot
 } from 'lucide-react';
 import {
   DropdownMenu,
