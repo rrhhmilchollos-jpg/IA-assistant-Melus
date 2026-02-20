@@ -419,6 +419,10 @@ Analyze what needs to change and generate the modifications.
                 if changes and "files" in changes:
                     project_path = Path(project["project_path"])
                     
+                    # Track original content for learning
+                    original_contents = {}
+                    modified_contents = {}
+                    
                     for file in changes["files"]:
                         file_path = project_path / file["path"]
                         
@@ -430,6 +434,10 @@ Analyze what needs to change and generate the modifications.
                                 {"$unset": {f"files.{file['path']}": ""}}
                             )
                         else:
+                            # Save original content for learning
+                            original_contents[file["path"]] = current_files.get(file["path"], "")
+                            modified_contents[file["path"]] = file["content"]
+                            
                             file_path.parent.mkdir(parents=True, exist_ok=True)
                             with open(file_path, "w") as f:
                                 f.write(file["content"])
@@ -450,6 +458,20 @@ Analyze what needs to change and generate the modifications.
                     )
                     
                     await self._update_phase(project_id, ProjectPhase.COMPLETED, "Changes applied!")
+                    
+                    # Learn from this iteration
+                    try:
+                        learning_engine = await self._get_learning_engine()
+                        for file_path, modified_code in modified_contents.items():
+                            await learning_engine.learn_from_iteration(
+                                project_id=project_id,
+                                original_code=original_contents.get(file_path, ""),
+                                user_request=modification,
+                                modified_code=modified_code,
+                                user_id=project.get("user_id")
+                            )
+                    except Exception as learn_error:
+                        logger.warning(f"Learning from iteration failed (non-critical): {learn_error}")
                     
                     return {
                         "success": True,
