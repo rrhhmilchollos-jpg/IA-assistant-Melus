@@ -182,8 +182,8 @@ async def get_project_files(project_id: str, request: Request):
     }
 
 @router.get("/projects/{project_id}/download")
-async def download_project(project_id: str, request: Request):
-    """Download project as ZIP"""
+async def download_project(project_id: str, request: Request, background_tasks: BackgroundTasks):
+    """Download project as ZIP and record feedback"""
     db = get_db(request)
     
     project = await db.projects.find_one({"id": project_id})
@@ -204,6 +204,18 @@ async def download_project(project_id: str, request: Request):
             if file_path.is_file():
                 arcname = file_path.relative_to(project_path)
                 zipf.write(file_path, arcname)
+    
+    # Record download as positive feedback (in background)
+    async def record_download_feedback():
+        try:
+            from learning.feedback_system import FeedbackSystem
+            user_id = await get_user_id(request)
+            feedback_system = FeedbackSystem(db)
+            await feedback_system.record_download(project_id, user_id)
+        except Exception as e:
+            pass  # Non-critical, don't fail download
+    
+    background_tasks.add_task(record_download_feedback)
     
     return FileResponse(
         zip_path,
