@@ -199,9 +199,12 @@ const WorkspacePage = () => {
   
   // Workspace state
   const [workspaceId, setWorkspaceId] = useState(searchParams.get('workspace') || null);
+  const [projectId, setProjectId] = useState(searchParams.get('project') || null);
   const [projectName, setProjectName] = useState('New Project');
   const [files, setFiles] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
+  const [projectPhase, setProjectPhase] = useState(null);
+  const [projectPlan, setProjectPlan] = useState(null);
   
   // Chat/Agent state
   const [messages, setMessages] = useState([]);
@@ -211,7 +214,7 @@ const WorkspacePage = () => {
   const [agentThinking, setAgentThinking] = useState(false);
   
   // UI state
-  const [rightPanelMode, setRightPanelMode] = useState('code'); // 'code' | 'preview'
+  const [rightPanelMode, setRightPanelMode] = useState('preview'); // 'code' | 'preview'
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [previewDevice, setPreviewDevice] = useState('desktop');
