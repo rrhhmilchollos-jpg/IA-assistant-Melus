@@ -8,7 +8,7 @@ import os
 import uuid
 
 # Base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ai-app-generator-6.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://multi-agent-ai-12.preview.emergentagent.com')
 
 # Admin credentials
 ADMIN_EMAIL = "rrhh.milchollos@gmail.com"

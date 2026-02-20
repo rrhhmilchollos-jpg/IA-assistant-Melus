@@ -339,10 +339,10 @@ Objetivo: [Descripción]
 
 ## 9. URLs
 
-- **Frontend:** https://ai-app-generator-6.preview.emergentagent.com
-- **HomePage:** https://ai-app-generator-6.preview.emergentagent.com/home
-- **Workspace:** https://ai-app-generator-6.preview.emergentagent.com/workspace
-- **API:** https://ai-app-generator-6.preview.emergentagent.com/api
+- **Frontend:** https://multi-agent-ai-12.preview.emergentagent.com
+- **HomePage:** https://multi-agent-ai-12.preview.emergentagent.com/home
+- **Workspace:** https://multi-agent-ai-12.preview.emergentagent.com/workspace
+- **API:** https://multi-agent-ai-12.preview.emergentagent.com/api
 
 > **NOTA:** La ruta /generator ha sido OCULTA por solicitud del usuario.
 
