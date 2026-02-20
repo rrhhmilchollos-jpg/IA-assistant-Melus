@@ -27,10 +27,37 @@
 
 ## 2. URLs y Accesos
 
-- **HomePage:** `/home`
+- **Landing Page:** `/` (usuarios no autenticados) ✅ COMPLETADO
+- **HomePage:** `/home` (usuarios autenticados)
 - **Workspace:** `/workspace?workspace={id}`
 - **Admin Panel:** `/admin` (solo admin/owner)
 - **Marketplace:** `/marketplace` (SOLO ADMIN)
+
+---
+
+## 2.1 UI Replica de Emergent.sh - Estado
+
+### ✅ FASE 1: Landing Page (COMPLETADA - Dic 2025)
+- [x] Fondo negro con código animado (Matrix-style canvas)
+- [x] Logo "e" animado con glow cyan
+- [x] Badge "Y Combinator S24" (naranja)
+- [x] Título "Build Full-Stack" + "Web & Mobile Apps in minutes" (gradiente cyan-azul)
+- [x] Botón "Continue with Google" (funcional)
+- [x] Botones sociales: GitHub (funcional), Apple, Facebook (deshabilitados)
+- [x] Separador "OR"
+- [x] Botón "Continue with Email" → formulario email/password
+- [x] Panel derecho cyan con carousel ($100M ARR, 500K+ apps, 10x Faster)
+- [x] Links Terms of Service y Privacy Policy
+- [x] Routing: `/` muestra Landing para no-autenticados, redirige a `/home` para autenticados
+
+### 🔲 FASE 2: Dashboard Post-Login (PENDIENTE)
+- [ ] Rediseñar `HomePage.jsx` para replicar dashboard de Emergent.sh
+- [ ] Input principal para describir proyectos
+- [ ] Barra lateral con historial
+
+### 🔲 FASE 3: Workspace/IDE (PENDIENTE)  
+- [ ] Rediseñar `WorkspacePage.jsx` para replicar IDE de Emergent.sh
+- [ ] Conectar WebSocket del sandbox para output real-time
 
 ---
 
