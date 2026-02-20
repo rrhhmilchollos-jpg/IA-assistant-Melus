@@ -88,6 +88,12 @@ function AppRouter() {
           <OrchestratorPage />
         </ProtectedRoute>
       } />
+      {/* Learning Dashboard - Continuous Learning System */}
+      <Route path="/learning" element={
+        <ProtectedRoute>
+          <LearningDashboard />
+        </ProtectedRoute>
+      } />
       {/* Landing page for unauthenticated users, redirect to home for authenticated */}
       <Route path="/" element={<LandingPageRoute />} />
       <Route path="*" element={<Navigate to="/" replace />} />
