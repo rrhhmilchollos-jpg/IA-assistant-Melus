@@ -33,40 +33,32 @@ const TaskManager = () => {
     setTasks(tasks.filter((_, idx) => idx !== index));
   };
 
-  const filterTasks = (status) => {
-    setFilter(status);
-  };
-
   const filteredTasks = tasks.filter(task => {
-    if (filter === 'completed') return task.completed;
     if (filter === 'active') return !task.completed;
+    if (filter === 'completed') return task.completed;
     return true;
   });
 
   return (
-    <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
-      <motion.h1 className="text-2xl font-bold mb-4">Task Manager</motion.h1>
-      <div className="flex mb-4">
+    <div>
+      <TaskFilter filter={filter} setFilter={setFilter} />
+      <div className="mb-4">
         <input
           type="text"
           value={newTask}
-          onChange={e => setNewTask(e.target.value)}
-          placeholder="Add a new task"
-          className="border flex-grow p-2 rounded-l"
+          onChange={(e) => setNewTask(e.target.value)}
+          placeholder="Add new task"
+          className="border p-2 mr-2"
         />
-        <button
-          onClick={addTask}
-          className="bg-blue-500 text-white p-2 rounded-r"
-        >Add</button>
+        <button onClick={addTask} className="bg-blue-500 text-white p-2">Add Task</button>
       </div>
-      <TaskFilter filter={filter} setFilter={filterTasks} />
-      <ul>
+      <ul className="task-list">
         {filteredTasks.map((task, index) => (
           <Task 
-            key={index} 
+            key={index}
             task={task} 
-            index={index} 
-            toggleTaskCompletion={toggleTaskCompletion} 
+            index={index}
+            toggleTaskCompletion={toggleTaskCompletion}
             deleteTask={deleteTask}
           />
         ))}
