@@ -51,6 +51,7 @@ from routes.github import router as github_router
 from routes.workspace import router as workspace_router
 from routes.marketplace import router as marketplace_router
 from routes.sandbox import router as sandbox_router
+from routes.orchestrator_api import router as orchestrator_router
 
 # Include all routers with /api prefix
 app.include_router(auth_router, prefix="/api")
