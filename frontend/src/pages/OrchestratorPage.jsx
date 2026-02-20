@@ -97,6 +97,8 @@ const OrchestratorPage = () => {
   const [generatedFiles, setGeneratedFiles] = useState([]);
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewObjective, setPreviewObjective] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
