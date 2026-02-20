@@ -1054,6 +1054,8 @@ I'm working on your request. This may take a moment...`);
                       files={files}
                       selectedFile={selectedFile}
                       onSelectFile={setSelectedFile}
+                      onRegenerateFile={handleRegenerateFile}
+                      regeneratingFile={regeneratingFile}
                     />
                   ) : (
                     <div className="px-3 py-2 text-sm text-gray-500">No files</div>
@@ -1068,9 +1070,10 @@ I'm working on your request. This may take a moment...`);
                         files={files}
                         selectedFile={selectedFile}
                         onSelectFile={setSelectedFile}
+                        onRegenerateFile={handleRegenerateFile}
                       />
                       <div className="flex-1 overflow-hidden">
-                        <CodeEditor
+                        <MonacoCodeEditor
                           code={files[selectedFile]}
                           filename={selectedFile}
                           onChange={(newCode) => {
