@@ -592,11 +592,11 @@ const HomePage = () => {
                 {/* Submit */}
                 <button
                   onClick={handleSubmit}
-                  disabled={!prompt.trim() || isLoading}
+                  disabled={!prompt.trim() || isLoading || isGenerating}
                   className="p-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   data-testid="submit-btn"
                 >
-                  {isLoading ? (
+                  {isLoading || isGenerating ? (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
                     <ArrowRight size={18} />
