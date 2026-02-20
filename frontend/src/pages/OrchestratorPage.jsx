@@ -177,6 +177,61 @@ const OrchestratorPage = () => {
     }
   };
 
+  const executeTask = async (taskId) => {
+    const token = localStorage.getItem('session_token');
+    setExecutingTask(taskId);
+    try {
+      const response = await fetch(`${API_BASE}/api/orchestrator/tasks/${taskId}/execute`, {
+        method: 'POST',
+        headers: { 'X-Session-Token': token }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(`Task "${result.title}" completed`);
+        loadDashboardData();
+        if (selectedObjective) {
+          loadObjectiveTasks(selectedObjective);
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to execute task');
+    } finally {
+      setExecutingTask(null);
+    }
+  };
+
+  const loadObjectiveTasks = async (objectiveId) => {
+    const token = localStorage.getItem('session_token');
+    setSelectedObjective(objectiveId);
+    try {
+      const response = await fetch(`${API_BASE}/api/orchestrator/tasks?objective_id=${objectiveId}`, {
+        headers: { 'X-Session-Token': token }
+      });
+      if (response.ok) {
+        const tasks = await response.json();
+        setObjectiveTasks(tasks.sort((a, b) => a.phase - b.phase));
+      }
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    }
+  };
+
+  const loadGeneratedFiles = async (objectiveId) => {
+    const token = localStorage.getItem('session_token');
+    try {
+      const response = await fetch(`${API_BASE}/api/orchestrator/objectives/${objectiveId}/files`, {
+        headers: { 'X-Session-Token': token }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGeneratedFiles(data.files || []);
+        setShowFilesModal(true);
+      }
+    } catch (error) {
+      toast.error('Failed to load files');
+    }
+  };
+
   const StatCard = ({ icon: Icon, label, value, subvalue, color = 'cyan' }) => (
     <div className="bg-white rounded-xl p-5 border border-gray-200">
       <div className="flex items-center justify-between mb-3">
