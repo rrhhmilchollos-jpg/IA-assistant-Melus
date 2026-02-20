@@ -65,9 +65,9 @@ function AppRouter() {
           <MarketplacePage />
         </ProtectedRoute>
       } />
-      {/* Default redirect to home */}
-      <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="*" element={<Navigate to="/home" replace />} />
+      {/* Landing page for unauthenticated users, redirect to home for authenticated */}
+      <Route path="/" element={<LandingPageRoute />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
