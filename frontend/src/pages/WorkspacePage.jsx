@@ -132,12 +132,42 @@ const FileTree = ({ files, selectedFile, onSelectFile, onRegenerateFile, regener
           </button>
         );
       })}
+      
+      {/* Context Menu */}
+      {contextMenu && (
+        <div 
+          className="fixed bg-[#252526] border border-gray-700 rounded-lg shadow-xl py-1 z-50 min-w-[160px]"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <button
+            onClick={() => {
+              onRegenerateFile?.(contextMenu.file);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-[#37373d] transition-colors"
+          >
+            <Wand2 size={14} className="text-cyan-400" />
+            Regenerate File
+          </button>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(files[contextMenu.file] || '');
+              toast.success('Copied to clipboard');
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-[#37373d] transition-colors"
+          >
+            <Copy size={14} />
+            Copy Content
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
 // Tab component for code editor
-const EditorTabs = ({ files, selectedFile, onSelectFile, onCloseFile }) => {
+const EditorTabs = ({ files, selectedFile, onSelectFile, onCloseFile, onRegenerateFile }) => {
   const openFiles = selectedFile ? [selectedFile] : [];
   
   const getFileIcon = (filename) => {
