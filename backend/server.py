@@ -67,6 +67,7 @@ app.include_router(github_router, prefix="/api")
 app.include_router(workspace_router, prefix="/api")
 app.include_router(marketplace_router, prefix="/api")
 app.include_router(sandbox_router, prefix="/api")
+app.include_router(orchestrator_router)
 
 # CORS middleware
 app.add_middleware(
