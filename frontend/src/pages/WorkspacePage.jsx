@@ -235,22 +235,76 @@ const WorkspacePage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle initial prompt
+  // Load project from pipeline if projectId provided
+  useEffect(() => {
+    if (projectId && !hasInitialized.current) {
+      hasInitialized.current = true;
+      loadPipelineProject(projectId);
+    }
+  }, [projectId]);
+
+  // Handle initial prompt (legacy)
   useEffect(() => {
     if (hasInitialized.current) return;
     const initialPrompt = searchParams.get('prompt');
-    if (initialPrompt && !workspaceId) {
+    if (initialPrompt && !workspaceId && !projectId) {
       hasInitialized.current = true;
       handleSendMessage(initialPrompt);
     }
   }, []);
 
-  // Load workspace if ID provided
+  // Load workspace if ID provided (legacy)
   useEffect(() => {
-    if (workspaceId) {
+    if (workspaceId && !projectId) {
       loadWorkspace(workspaceId);
     }
   }, [workspaceId]);
+
+  // Load project from pipeline API
+  const loadPipelineProject = async (projId) => {
+    const token = localStorage.getItem('session_token');
+    try {
+      // Get project details
+      const response = await fetch(`${API_BASE}/api/pipeline/projects/${projId}`, {
+        headers: { 'X-Session-Token': token }
+      });
+      
+      if (response.ok) {
+        const project = await response.json();
+        
+        // Set project info
+        setProjectName(project.plan?.project_name || 'My Project');
+        setProjectPhase(project.phase);
+        setProjectPlan(project.plan);
+        setFiles(project.files || {});
+        
+        // Select first file
+        const fileNames = Object.keys(project.files || {});
+        if (fileNames.length > 0) {
+          setSelectedFile(fileNames[0]);
+        }
+        
+        // Add welcome message
+        addMessage('assistant', `✅ Project loaded: **${project.plan?.project_name || 'Your Project'}**
+
+📁 ${fileNames.length} files generated
+🏗️ Status: ${project.phase}
+
+You can now:
+- **Preview** your project on the right panel
+- **Edit** any file directly
+- **Ask me** to add features or fix issues
+
+What would you like to do next?`);
+
+        // Switch to preview mode
+        setRightPanelMode('preview');
+      }
+    } catch (error) {
+      console.error('Failed to load project:', error);
+      toast.error('Failed to load project');
+    }
+  };
 
   // Check GitHub status
   useEffect(() => {

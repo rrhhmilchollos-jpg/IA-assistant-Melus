@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import CalculatorButton from './components/CalculatorButton';
+import { create, all } from 'mathjs';
 
+const math = create(all);
 const App = () => {
     const [input, setInput] = useState('');
 
@@ -10,7 +12,7 @@ const App = () => {
 
     const evaluateInput = () => {
         try {
-            setInput(eval(input).toString());
+            setInput(math.evaluate(input).toString());
         } catch (error) {
             alert('Invalid Expression');
             setInput('');
@@ -30,13 +32,9 @@ const App = () => {
                 {[...Array(10).keys()].map(number => (
                     <CalculatorButton key={number} text={number} onClick={() => appendToInput(number)} />
                 ))}
-                <CalculatorButton text="+" onClick={() => appendToInput('+')} />
-                <CalculatorButton text="-" onClick={() => appendToInput('-')} />
-                <CalculatorButton text="*" onClick={() => appendToInput('*')} />
-                <CalculatorButton text="/" onClick={() => appendToInput('/')} />
-                <CalculatorButton text="=" className="col-span-2" onClick={evaluateInput} />
-                <CalculatorButton text="C" className="col-span-2" onClick={clearInput} />
             </div>
+            <CalculatorButton text="=" onClick={evaluateInput} />
+            <CalculatorButton text="C" onClick={clearInput} />
         </div>
     );
 };
