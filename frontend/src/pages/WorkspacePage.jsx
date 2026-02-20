@@ -996,7 +996,14 @@ I'm working on your request. This may take a moment...`);
                       <span>{projectId ? `preview.melus.ai/${projectId?.slice(0, 8)}` : 'preview.melus.ai'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    {/* Rating component */}
+                    {projectId && projectPhase === 'completed' && (
+                      <div className="flex items-center gap-2 mr-2 px-2 py-1 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-400">Rate:</span>
+                        <ProjectRating projectId={projectId} />
+                      </div>
+                    )}
                     <button 
                       onClick={() => {
                         const iframe = document.getElementById('preview-iframe');
