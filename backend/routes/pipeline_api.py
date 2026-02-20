@@ -59,7 +59,7 @@ async def create_project(
     Starts the development pipeline in background.
     """
     db = get_db(request)
-    user_id = get_user_id(request)
+    user_id = await get_user_id(request)
     
     pipeline = DevelopmentPipeline(db)
     
@@ -79,7 +79,7 @@ async def create_project(
 async def get_user_projects(request: Request):
     """Get all projects for current user"""
     db = get_db(request)
-    user_id = get_user_id(request)
+    user_id = await get_user_id(request)
     
     pipeline = DevelopmentPipeline(db)
     projects = await pipeline.get_user_projects(user_id)
