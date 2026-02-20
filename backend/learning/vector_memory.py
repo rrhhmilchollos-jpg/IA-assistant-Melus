@@ -64,16 +64,18 @@ class VectorMemoryStore:
             return False
     
     def _get_openai_client(self):
-        """Lazy load OpenAI client"""
+        """Lazy load OpenAI client with direct OpenAI API"""
         if self._openai_client is None:
             try:
                 from openai import OpenAI
-                api_key = os.environ.get('EMERGENT_LLM_KEY')
-                if api_key:
-                    self._openai_client = OpenAI(
-                        api_key=api_key,
-                        base_url="https://api.emergent.sh/v1"
-                    )
+                # Try direct OpenAI API key first (for embeddings)
+                openai_key = os.environ.get('OPENAI_API_KEY')
+                if openai_key:
+                    self._openai_client = OpenAI(api_key=openai_key)
+                    logger.info("Using direct OpenAI API for embeddings")
+                else:
+                    # Fallback: Emergent key doesn't support embeddings endpoint
+                    logger.info("No OPENAI_API_KEY, using hash-based embeddings")
             except Exception as e:
                 logger.warning(f"Could not initialize OpenAI client: {e}")
         return self._openai_client
