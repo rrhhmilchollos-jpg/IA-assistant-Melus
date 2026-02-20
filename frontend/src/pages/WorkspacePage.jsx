@@ -375,8 +375,57 @@ What would you like to do next?`);
     const token = localStorage.getItem('session_token');
     
     try {
-      if (!workspaceId) {
-        // New project generation
+      // Use pipeline for project iteration
+      if (projectId) {
+        setCurrentStep('Processing your request...');
+        
+        const response = await fetch(`${API_BASE}/api/pipeline/projects/${projectId}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Token': token
+          },
+          body: JSON.stringify({
+            content: messageText,
+            role: 'user'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          addMessage('assistant', `🔄 ${data.message}
+
+I'm working on your request. This may take a moment...`);
+          
+          // Poll for completion
+          let attempts = 0;
+          while (attempts < 30) {
+            await new Promise(r => setTimeout(r, 2000));
+            attempts++;
+            
+            const statusResponse = await fetch(`${API_BASE}/api/pipeline/projects/${projectId}/status`, {
+              headers: { 'X-Session-Token': token }
+            });
+            
+            const status = await statusResponse.json();
+            setCurrentStep(status.status);
+            
+            if (status.phase === 'completed') {
+              // Reload project files
+              await loadPipelineProject(projectId);
+              addMessage('assistant', '✅ Changes applied successfully! Check the preview.');
+              break;
+            } else if (status.phase === 'failed') {
+              addMessage('assistant', '❌ Failed to apply changes. Please try again.');
+              break;
+            }
+          }
+        } else {
+          addMessage('assistant', `Error: ${data.error || 'Failed to process request'}`);
+        }
+      } else if (!workspaceId) {
+        // New project generation (legacy)
         setCurrentStep('Analyzing your request...');
         addMessage('assistant', 'Starting to build your app...', 'progress');
         
