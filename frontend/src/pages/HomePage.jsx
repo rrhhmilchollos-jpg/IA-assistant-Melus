@@ -219,6 +219,16 @@ const HomePage = () => {
             <Plus size={18} />
             <span className="font-medium">New Chat</span>
           </button>
+          
+          {/* Orchestrator Button */}
+          <button
+            onClick={() => navigate('/orchestrator')}
+            className="w-full flex items-center gap-2 px-4 py-2.5 mt-2 bg-gradient-to-r from-cyan-50 to-blue-50 hover:from-cyan-100 hover:to-blue-100 border border-cyan-200 rounded-lg transition-colors text-cyan-700"
+            data-testid="orchestrator-btn"
+          >
+            <Bot size={18} />
+            <span className="font-medium">Orchestrator</span>
+          </button>
         </div>
         
         {/* Projects List */}
