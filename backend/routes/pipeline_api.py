@@ -162,6 +162,101 @@ async def iterate_project(
         "message": "Applying changes..."
     }
 
+@router.post("/projects/{project_id}/regenerate-file")
+async def regenerate_single_file(project_id: str, data: RegenerateFileRequest, request: Request):
+    """Regenerate a single file in the project"""
+    db = get_db(request)
+    
+    project = await db.projects.find_one({"id": project_id})
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    files = project.get("files", {})
+    
+    if data.file_path not in files:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    current_content = files[data.file_path]
+    project_plan = project.get("plan", {})
+    
+    # Build regeneration prompt
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
+    api_key = os.environ.get('EMERGENT_LLM_KEY')
+    if not api_key:
+        raise HTTPException(status_code=500, detail="LLM key not configured")
+    
+    chat = LlmChat(
+        api_key=api_key,
+        session_id=f"regen_{project_id}_{data.file_path}",
+        system_message="""You are an expert code generator. 
+Regenerate the given file following the instructions.
+Return ONLY the new file content, no explanations or markdown code blocks.
+Keep the same file structure and purpose but improve based on the instruction."""
+    ).with_model("openai", "gpt-4o")
+    
+    prompt = f"""Project: {project_plan.get('project_name', 'Web App')}
+Project Type: {project_plan.get('project_type', 'web_app')}
+
+File to regenerate: {data.file_path}
+
+Current content:
+```
+{current_content}
+```
+
+Instruction: {data.instruction if data.instruction else 'Improve this file, fix any issues, and make it better.'}
+
+Generate the improved version of this file. Return ONLY the code, no explanations."""
+
+    try:
+        response = await chat.send_message(UserMessage(text=prompt))
+        
+        # Clean the response
+        new_content = response.strip()
+        
+        # Remove markdown code blocks if present
+        if new_content.startswith("```"):
+            lines = new_content.split("\n")
+            # Find first and last ``` lines
+            start_idx = 0
+            end_idx = len(lines)
+            for i, line in enumerate(lines):
+                if line.startswith("```") and i == 0:
+                    start_idx = 1
+                elif line.strip() == "```" and i > 0:
+                    end_idx = i
+                    break
+            new_content = "\n".join(lines[start_idx:end_idx])
+        
+        # Save to disk and database
+        project_path = Path(project.get("project_path", ""))
+        if project_path.exists():
+            file_path = project_path / data.file_path
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(file_path, "w") as f:
+                f.write(new_content)
+        
+        # Update database
+        await db.projects.update_one(
+            {"id": project_id},
+            {"$set": {f"files.{data.file_path}": new_content}}
+        )
+        
+        return {
+            "success": True,
+            "file_path": data.file_path,
+            "content": new_content,
+            "summary": f"Regenerated {data.file_path} successfully"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @router.get("/projects/{project_id}/files")
 async def get_project_files(project_id: str, request: Request):
     """Get all files in a project"""
