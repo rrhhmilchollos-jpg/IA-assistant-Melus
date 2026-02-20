@@ -463,23 +463,48 @@ Analyze what needs to change and generate the modifications.
     
     # ============= PHASE IMPLEMENTATIONS =============
     
-    async def _phase_planning(self, prompt: str) -> Optional[Dict]:
-        """Phase 1: Analyze and plan the project"""
-        result = await call_llm(prompt, PLANNER_PROMPT)
+    async def _phase_planning(self, prompt: str, context: Dict = None) -> Optional[Dict]:
+        """Phase 1: Analyze and plan the project with learning context"""
+        
+        # Enhance prompt with context from learning system
+        enhanced_prompt = prompt
+        if context and context.get("similar_prompts"):
+            enhanced_prompt += "\n\n[Context from successful similar projects:"
+            for sp in context["similar_prompts"][:2]:
+                enhanced_prompt += f"\n- Type: {sp.get('project_type')}, Quality: {sp.get('quality', 'N/A')}"
+            enhanced_prompt += "]"
+        
+        if context and context.get("common_errors"):
+            enhanced_prompt += "\n\n[Avoid these common errors:"
+            for err in context["common_errors"][:2]:
+                enhanced_prompt += f"\n- {err.get('error_type', 'unknown')}"
+            enhanced_prompt += "]"
+        
+        result = await call_llm(enhanced_prompt, PLANNER_PROMPT)
         
         if result["success"]:
             return self._parse_json_response(result["response"])
         return None
     
-    async def _phase_generation(self, plan: Dict, original_prompt: str) -> Optional[Dict]:
-        """Phase 2: Generate all project files"""
+    async def _phase_generation(self, plan: Dict, original_prompt: str, context: Dict = None) -> Optional[Dict]:
+        """Phase 2: Generate all project files with learning context"""
+        
+        # Build context from learning system
+        code_examples_context = ""
+        if context and context.get("code_examples"):
+            code_examples_context = "\n\n[Quality code examples from similar projects:\n"
+            for ex in context["code_examples"][:2]:
+                code_examples_context += f"File: {ex.get('file_path', 'unknown')}\n"
+                code_examples_context += f"Preview: {ex.get('preview', '')[:200]}...\n\n"
+            code_examples_context += "]"
+        
         generation_prompt = f"""
 Project Plan:
 {json.dumps(plan, indent=2)}
 
 Original Request:
 {original_prompt}
-
+{code_examples_context}
 Generate ALL files for this project. Make it complete and production-ready.
 """
         result = await call_llm(generation_prompt, GENERATOR_PROMPT)
