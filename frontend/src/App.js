@@ -1,6 +1,6 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./pages/HomePage";
+import LandingPage from "./pages/LandingPage";
 import Pricing from "./pages/Pricing";
 import Success from "./pages/Success";
 import AdminPanel from "./pages/AdminPanel";
