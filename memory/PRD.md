@@ -1,376 +1,182 @@
 # Melus AI - Product Requirements Document
 
-> **Última actualización:** Diciembre 2025
-> **Versión:** 5.0.0 - EMERGENT.SH UI REPLICA COMPLETA (3 FASES)
+## Original Problem Statement
+Build an AI application generator named "Melus AI" - a highly advanced, autonomous, multi-agent platform. The platform must be capable of hierarchical task planning, routing tasks to specialized agents (e.g., Code Agent, Research Agent), using a persistent vector memory, and executing real-world tools (Git, APIs, code execution).
+
+The frontend is a visual replica of the Emergent.sh website's light theme. The backend uses MongoDB for data persistence.
+
+**User's preferred language**: Spanish
 
 ---
 
-## 1. Visión del Producto
+## Current Architecture
 
-**Melus AI** es un **Constructor Universal de Aplicaciones** con UI réplica de Emergent.sh, con:
-- Ejecución aislada de código (sandbox)
-- 13 agentes core
-- **15 Expert Agents** especializados
-- Panel de Admin completo con métricas
-- WebSocket para output en tiempo real
+### Tech Stack
+- **Frontend**: React, react-router-dom, axios, lucide-react, shadcn/ui, TailwindCSS
+- **Backend**: FastAPI, Pydantic, Motor (MongoDB async driver)
+- **Database**: MongoDB Atlas
+- **AI Integration**: OpenAI GPT-4 (via Emergent LLM Key)
+- **Payments**: Stripe
 
-### Características Principales
-- **HomePage Completa**: Todos los controles funcionales
-- **Sandbox Execution**: 3 métodos + WebSocket real-time
-- **Marketplace ADMIN ONLY**: Templates internos
-- **Expert Agents**: 15 tipos especializados
-- **Vercel Deploy**: Flujo GitHub → Vercel
-- **Sistema de Versionado**: Snapshots, compare, file-history
-- **Panel de Admin Mejorado**: Dashboard personalizable con widgets
-
----
-
-## 2. URLs y Accesos
-
-- **Landing Page:** `/` (usuarios no autenticados) ✅ COMPLETADO
-- **HomePage:** `/home` (usuarios autenticados)
-- **Workspace:** `/workspace?workspace={id}`
-- **Admin Panel:** `/admin` (solo admin/owner)
-- **Marketplace:** `/marketplace` (SOLO ADMIN)
-
----
-
-## 2.1 UI Replica de Emergent.sh - Estado
-
-### ✅ FASE 1: Landing Page (COMPLETADA - Dic 2025)
-- [x] Fondo negro con código animado (Matrix-style canvas)
-- [x] Logo "e" animado con glow cyan
-- [x] Badge "Y Combinator S24" (naranja)
-- [x] Título "Build Full-Stack" + "Web & Mobile Apps in minutes" (gradiente cyan-azul)
-- [x] Botón "Continue with Google" (funcional)
-- [x] Botones sociales: GitHub (funcional), Apple, Facebook (deshabilitados)
-- [x] Separador "OR"
-- [x] Botón "Continue with Email" → formulario email/password
-- [x] Panel derecho cyan con carousel ($100M ARR, 500K+ apps, 10x Faster)
-- [x] Links Terms of Service y Privacy Policy
-- [x] Routing: `/` muestra Landing para no-autenticados, redirige a `/home` para autenticados
-
-### ✅ FASE 2: Dashboard Post-Login (COMPLETADA - Dic 2025)
-- [x] Sidebar izquierdo colapsable con botón "New Chat"
-- [x] Lista de "Recent Projects" en sidebar
-- [x] Perfil de usuario en footer del sidebar con dropdown
-- [x] Header con logo "e" + "Melus AI"
-- [x] Selector de modo agente E1 / E1.5 / E2 (como Emergent)
-- [x] Display de créditos en header
-- [x] Título central "What do you want to build?"
-- [x] Input textarea con auto-resize
-- [x] Botones de attachment y voice input
-- [x] Botón submit que navega al workspace
-- [x] Quick suggestions: "Build a todo app", "Create an e-commerce site", etc.
-- [x] Footer con modo de agente seleccionado
-
-### ✅ FASE 3: Workspace/IDE (COMPLETADA - Dic 2025)
-- [x] Layout 50/50 - Panel chat izquierdo + Panel código derecho
-- [x] Header con logo "melusAI", nombre de proyecto, Share, Download, Deploy, Credits
-- [x] Panel de chat con mensajes estilo AI/User
-- [x] Input de chat con placeholder dinámico
-- [x] Tabs Code/Preview con indicador activo
-- [x] Explorer de archivos con iconos por tipo (JS, HTML, CSS, JSON)
-- [x] Editor de código estilo VS Code con tema oscuro
-- [x] Números de línea
-- [x] Tabs de archivos con indicador cyan y botón cerrar
-- [x] Preview mode con barra de navegador (botones Mac rojo/amarillo/verde)
-- [x] Selector de dispositivo (Desktop/Tablet/Mobile)
-- [x] Terminal toggle con output de comandos
-- [x] Deploy modal con conexión GitHub
-
----
-
-## 3. Panel de Admin (Mejorado)
-
-### Dashboard con Widgets Personalizables:
-- **Stats**: Total usuarios, activos 24h, ingresos
-- **Proyectos Generados**: Total, hoy, semana, por tipo
-- **Ejecuciones Sandbox**: Total, exitosos, fallidos, por método
-- **Consumo de Créditos**: Gráfico 7 días
-- **Uso de Agentes**: Métricas por tipo
-- **Actividad Reciente**: Timeline de acciones
-
-### Secciones:
-- Dashboard, Usuarios, Transacciones, Proyectos, Agentes, Sandbox, Ingresos, Sistema, Configuración
-
-### Endpoints de Métricas:
-- `GET /api/admin/metrics/projects` - Métricas de proyectos
-- `GET /api/admin/metrics/sandbox` - Métricas de sandbox
-- `GET /api/admin/metrics/credits` - Consumo de créditos
-
----
-
-## 4. Sandbox Execution System
-
-### 3 Métodos Implementados:
-
-**A) CodeSandbox API**
-- `POST /api/sandbox/codesandbox/create` - Crear sandbox remoto
-- `GET /api/sandbox/codesandbox/{id}/status` - Estado del sandbox
-- Features: Full React app, Live preview, URL persistente
-
-**B) Node.js Process Sandbox**
-- `POST /api/sandbox/node/execute` - Ejecutar código JS
-- `POST /api/sandbox/node/evaluate` - Evaluar expresión
-- Features: Ejecución rápida, Timeout, Output capturado
-
-**C) Docker Container (Requiere Docker)**
-- `GET /api/sandbox/docker/status` - Verificar Docker
-- `POST /api/sandbox/docker/execute` - Ejecutar en container
-- Features: Aislamiento completo, Sin red, Límites de memoria
-
-**Endpoints universales:**
-- `POST /api/sandbox/run` - Auto-selecciona mejor método
-- `GET /api/sandbox/methods` - Lista métodos disponibles
-- `GET /api/sandbox/executions` - Historial de ejecuciones
-
-### UI en WorkspacePage:
-- Botón "Sandbox" en header (púrpura)
-- Panel lateral con:
-  - Botón CodeSandbox
-  - Botón Run Node
-  - Console output
-  - Crear Snapshot
-
----
-
-## 4. Estado Actual - Completado
-
-### ✅ Sesión Actual - P2 Features
-
-**1) Vercel Deploy (desde GitHub):**
-- [x] Modal detecta si proyecto está en GitHub
-- [x] Si NO está: muestra mensaje y botón "Ir a subir a GitHub"
-- [x] Si ESTÁ: abre `vercel.com/new/import?s={repo_url}`
-
-**2) Marketplace SOLO ADMIN:**
-- [x] Acceso restringido a `is_admin` o `is_owner`
-- [x] Templates son gratuitos (uso interno)
-- [x] Sin opción de compra para usuarios normales
-
-**3) Sistema de Versionado Mejorado:**
-- [x] `POST /workspace/{id}/snapshot` - Crear snapshots con nombre
-- [x] `GET /workspace/{id}/compare/{v1}/{v2}` - Diff entre versiones
-- [x] `GET /workspace/{id}/file-history/{path}` - Historial de archivo
-
-**4) Panel de Admin:**
-- [x] Dashboard con métricas
-- [x] Gestión de usuarios
-- [x] Transacciones
-- [x] Sistema de salud
-
-### ✅ Sesiones Anteriores
-- HomePage funcional completa
-- Ruta /generator oculta
-- Expert Agents (8 tipos)
-- GitHub push-workspace
-- Voice transcription
-
----
-
-## 4. Expert Agents (8 Agentes Especializados)
-
-| Agente | Costo | Categoría | Capacidades |
-|--------|-------|-----------|-------------|
-| Game Developer | 200 | Desarrollo | Canvas, Física, Animaciones |
-| Mobile App | 250 | Desarrollo | PWA, Responsive, Touch, Offline |
-| E-commerce | 300 | Desarrollo | Carrito, Productos, Checkout |
-| Dashboard Admin | 250 | Desarrollo | Gráficos, Tablas, Analytics |
-| SaaS App | 350 | Desarrollo | Auth, Suscripciones, API |
-| AI Application | 300 | IA & ML | Chat LLM, Embeddings, Prompts |
-| Portfolio Creator | 150 | Desarrollo | Animaciones, Galería, Contacto |
-| API Builder | 200 | Backend | REST, GraphQL, Swagger |
-
----
-
-## 4. Sistema de 13 Agentes Core
-
-### 4.1 Agentes Core (Generación)
-| Agente | Costo | Función |
-|--------|-------|---------|
-| Classifier | 25 | Clasifica tipo de aplicación |
-| Architect | 50 | Diseña estructura y arquitectura |
-| Frontend | 150 | Genera código React completo |
-| Backend | 150 | Genera APIs y servidor |
-| Integrator | 75 | Conecta frontend con backend |
-
-### 4.2 Agentes Especializados
-| Agente | Costo | Función |
-|--------|-------|---------|
-| Design | 100 | UI/UX y sistema de diseño |
-| Database | 100 | Esquemas y queries |
-| Testing | 75 | Tests automatizados |
-| Security | 50 | Análisis de vulnerabilidades |
-| Deploy | 50 | Configuración de despliegue |
-
-### 4.3 Agentes de Utilidad
-| Agente | Costo | Función |
-|--------|-------|---------|
-| Debugger | 30 | Corrección de errores (monetización) |
-| Optimizer | 50 | Optimización de rendimiento |
-| Docs | 25 | Generación de documentación |
-
----
-
-## 5. Plantilla de Proyecto (Modo Motor)
-
+### Directory Structure
 ```
-Proyecto: [Nombre]
-Objetivo: [Descripción]
-
-# FRONTEND AGENT
-- Framework: React con TailwindCSS
-- Componentes: [Lista]
-- Páginas: [Lista]
-
-# BACKEND AGENT
-- Framework: FastAPI
-- Endpoints: [Lista]
-- Autenticación: JWT
-
-# DATABASE AGENT
-- Motor: MongoDB
-- Tablas: [Lista]
-
-# INTEGRATION AGENT
-- Servicios: Stripe, OAuth
-
-# TESTING AGENT
-- Unit tests
-- Integration tests
-
-# SECURITY AGENT
-- Validación de inputs
-- Protección de endpoints
-
-# DEPLOYMENT AGENT
-- Plataforma: Vercel/Docker
-- CI/CD: GitHub Actions
+/app
+├── backend/
+│   ├── server.py                    # Main FastAPI app
+│   ├── orchestrator_models.py       # Pydantic models for orchestrator
+│   ├── routes/
+│   │   ├── orchestrator_api.py      # Multi-agent orchestrator endpoints
+│   │   ├── auth.py                  # Authentication routes
+│   │   └── ...                      # Other route files
+│   └── .env                         # Environment variables
+├── frontend/
+│   └── src/
+│       ├── pages/
+│       │   ├── LandingPage.jsx      # Public landing page
+│       │   ├── HomePage.jsx         # Post-login main page
+│       │   ├── OrchestratorPage.jsx # Multi-agent dashboard
+│       │   └── WorkspacePage.jsx    # IDE-style workspace
+│       ├── context/
+│       │   └── AuthContext.jsx      # Authentication context
+│       └── components/              # UI components
+└── memory/
+    └── PRD.md                       # This file
 ```
 
 ---
 
-## 5. Funcionalidades Implementadas
+## What's Been Implemented
 
-### ✅ Completado
-- [x] Sistema de 13 agentes especializados
-- [x] **MODO MOTOR (No Chat)** - Ejecución directa
-- [x] Plantilla de proyecto estructurada
-- [x] Preview en vivo con Sandpack - **FUNCIONANDO**
-- [x] 12 templates predefinidos
-- [x] Ultra Mode (2x créditos)
-- [x] Debug Agent (30 créditos)
-- [x] Sistema de versionado/rollback - **FUNCIONAL**
-- [x] Descarga ZIP
-- [x] GitHub OAuth completo
-- [x] GitHub push desde workspace (50 créditos)
-- [x] Panel de administración
-- [x] **Nueva UI HomePage** - Interfaz simplificada estilo Emergent.sh
-- [x] **Nueva UI WorkspacePage** - Clon exacto de interfaz Emergent.sh
-- [x] Botones de sugerencia funcionando
-- [x] Navegación HomePage → WorkspacePage con prompt
-- [x] Sistema de créditos ILIMITADO para Owner
-- [x] **Fix: Generación de código con saltos de línea correctos**
-- [x] **Fix: Dependencias base (lucide-react, prop-types)**
-- [x] **Fix: Prompt mejorado para evitar imports CSS externos**
-- [x] **Backend Asíncrono** - Generación con BackgroundTasks + polling
-- [x] **GitHub Deploy Modal** - UI completa para subir a GitHub
-- [x] **Vercel Deploy** - Preparación de proyecto para Vercel con ZIP
-- [x] **Sistema de Rollback UI** - Modal con historial de versiones
-- [x] **Documentación GitHub** - Instrucciones de configuración OAuth
-- [x] **Marketplace de Templates** - Publicar, buscar, descargar templates
-- [x] **Expert Agents** - 8 agentes especializados (Game, Mobile, E-commerce, etc.)
-- [x] **Docker Sandbox Service** - Estructura para ejecución aislada
+### Date: 2026-02-20
 
-### Backlog (Opcional)
-- [ ] Integración directa con Vercel API
-- [ ] Autenticación social (Google, GitHub)
-- [ ] Soporte para Vue/Angular/Svelte
+#### Authentication System
+- [x] Email/password login and registration
+- [x] Google OAuth integration
+- [x] GitHub OAuth integration
+- [x] Session token management
+- [x] Protected routes with AuthContext
 
----
+#### UI/UX (Emergent.sh Light Theme Replica)
+- [x] Landing Page with auth buttons and showcase carousel
+- [x] HomePage with sidebar, project list, and prompt input
+- [x] Agent mode selector (E1, E1.5, E2)
+- [x] Credits display and modal
+- [x] Orchestrator Dashboard with modern design
 
-## 6. API Endpoints
-
-### Motor No Chat
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/agents/v2/template` | Obtener formato de plantilla |
-| POST | `/api/agents/v2/execute-project` | Ejecutar proyecto completo |
-
-### Agentes
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/agents/v2/costs` | Costos y modos |
-| GET | `/api/agents/v2/agents` | Lista de 13 agentes |
-| POST | `/api/agents/v2/run-agent` | Ejecutar agente individual |
-| POST | `/api/agents/v2/generate` | Generar (modo chat) |
-| POST | `/api/agents/v2/debug` | Debug Agent (30 créditos) |
+#### Multi-Agent Orchestrator System
+- [x] **10 Specialized Agents** defined:
+  - Cognitive: Planner, Research, Reasoning
+  - Productive: Content, Code, Automation
+  - Control: QA, Security, Optimization, Cost Control
+- [x] **Orchestrator API** endpoints:
+  - `POST /api/orchestrator/objectives` - Create new objective
+  - `GET /api/orchestrator/objectives` - List all objectives
+  - `POST /api/orchestrator/objectives/{id}/start` - Start objective
+  - `POST /api/orchestrator/objectives/{id}/pause` - Pause objective
+  - `GET /api/orchestrator/agents` - List all agents
+  - `POST /api/orchestrator/agents/{id}/toggle` - Enable/disable agent
+  - `GET /api/orchestrator/stats` - Dashboard statistics
+  - `GET /api/orchestrator/activity` - Recent activity feed
+  - `GET /api/orchestrator/tasks` - List tasks
+- [x] **Task Auto-Generation** based on objective type:
+  - Code: Planning → Architecture → Implementation → Testing → Security → Optimization
+  - Content: Research → Planning → Writing → QA → SEO
+  - Automation: Requirements → Design → Implementation → Testing
+  - Research: Data Collection → Analysis → Report Generation
+- [x] **Orchestrator Dashboard UI**:
+  - Stats cards (Objectives, Tasks, Agents, Cost)
+  - Agent cards with status indicators
+  - Tabs: Overview, Objectives, Agents, Activity
+  - New Objective modal with form
+  - Auto Mode toggle
 
 ---
 
-## 7. Arquitectura Técnica
+## Prioritized Backlog
 
-### Backend (FastAPI)
-```
-/app/backend/
-├── routes/
-│   └── agents_v2.py    # 13 agentes + Motor
-├── services/
-│   └── execution_engine.py  # Parser de plantillas
-└── templates/
-```
+### P0 (Critical - Next)
+1. **Implement Actual LLM Integration for Task Execution**
+   - Connect task execution to OpenAI GPT-4 via Emergent LLM Key
+   - Add streaming responses for real-time feedback
+   - Track token usage and costs per task
 
-### Frontend (React)
-```
-/app/frontend/src/components/
-└── AppGeneratorV2.jsx  # UI con modo Motor
-```
+2. **Persist Orchestrator Data to MongoDB**
+   - Currently using in-memory storage (resets on restart)
+   - Need to save objectives, tasks, and agent metrics to MongoDB
+
+### P1 (High Priority)
+3. **Task Detail View**
+   - Show task input/output data
+   - Display execution logs
+   - Allow manual retry of failed tasks
+
+4. **Real-time WebSocket Updates**
+   - Push task status updates to frontend
+   - Live progress indicators during execution
+
+5. **Agent Performance Dashboard**
+   - Historical success rates
+   - Cost per agent
+   - Task completion times
+
+### P2 (Medium Priority)
+6. **Vector Memory Integration**
+   - Add pgvector or similar for embeddings
+   - Store project context for better agent decisions
+   - Implement semantic search
+
+7. **WorkspacePage Terminal Integration**
+   - Connect WebSocket backend to frontend terminal
+   - Show real-time code execution output
+
+8. **Objective Templates**
+   - Pre-defined templates for common tasks
+   - Quick-start objectives
+
+### P3 (Future)
+9. **Git Integration**
+   - Clone/push to repositories
+   - Branch management
+   - Commit history
+
+10. **Code Sandbox Execution**
+    - Secure code execution environment
+    - File system access for agents
+    - Package installation
 
 ---
 
-## 8. Credenciales de Prueba
+## API Endpoints Summary
 
-| Tipo | Email | Password |
-|------|-------|----------|
-| Admin | rrhh.milchollos@gmail.com | 19862210Des |
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login with email/password
+- `GET /api/auth/me` - Get current user
+- `GET /api/auth/google` - Google OAuth redirect
+- `GET /api/github/auth` - GitHub OAuth redirect
 
----
+### Orchestrator
+- `GET /api/orchestrator/stats` - Dashboard stats
+- `GET /api/orchestrator/objectives` - List objectives
+- `POST /api/orchestrator/objectives` - Create objective
+- `POST /api/orchestrator/objectives/{id}/start` - Start objective
+- `GET /api/orchestrator/agents` - List agents
+- `GET /api/orchestrator/activity` - Recent activity
 
-## 9. URLs
-
-- **Frontend:** https://multi-agent-ai-12.preview.emergentagent.com
-- **HomePage:** https://multi-agent-ai-12.preview.emergentagent.com/home
-- **Workspace:** https://multi-agent-ai-12.preview.emergentagent.com/workspace
-- **API:** https://multi-agent-ai-12.preview.emergentagent.com/api
-
-> **NOTA:** La ruta /generator ha sido OCULTA por solicitud del usuario.
-
----
-
-## 10. Próximas Tareas
-
-### P1 - Pendientes
-- [ ] **Implementar lógica completa de GitHub Deploy** - UI existe, falta lógica backend
-- [ ] **Expert Agents backend logic** - Scaffolding existe
-
-### P2 - Futuro
-- [ ] Deploy funcional a Vercel (actualmente descarga ZIP)
-- [ ] Ejecución sandboxed con Docker
-- [ ] Backend del Marketplace de templates
-- [ ] Sistema de versionado para Rollback
+### Health
+- `GET /api/health` - System health check
 
 ---
 
-## 11. Comparación con Emergent.sh
+## Testing Notes
+- User has explicitly requested NO automated testing agent
+- Manual testing with curl and screenshots required
+- Test user: test@test.com / Test123!
 
-| Característica | Emergent.sh | Melus AI |
-|---------------|-------------|----------|
-| Multi-agentes | ✅ | ✅ 13 agentes |
-| Modo No Chat | ✅ | ✅ Motor |
-| Preview en vivo | ✅ | ✅ Sandpack |
-| Tests automáticos | ✅ | ✅ Testing Agent |
-| Deploy automático | ✅ | ⏳ Próximamente |
-| GitHub export | ✅ | ✅ |
-| Sistema de créditos | ✅ | ✅ |
-| Debug/Fixer | ✅ | ✅ 30 créditos |
+---
+
+## Known Limitations
+1. Orchestrator data is in-memory only (lost on restart)
+2. Tasks show "queued" but don't actually execute LLM calls
+3. WorkspacePage terminal not connected to WebSocket
+4. Original project generation flow is deprecated
