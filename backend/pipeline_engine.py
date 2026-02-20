@@ -1,6 +1,7 @@
 """
 MelusAI - Development Pipeline Engine
 Sistema de 5 fases: Planificación → Generación → Ejecución → Validación → Iteración
+Con integración de Sistema de Aprendizaje Continuo
 """
 import os
 import json
@@ -9,6 +10,7 @@ import asyncio
 import logging
 import subprocess
 import shutil
+import time
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from pathlib import Path
