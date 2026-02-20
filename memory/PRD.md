@@ -50,10 +50,19 @@
 - [x] Links Terms of Service y Privacy Policy
 - [x] Routing: `/` muestra Landing para no-autenticados, redirige a `/home` para autenticados
 
-### 🔲 FASE 2: Dashboard Post-Login (PENDIENTE)
-- [ ] Rediseñar `HomePage.jsx` para replicar dashboard de Emergent.sh
-- [ ] Input principal para describir proyectos
-- [ ] Barra lateral con historial
+### ✅ FASE 2: Dashboard Post-Login (COMPLETADA - Dic 2025)
+- [x] Sidebar izquierdo colapsable con botón "New Chat"
+- [x] Lista de "Recent Projects" en sidebar
+- [x] Perfil de usuario en footer del sidebar con dropdown
+- [x] Header con logo "e" + "Melus AI"
+- [x] Selector de modo agente E1 / E1.5 / E2 (como Emergent)
+- [x] Display de créditos en header
+- [x] Título central "What do you want to build?"
+- [x] Input textarea con auto-resize
+- [x] Botones de attachment y voice input
+- [x] Botón submit que navega al workspace
+- [x] Quick suggestions: "Build a todo app", "Create an e-commerce site", etc.
+- [x] Footer con modo de agente seleccionado
 
 ### 🔲 FASE 3: Workspace/IDE (PENDIENTE)  
 - [ ] Rediseñar `WorkspacePage.jsx` para replicar IDE de Emergent.sh
