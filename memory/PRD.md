@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Diciembre 2025
-> **Versión:** 4.0.0 - EMERGENT.SH UI REPLICA (FASE 1 COMPLETA)
+> **Versión:** 4.1.0 - EMERGENT.SH UI REPLICA (FASE 1 Y 2 COMPLETAS)
 
 ---
 
