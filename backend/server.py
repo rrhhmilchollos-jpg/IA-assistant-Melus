@@ -2,7 +2,7 @@
 Assistant Melus API - Main Server
 Full-stack AI application generator with multi-agent architecture
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -55,6 +55,9 @@ from routes.orchestrator_api import router as orchestrator_router
 from routes.pipeline_api import router as pipeline_router
 from routes.learning_api import router as learning_router
 
+# Import WebSocket manager
+from websocket_manager import websocket_endpoint, ws_manager
+
 # Include all routers with /api prefix
 app.include_router(auth_router, prefix="/api")
 app.include_router(billing_router, prefix="/api")
@@ -72,6 +75,15 @@ app.include_router(sandbox_router, prefix="/api")
 app.include_router(orchestrator_router)
 app.include_router(pipeline_router)
 app.include_router(learning_router)
+
+# WebSocket endpoint for project streaming
+@app.websocket("/api/ws/projects/{project_id}")
+async def project_websocket(websocket: WebSocket, project_id: str):
+    """WebSocket endpoint for real-time project logs streaming"""
+    await websocket_endpoint(websocket, project_id)
+
+# Store ws_manager in app state
+app.state.ws_manager = ws_manager
 
 # CORS middleware
 app.add_middleware(
