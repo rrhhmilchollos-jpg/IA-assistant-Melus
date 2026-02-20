@@ -1,7 +1,7 @@
 """
 MelusAI - Development Pipeline Engine
 Sistema de 5 fases: Planificación → Generación → Ejecución → Validación → Iteración
-Con integración de Sistema de Aprendizaje Continuo
+Con integración de Sistema de Aprendizaje Continuo y WebSocket Streaming
 """
 import os
 import json
@@ -40,6 +40,33 @@ class ProjectType(str, Enum):
     LANDING_PAGE = "landing_page"
     API_BACKEND = "api_backend"
     FULL_STACK = "full_stack"
+
+# ============= WEBSOCKET STREAMING =============
+
+async def stream_log(project_id: str, level: str, message: str, details: Dict = None):
+    """Send log to WebSocket stream if available"""
+    try:
+        from websocket_manager import ws_manager, LogLevel
+        log_level = LogLevel(level) if level in [l.value for l in LogLevel] else LogLevel.INFO
+        await ws_manager.send_log(project_id, log_level, message, details)
+    except Exception as e:
+        logger.debug(f"WebSocket stream not available: {e}")
+
+async def stream_phase(project_id: str, phase: str, status: str, progress: float = None):
+    """Send phase update to WebSocket stream"""
+    try:
+        from websocket_manager import ws_manager
+        await ws_manager.send_phase_update(project_id, phase, status, progress)
+    except Exception as e:
+        logger.debug(f"WebSocket stream not available: {e}")
+
+async def stream_file_created(project_id: str, file_path: str, file_size: int = 0):
+    """Notify file creation via WebSocket"""
+    try:
+        from websocket_manager import ws_manager
+        await ws_manager.send_file_created(project_id, file_path, file_size)
+    except Exception as e:
+        logger.debug(f"WebSocket stream not available: {e}")
 
 # ============= LLM INTEGRATION =============
 
