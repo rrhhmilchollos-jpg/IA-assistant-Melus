@@ -66,6 +66,13 @@ const HomePage = () => {
 
   useEffect(() => {
     loadRecentProjects();
+    
+    // Cleanup polling on unmount
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
   }, []);
 
   // Auto-resize textarea
