@@ -81,6 +81,12 @@ function AppRouter() {
           <MarketplacePage />
         </ProtectedRoute>
       } />
+      {/* Orchestrator - Multi-Agent Dashboard */}
+      <Route path="/orchestrator" element={
+        <ProtectedRoute>
+          <OrchestratorPage />
+        </ProtectedRoute>
+      } />
       {/* Landing page for unauthenticated users, redirect to home for authenticated */}
       <Route path="/" element={<LandingPageRoute />} />
       <Route path="*" element={<Navigate to="/" replace />} />
