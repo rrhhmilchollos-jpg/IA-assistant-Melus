@@ -1269,4 +1269,55 @@ I'm working on your request. This may take a moment...`);
   );
 };
 
+      {/* Regenerate File Modal */}
+      {showRegenerateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
+                <Wand2 size={20} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Regenerate File</h3>
+                <p className="text-sm text-gray-500">{fileToRegenerate}</p>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm text-gray-600 mb-1.5">Instructions (optional)</label>
+              <textarea
+                value={regeneratePrompt}
+                onChange={(e) => setRegeneratePrompt(e.target.value)}
+                placeholder="E.g., 'Add error handling', 'Make it more responsive', 'Fix the bug in...'"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-sm focus:outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-100 resize-none h-24"
+                data-testid="regenerate-prompt"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRegenerateModal(false);
+                  setFileToRegenerate(null);
+                }}
+                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeRegenerateFile}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                data-testid="confirm-regenerate-btn"
+              >
+                <Wand2 size={16} />
+                Regenerate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default WorkspacePage;
