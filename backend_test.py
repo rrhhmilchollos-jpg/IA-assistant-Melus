@@ -15,7 +15,7 @@ import asyncio
 import traceback
 
 # Configuration
-BASE_URL = "https://melus-homepage-fix.preview.emergentagent.com/api"
+BASE_URL = "https://ai-app-generator-6.preview.emergentagent.com/api"
 MONGO_URL = "mongodb://localhost:27017"
 DB_NAME = "test_database"
 
