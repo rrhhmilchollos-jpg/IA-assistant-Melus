@@ -16,6 +16,7 @@ import AdminPanel from "./pages/AdminPanel";
 import WorkspacePage from "./pages/WorkspacePage";
 import MarketplacePage from "./pages/MarketplacePage";
 import OrchestratorPage from "./pages/OrchestratorPage";
+import LearningDashboard from "./pages/LearningDashboard";
 
 // Landing page route - shows landing for unauthenticated, redirects to home for authenticated
 function LandingPageRoute() {
