@@ -914,21 +914,32 @@ I'm working on your request. This may take a moment...`);
                       <div className="w-3 h-3 rounded-full bg-green-400" />
                     </div>
                     <div className="ml-4 px-3 py-1 bg-gray-100 rounded text-xs text-gray-500 flex items-center gap-2">
-                      <span>preview.melus.ai</span>
+                      <span>{projectId ? `preview.melus.ai/${projectId?.slice(0, 8)}` : 'preview.melus.ai'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded">
+                    <button 
+                      onClick={() => {
+                        const iframe = document.getElementById('preview-iframe');
+                        if (iframe) iframe.src = iframe.src;
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
+                      title="Refresh preview"
+                    >
                       <RefreshCw size={14} />
                     </button>
-                    <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded">
+                    <button 
+                      onClick={() => projectId && window.open(`${API_BASE}/api/pipeline/preview/${projectId}`, '_blank')}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
+                      title="Open in new tab"
+                    >
                       <ExternalLink size={14} />
                     </button>
                   </div>
                 </div>
                 
                 {/* Preview content */}
-                <div className="flex-1 flex items-center justify-center p-8">
+                <div className="flex-1 flex items-center justify-center p-4">
                   <div 
                     className={`bg-white rounded-lg shadow-lg overflow-hidden transition-all ${
                       previewDevice === 'desktop' ? 'w-full h-full' :
@@ -936,11 +947,19 @@ I'm working on your request. This may take a moment...`);
                       'w-[375px] h-full'
                     }`}
                   >
-                    {hasFiles ? (
+                    {projectId && hasFiles ? (
+                      <iframe
+                        id="preview-iframe"
+                        src={`${API_BASE}/api/pipeline/preview/${projectId}`}
+                        className="w-full h-full border-0"
+                        title="Project Preview"
+                        sandbox="allow-scripts allow-same-origin"
+                      />
+                    ) : hasFiles ? (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
                         <div className="text-center">
                           <Eye size={48} className="mx-auto mb-4 text-gray-300" />
-                          <p className="text-sm">Live preview coming soon</p>
+                          <p className="text-sm">Preview not available</p>
                           <p className="text-xs text-gray-300 mt-1">View your code in the Code tab</p>
                         </div>
                       </div>
