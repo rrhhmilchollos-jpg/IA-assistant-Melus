@@ -1,13 +1,13 @@
 # Melus AI - Product Requirements Document
 
 > **Última actualización:** Diciembre 2025
-> **Versión:** 3.5.0 - ADMIN PANEL + 15 EXPERT AGENTS + WEBSOCKET
+> **Versión:** 4.0.0 - EMERGENT.SH UI REPLICA (FASE 1 COMPLETA)
 
 ---
 
 ## 1. Visión del Producto
 
-**Melus AI** es un **Constructor Universal de Aplicaciones** idéntico a Emergent.sh, con:
+**Melus AI** es un **Constructor Universal de Aplicaciones** con UI réplica de Emergent.sh, con:
 - Ejecución aislada de código (sandbox)
 - 13 agentes core
 - **15 Expert Agents** especializados
