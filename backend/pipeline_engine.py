@@ -670,7 +670,7 @@ Return the complete fixed files.
         return project_path
     
     async def _update_phase(self, project_id: str, phase: ProjectPhase, status: str):
-        """Update project phase and status"""
+        """Update project phase and status with WebSocket streaming"""
         await self.db.projects.update_one(
             {"id": project_id},
             {"$set": {
@@ -679,9 +679,21 @@ Return the complete fixed files.
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
+        
+        # Stream phase update via WebSocket
+        progress_map = {
+            ProjectPhase.PLANNING: 0.2,
+            ProjectPhase.GENERATION: 0.4,
+            ProjectPhase.EXECUTION: 0.6,
+            ProjectPhase.VALIDATION: 0.8,
+            ProjectPhase.COMPLETED: 1.0,
+            ProjectPhase.FAILED: None
+        }
+        await stream_phase(project_id, phase.value, status, progress_map.get(phase))
+        await stream_log(project_id, "phase", f"[{phase.value.upper()}] {status}")
     
     async def _handle_failure(self, project_id: str, error: str) -> Dict:
-        """Handle pipeline failure"""
+        """Handle pipeline failure with WebSocket notification"""
         await self.db.projects.update_one(
             {"id": project_id},
             {"$set": {
@@ -691,6 +703,14 @@ Return the complete fixed files.
             },
             "$push": {"errors": {"message": error, "timestamp": datetime.now(timezone.utc).isoformat()}}}
         )
+        
+        # Stream error via WebSocket
+        try:
+            from websocket_manager import ws_manager
+            await ws_manager.send_error(project_id, "pipeline_error", error)
+        except:
+            pass
+        
         return {"error": error, "project_id": project_id}
     
     def _parse_json_response(self, response: str) -> Optional[Dict]:
