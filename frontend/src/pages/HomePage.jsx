@@ -330,19 +330,28 @@ const HomePage = () => {
               <div className="space-y-1">
                 {recentProjects.map((project) => (
                   <button
-                    key={project.workspace_id}
+                    key={project.id}
                     onClick={() => openProject(project)}
                     className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors group"
-                    data-testid={`project-${project.workspace_id}`}
+                    data-testid={`project-${project.id}`}
                   >
                     <div className="flex items-center gap-2">
                       <FolderOpen size={14} className="text-gray-400 flex-shrink-0" />
                       <span className="text-sm text-gray-600 truncate flex-1">
-                        {project.name || project.prompt?.slice(0, 30) || 'Untitled'}
+                        {project.plan?.project_name || project.prompt?.slice(0, 30) || 'Untitled'}
                       </span>
+                      {project.phase === 'completed' && (
+                        <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0" />
+                      )}
+                      {(project.phase === 'planning' || project.phase === 'generation') && (
+                        <Loader2 size={12} className="text-cyan-500 animate-spin flex-shrink-0" />
+                      )}
                     </div>
-                    <div className="text-xs text-gray-400 mt-0.5 pl-6">
-                      {new Date(project.updated_at || project.created_at).toLocaleDateString()}
+                    <div className="text-xs text-gray-400 mt-0.5 pl-6 flex items-center gap-2">
+                      <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                      {project.files_count > 0 && (
+                        <span className="text-cyan-500">{project.files_count} files</span>
+                      )}
                     </div>
                   </button>
                 ))}
