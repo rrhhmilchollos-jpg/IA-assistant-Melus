@@ -220,10 +220,19 @@ class DevelopmentPipeline:
     """
     Main pipeline for automated development.
     Phases: Planning → Generation → Execution → Validation → Iteration
+    Now integrated with Continuous Learning System
     """
     
     def __init__(self, db):
         self.db = db
+        self._learning_engine = None
+    
+    async def _get_learning_engine(self):
+        """Lazy load learning engine"""
+        if self._learning_engine is None:
+            from learning.learning_engine import LearningEngine
+            self._learning_engine = LearningEngine(self.db)
+        return self._learning_engine
     
     async def create_project(self, user_id: str, prompt: str) -> Dict[str, Any]:
         """Create a new project from user prompt"""
