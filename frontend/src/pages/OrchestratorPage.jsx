@@ -305,7 +305,7 @@ const OrchestratorPage = () => {
       {/* Tabs */}
       <div className="bg-white border-b border-gray-200 px-6">
         <div className="flex gap-1">
-          {['overview', 'objectives', 'agents', 'activity'].map(tab => (
+          {['overview', 'objectives', 'tasks', 'agents', 'activity'].map(tab => (
             <button
               key={tab}
               onClick={() => setSelectedTab(tab)}
