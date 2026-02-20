@@ -234,6 +234,20 @@ const OrchestratorPage = () => {
     }
   };
 
+  const downloadProject = async (objectiveId) => {
+    try {
+      window.open(`${API_BASE}/api/orchestrator/objectives/${objectiveId}/download`, '_blank');
+      toast.success('Download started');
+    } catch (error) {
+      toast.error('Failed to download project');
+    }
+  };
+
+  const openPreview = (objectiveId) => {
+    setPreviewObjective(objectiveId);
+    setShowPreview(true);
+  };
+
   const StatCard = ({ icon: Icon, label, value, subvalue, color = 'cyan' }) => (
     <div className="bg-white rounded-xl p-5 border border-gray-200">
       <div className="flex items-center justify-between mb-3">
