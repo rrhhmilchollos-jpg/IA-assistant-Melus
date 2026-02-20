@@ -16,6 +16,21 @@ import AdminPanel from "./pages/AdminPanel";
 import WorkspacePage from "./pages/WorkspacePage";
 import MarketplacePage from "./pages/MarketplacePage";
 
+// Landing page route - shows landing for unauthenticated, redirects to home for authenticated
+function LandingPageRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  return isAuthenticated ? <Navigate to="/home" replace /> : <LandingPage />;
+}
+
 // AppRouter component to handle session_id detection
 function AppRouter() {
   const location = useLocation();
