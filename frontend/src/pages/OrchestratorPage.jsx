@@ -446,38 +446,153 @@ const OrchestratorPage = () => {
                           {obj.status.replace('_', ' ')}
                         </span>
                         <span className="text-xs text-gray-400 capitalize">{obj.type}</span>
+                        {obj.project_type && (
+                          <span className="text-xs text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded">{obj.project_type.replace('_', ' ')}</span>
+                        )}
                         <span className="text-xs text-gray-400">Priority: {obj.priority}</span>
                       </div>
                       <h3 className="text-base font-medium text-gray-800">{obj.title}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{obj.description}</p>
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{obj.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {obj.status === 'pending' && (
                         <button
                           onClick={() => startObjective(obj.id)}
                           className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg"
+                          title="Start Objective"
                         >
                           <Play size={18} />
                         </button>
                       )}
                       {obj.status === 'in_progress' && (
-                        <button className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg">
+                        <button className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg" title="Pause">
                           <Pause size={18} />
                         </button>
                       )}
-                      <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg">
-                        <MoreHorizontal size={18} />
+                      <button
+                        onClick={() => {
+                          loadObjectiveTasks(obj.id);
+                          setSelectedTab('tasks');
+                        }}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        title="View Tasks"
+                      >
+                        <Layers size={18} />
+                      </button>
+                      <button
+                        onClick={() => loadGeneratedFiles(obj.id)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+                        title="View Generated Files"
+                      >
+                        <Folder size={18} />
                       </button>
                     </div>
                   </div>
-                  {obj.quality_score && (
+                  {(obj.quality_score || obj.cost_used > 0) && (
                     <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-4">
-                      <span className="text-xs text-gray-500">Quality: {(obj.quality_score * 100).toFixed(0)}%</span>
+                      {obj.quality_score && <span className="text-xs text-gray-500">Quality: {(obj.quality_score * 100).toFixed(0)}%</span>}
                       <span className="text-xs text-gray-500">Cost: ${obj.cost_used?.toFixed(2) || '0.00'}</span>
                     </div>
                   )}
                 </div>
               ))
+            )}
+          </div>
+        )}
+
+        {selectedTab === 'tasks' && (
+          <div className="space-y-4">
+            {!selectedObjective ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                <Layers size={48} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-800 mb-2">Select an objective</h3>
+                <p className="text-gray-500">Go to Objectives tab and click on a project to see its tasks</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Tasks for: {objectives.find(o => o.id === selectedObjective)?.title}
+                  </h2>
+                  <button
+                    onClick={() => loadGeneratedFiles(selectedObjective)}
+                    className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200"
+                  >
+                    <Folder size={16} />
+                    View Generated Files
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {objectiveTasks.map((task, idx) => (
+                    <div key={task.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            task.status === 'completed' ? 'bg-green-100' :
+                            task.status === 'running' ? 'bg-cyan-100' :
+                            task.status === 'failed' ? 'bg-red-100' :
+                            'bg-gray-100'
+                          }`}>
+                            {task.status === 'completed' ? (
+                              <CheckCircle size={20} className="text-green-600" />
+                            ) : task.status === 'running' ? (
+                              <Loader2 size={20} className="text-cyan-600 animate-spin" />
+                            ) : task.status === 'failed' ? (
+                              <AlertCircle size={20} className="text-red-600" />
+                            ) : (
+                              <Clock size={20} className="text-gray-400" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400">Phase {task.phase}</span>
+                              <span className="font-medium text-gray-800">{task.title}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500">Agent: {task.agent_role}</span>
+                              {task.generated_files?.length > 0 && (
+                                <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                                  {task.generated_files.length} files generated
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {task.status === 'queued' && (
+                            <button
+                              onClick={() => executeTask(task.id)}
+                              disabled={executingTask === task.id}
+                              className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-700 disabled:opacity-50"
+                            >
+                              {executingTask === task.id ? (
+                                <>
+                                  <Loader2 size={14} className="animate-spin" />
+                                  Running...
+                                </>
+                              ) : (
+                                <>
+                                  <Play size={14} />
+                                  Execute
+                                </>
+                              )}
+                            </button>
+                          )}
+                          {task.status === 'completed' && task.output_data && (
+                            <button
+                              onClick={() => setSelectedFile({ name: task.title, content: task.output_data.response })}
+                              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                              title="View Output"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
