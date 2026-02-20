@@ -1,210 +1,81 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
-// Animated falling code background - Matrix style
+// Matrix-style background with scattered characters
 const CodeBackground = () => {
-  const canvasRef = useRef(null);
+  const [chars, setChars] = useState([]);
   
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*(){}[]<>/\\|~`+-=';
-    const fontSize = 14;
-    let columns;
-    let drops = [];
-    
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      columns = Math.floor(canvas.width / fontSize);
-      drops = Array(columns).fill(1);
-    };
-    
-    resize();
-    window.addEventListener('resize', resize);
-    
-    const draw = () => {
-      // Fade effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      ctx.fillStyle = 'rgba(100, 100, 120, 0.12)';
-      ctx.font = `${fontSize}px monospace`;
-      
-      for (let i = 0; i < drops.length; i++) {
-        const char = chars[Math.floor(Math.random() * chars.length)];
-        const x = i * fontSize;
-        const y = drops[i] * fontSize;
-        
-        ctx.fillText(char, x, y);
-        
-        if (y > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
-        drops[i]++;
-      }
-    };
-    
-    const interval = setInterval(draw, 45);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('resize', resize);
-    };
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+-*/<>[]{}()&@#$%';
+    const newChars = [];
+    for (let i = 0; i < 150; i++) {
+      newChars.push({
+        char: characters[Math.floor(Math.random() * characters.length)],
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        opacity: Math.random() * 0.12 + 0.03,
+        size: Math.random() * 10 + 12
+      });
+    }
+    setChars(newChars);
   }, []);
-  
-  return (
-    <canvas 
-      ref={canvasRef} 
-      className="absolute inset-0 pointer-events-none"
-      style={{ opacity: 0.6 }}
-    />
-  );
-};
 
-// Animated "e" Logo
-const AnimatedLogo = () => {
   return (
-    <div className="relative w-20 h-20 mb-8">
-      {/* Outer glow pulse */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400/30 to-blue-500/30 animate-pulse" />
-      
-      {/* Inner box */}
-      <div className="absolute inset-1 rounded-xl bg-black border border-gray-700/80 flex items-center justify-center overflow-hidden">
-        {/* Gradient shimmer */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5" />
-        
-        {/* The "e" letter */}
-        <span 
-          className="text-5xl font-bold text-white relative z-10 select-none"
+    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+      {chars.map((c, i) => (
+        <span
+          key={i}
+          className="absolute font-mono text-gray-400"
           style={{
-            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-            textShadow: '0 0 30px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.2)'
+            left: `${c.x}%`,
+            top: `${c.y}%`,
+            opacity: c.opacity,
+            fontSize: `${c.size}px`
           }}
         >
-          e
+          {c.char}
         </span>
-        
-        {/* Shine animation overlay */}
-        <div 
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full"
-          style={{
-            animation: 'shine 3s ease-in-out infinite'
-          }}
-        />
-      </div>
+      ))}
     </div>
   );
 };
 
-// Right panel showcase carousel
-const ShowcaseCarousel = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  
-  const slides = [
-    {
-      metric: "$100M ARR",
-      subtext: "in 8 months",
-      description: "One of the fastest startups to reach this milestone."
-    },
-    {
-      metric: "500K+",
-      subtext: "apps created",
-      description: "Join thousands building the future with AI."
-    },
-    {
-      metric: "10x Faster",
-      subtext: "development",
-      description: "Ship products in minutes, not months."
-    }
-  ];
-  
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
-  
-  return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center p-8">
-      {/* Background dots pattern */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0)`,
-          backgroundSize: '24px 24px'
-        }}
-      />
-      
-      {/* Content card */}
-      <div className="relative bg-black/40 backdrop-blur-sm rounded-2xl border border-white/10 p-8 max-w-sm w-full">
-        {/* Window dots */}
-        <div className="flex gap-2 mb-6">
-          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-green-500/80" />
-        </div>
-        
-        {/* Slide content */}
-        {slides.map((slide, index) => (
-          <div
-            key={index}
-            className={`transition-all duration-500 ${
-              currentSlide === index 
-                ? 'opacity-100 translate-y-0' 
-                : 'opacity-0 translate-y-4 absolute'
-            }`}
-          >
-            {currentSlide === index && (
-              <div className="text-center">
-                <p className="text-gray-400 text-sm mb-2">Melus AI reaches</p>
-                <p className="text-5xl font-bold text-white mb-1">
-                  {slide.metric}
-                </p>
-                <p className="text-2xl font-semibold text-cyan-400 mb-4">
-                  {slide.subtext}
-                </p>
-                <p className="text-gray-400 text-sm">
-                  {slide.description}
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      
-      {/* Carousel indicators */}
-      <div className="flex gap-2 mt-8">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              currentSlide === index 
-                ? 'w-8 bg-white' 
-                : 'w-2 bg-white/30 hover:bg-white/50'
-            }`}
-          />
-        ))}
-      </div>
-      
-      {/* Emoji celebration */}
-      <div className="absolute top-8 right-8 text-4xl animate-bounce">
-        🎉
-      </div>
-    </div>
-  );
-};
+// Showcase slides data
+const showcaseSlides = [
+  {
+    title: "$100M ARR",
+    emoji: "🎉",
+    subtitle: "One of the fastest startups to reach this milestone.",
+    highlight: "Celebrating this milestone with",
+    promo: "flat 75% off on our standard monthly plan.",
+    bgGradient: "from-cyan-400 via-sky-300 to-blue-400"
+  },
+  {
+    title: "500K+ Apps",
+    emoji: "🚀",
+    subtitle: "Built by developers around the world.",
+    highlight: "Join the community building",
+    promo: "the future of software development.",
+    bgGradient: "from-purple-400 via-pink-300 to-rose-400"
+  },
+  {
+    title: "10x Faster",
+    emoji: "⚡",
+    subtitle: "Ship products in minutes, not months.",
+    highlight: "AI-powered development",
+    promo: "that actually works.",
+    bgGradient: "from-emerald-400 via-teal-300 to-cyan-400"
+  }
+];
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -218,6 +89,14 @@ const LandingPage = () => {
       navigate('/home');
     }
   }, [user, isLoading, navigate]);
+
+  // Auto-rotate carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % showcaseSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Handle Google login
   const handleGoogleAuth = () => {
@@ -262,59 +141,62 @@ const LandingPage = () => {
     }
   };
 
+  const currentShowcase = showcaseSlides[currentSlide];
+
   // Show loading while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden flex">
-      {/* Animated code background */}
-      <CodeBackground />
-      
-      {/* Left side - Auth section */}
-      <div className="flex-1 relative z-10 flex flex-col items-center justify-center px-8 py-12">
-        <div className="w-full max-w-md">
-          {/* Y Combinator Badge */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/40 rounded-full">
-              <div className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">Y</span>
-              </div>
-              <span className="text-orange-400 text-sm font-medium">Combinator S24</span>
+    <div className="min-h-screen bg-[#f8f9fa] flex">
+      {/* Left side - Auth */}
+      <div className="flex-1 relative flex flex-col items-center justify-center px-8">
+        <CodeBackground />
+        
+        {/* Logo - Top left */}
+        <div className="absolute top-6 left-8 z-10">
+          <span className="text-xl font-light tracking-tight text-gray-800">
+            melus<span className="font-normal">AI</span>
+          </span>
+        </div>
+
+        {/* Main Content */}
+        <div className="relative z-10 w-full max-w-md">
+          {/* Logo Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="w-12 h-12 relative">
+              <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
+                <rect x="8" y="8" width="32" height="32" rx="8" fill="#e5e7eb" stroke="#d1d5db" strokeWidth="1"/>
+                <path d="M18 20 L24 16 L30 20 L30 28 L24 32 L18 28 Z" fill="#9ca3af"/>
+                <circle cx="24" cy="24" r="4" fill="#6b7280"/>
+              </svg>
             </div>
           </div>
-          
-          {/* Animated Logo */}
-          <div className="flex justify-center">
-            <AnimatedLogo />
-          </div>
-          
+
           {/* Title */}
-          <h1 className="text-center mb-2">
-            <span className="text-4xl md:text-5xl font-bold text-white block">
+          <h1 className="text-center mb-8">
+            <span className="text-3xl font-medium text-gray-800 block mb-1">
               Build Full-Stack
             </span>
-          </h1>
-          <h2 className="text-center mb-10">
-            <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            <span className="text-3xl font-medium bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
               Web & Mobile Apps in minutes
             </span>
-          </h2>
-          
-          {/* Auth buttons */}
-          <div className="space-y-4">
+          </h1>
+
+          {/* Auth Buttons */}
+          <div className="space-y-3">
             {!showEmailForm ? (
               <>
-                {/* Continue with Google - Main CTA */}
+                {/* Google Button - Dark */}
                 <button
                   onClick={handleGoogleAuth}
                   disabled={authLoading}
-                  className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 text-white font-medium rounded-xl transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-gray-900 hover:bg-gray-800 text-white rounded-full font-medium transition-colors disabled:opacity-50"
                   data-testid="google-login-btn"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -325,14 +207,13 @@ const LandingPage = () => {
                   </svg>
                   Continue with Google
                 </button>
-                
-                {/* Social login row */}
-                <div className="flex gap-3">
-                  {/* GitHub */}
+
+                {/* Social Buttons Row - Light gray */}
+                <div className="flex gap-2">
                   <button
                     onClick={handleGitHubAuth}
                     disabled={authLoading}
-                    className="flex-1 flex items-center justify-center px-4 py-3.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl transition-all disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-colors disabled:opacity-50"
                     data-testid="github-login-btn"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -340,10 +221,9 @@ const LandingPage = () => {
                     </svg>
                   </button>
                   
-                  {/* Apple - disabled */}
                   <button
                     disabled
-                    className="flex-1 flex items-center justify-center px-4 py-3.5 bg-gray-800/50 border border-gray-700/50 rounded-xl opacity-40 cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-100 text-gray-400 rounded-full font-medium cursor-not-allowed"
                     title="Coming soon"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -351,10 +231,9 @@ const LandingPage = () => {
                     </svg>
                   </button>
                   
-                  {/* Facebook - disabled */}
                   <button
                     disabled
-                    className="flex-1 flex items-center justify-center px-4 py-3.5 bg-gray-800/50 border border-gray-700/50 rounded-xl opacity-40 cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-100 text-gray-400 rounded-full font-medium cursor-not-allowed"
                     title="Coming soon"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -362,37 +241,36 @@ const LandingPage = () => {
                     </svg>
                   </button>
                 </div>
-                
-                {/* Divider */}
-                <div className="flex items-center gap-4 py-2">
-                  <div className="flex-1 h-px bg-gray-800" />
-                  <span className="text-gray-500 text-sm">OR</span>
-                  <div className="flex-1 h-px bg-gray-800" />
+
+                {/* Divider - Dashed */}
+                <div className="flex items-center gap-4 py-3">
+                  <div className="flex-1 border-t border-dashed border-gray-300" />
+                  <span className="text-sm text-gray-400">OR</span>
+                  <div className="flex-1 border-t border-dashed border-gray-300" />
                 </div>
-                
-                {/* Continue with Email */}
+
+                {/* Email Button - Light gray with icon */}
                 <button
                   onClick={() => setShowEmailForm(true)}
-                  className="w-full px-6 py-4 bg-transparent hover:bg-gray-900 border border-gray-700 text-white font-medium rounded-xl transition-all"
+                  className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-colors"
                   data-testid="email-toggle-btn"
                 >
+                  <Mail size={20} className="text-gray-500" />
                   Continue with Email
                 </button>
               </>
             ) : (
               /* Email Form */
-              <form onSubmit={handleEmailAuth} className="space-y-4">
+              <form onSubmit={handleEmailAuth} className="space-y-3">
                 <button
                   type="button"
                   onClick={() => {
                     setShowEmailForm(false);
                     setError('');
                   }}
-                  className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors mb-4"
+                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <ChevronLeft size={16} />
                   Back
                 </button>
                 
@@ -400,8 +278,8 @@ const LandingPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email address"
-                  className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                  placeholder="Email"
+                  className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-full text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors"
                   data-testid="email-input"
                   required
                   autoFocus
@@ -412,24 +290,24 @@ const LandingPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                  className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-full text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors"
                   data-testid="password-input"
                   required
                 />
                 
                 {error && (
-                  <p className="text-red-400 text-sm text-center py-2">{error}</p>
+                  <p className="text-red-500 text-sm text-center py-1">{error}</p>
                 )}
                 
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full px-6 py-4 bg-white hover:bg-gray-100 text-black font-medium rounded-xl transition-all disabled:opacity-50"
+                  className="w-full px-6 py-3.5 bg-gray-900 hover:bg-gray-800 text-white rounded-full font-medium transition-colors disabled:opacity-50"
                   data-testid="email-submit-btn"
                 >
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Loading...
                     </span>
                   ) : (
@@ -437,7 +315,7 @@ const LandingPage = () => {
                   )}
                 </button>
                 
-                <p className="text-center text-gray-400 text-sm">
+                <p className="text-center text-gray-500 text-sm">
                   {isLogin ? "Don't have an account? " : "Already have an account? "}
                   <button
                     type="button"
@@ -445,7 +323,7 @@ const LandingPage = () => {
                       setIsLogin(!isLogin);
                       setError('');
                     }}
-                    className="text-cyan-400 hover:text-cyan-300 font-medium"
+                    className="text-gray-700 hover:text-gray-900 font-medium"
                   >
                     {isLogin ? 'Sign Up' : 'Sign In'}
                   </button>
@@ -453,33 +331,112 @@ const LandingPage = () => {
               </form>
             )}
           </div>
-          
+
           {/* Terms and Privacy */}
-          <p className="text-center text-gray-600 text-sm mt-8">
+          <p className="text-center text-gray-400 text-xs mt-6">
             By continuing, you agree to our{' '}
-            <a href="/terms" className="text-gray-400 hover:text-white underline">
+            <a href="/terms" className="text-gray-500 hover:text-gray-700 underline">
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href="/privacy" className="text-gray-400 hover:text-white underline">
+            <a href="/privacy" className="text-gray-500 hover:text-gray-700 underline">
               Privacy Policy
-            </a>
+            </a>.
           </p>
         </div>
       </div>
       
-      {/* Right side - Showcase panel (cyan/turquoise) */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-500">
-        <ShowcaseCarousel />
+      {/* Right side - Showcase with gradient */}
+      <div className={`hidden lg:flex flex-1 relative bg-gradient-to-br ${currentShowcase.bgGradient} overflow-hidden`}>
+        {/* Y Combinator badge - Top right */}
+        <div className="absolute top-4 right-4 z-20">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
+            <div className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center">
+              <span className="text-white text-xs font-bold">Y</span>
+            </div>
+            <span className="text-gray-700 text-sm font-medium">Combinator S24</span>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
+          {/* Top title */}
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-white mb-2">
+              {currentShowcase.title} {currentShowcase.emoji}
+            </h2>
+            <p className="text-white/80 text-lg">
+              {currentShowcase.subtitle}
+            </p>
+          </div>
+          
+          {/* Mockup Card - Laptop style */}
+          <div className="relative w-full max-w-lg">
+            {/* Laptop frame */}
+            <div className="bg-gray-900 rounded-t-xl p-2">
+              {/* Browser buttons */}
+              <div className="flex items-center gap-1.5 px-2 mb-2">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <div className="flex-1 mx-4">
+                  <div className="h-5 bg-gray-700 rounded-full" />
+                </div>
+              </div>
+              
+              {/* Screen content */}
+              <div className="bg-white rounded-lg p-8 text-center">
+                <p className="text-gray-500 text-sm mb-2">Melus AI reaches</p>
+                <p className="text-5xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent mb-1">
+                  {currentShowcase.title}
+                </p>
+                <p className="text-xl font-semibold text-cyan-500 mb-4">
+                  in 8 months
+                </p>
+                <p className="text-gray-500 text-sm">
+                  {currentShowcase.highlight}
+                </p>
+                <p className="text-cyan-500 text-sm font-medium">
+                  {currentShowcase.promo}
+                </p>
+              </div>
+            </div>
+            
+            {/* Laptop base */}
+            <div className="h-4 bg-gray-300 rounded-b-lg mx-8" />
+            <div className="h-1 bg-gray-400 rounded-b mx-16" />
+          </div>
+
+          {/* Carousel Controls */}
+          <div className="flex items-center gap-4 mt-8">
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev - 1 + showcaseSlides.length) % showcaseSlides.length)}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            
+            <div className="flex gap-2">
+              {showcaseSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentSlide(i)}
+                  className={`h-2 rounded-full transition-all ${
+                    i === currentSlide ? 'w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % showcaseSlides.length)}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
       </div>
-      
-      {/* Global styles for animations */}
-      <style>{`
-        @keyframes shine {
-          0% { transform: translateX(-100%); }
-          50%, 100% { transform: translateX(200%); }
-        }
-      `}</style>
     </div>
   );
 };
