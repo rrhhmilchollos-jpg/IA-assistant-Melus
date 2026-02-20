@@ -264,7 +264,7 @@ const HomePage = () => {
   };
 
   const openProject = (project) => {
-    navigate(`/workspace?workspace=${project.workspace_id}`);
+    navigate(`/workspace?project=${project.id}`);
   };
 
   const displayCredits = () => {
