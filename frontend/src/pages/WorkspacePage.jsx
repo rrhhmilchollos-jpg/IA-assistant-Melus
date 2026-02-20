@@ -1009,13 +1009,23 @@ I'm working on your request. This may take a moment...`);
             {/* Actions */}
             <div className="flex items-center gap-1">
               {rightPanelMode === 'code' && selectedFile && (
-                <button
-                  onClick={copyCode}
-                  className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                  title="Copy code"
-                >
-                  <Copy size={14} />
-                </button>
+                <>
+                  <button
+                    onClick={() => handleRegenerateFile(selectedFile)}
+                    disabled={regeneratingFile}
+                    className="p-1.5 text-gray-400 hover:text-cyan-400 hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
+                    title="Regenerate file"
+                  >
+                    <Wand2 size={14} />
+                  </button>
+                  <button
+                    onClick={copyCode}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    title="Copy code"
+                  >
+                    <Copy size={14} />
+                  </button>
+                </>
               )}
               {rightPanelMode === 'preview' && (
                 <DeviceSelector device={previewDevice} onChange={setPreviewDevice} />
