@@ -232,11 +232,84 @@ const WorkspacePage = () => {
   const messagesEndRef = useRef(null);
   const hasInitialized = useRef(false);
   const inputRef = useRef(null);
+  const wsRef = useRef(null);
 
   // Auto-scroll messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // WebSocket connection for real-time logs
+  const connectWebSocket = useCallback((projId) => {
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    
+    try {
+      const ws = new WebSocket(`${WS_BASE}/api/ws/projects/${projId}`);
+      
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setTerminalOutput(prev => [...prev, '$ Connected to project stream']);
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'log') {
+            const levelIcon = {
+              'info': '●',
+              'success': '✓',
+              'warning': '⚠',
+              'error': '✗',
+              'phase': '►',
+              'file': '📄'
+            }[data.level] || '●';
+            
+            setTerminalOutput(prev => [...prev, `$ ${levelIcon} ${data.message}`]);
+          } else if (data.type === 'phase_update') {
+            setCurrentStep(data.status);
+            setProjectPhase(data.phase);
+          } else if (data.type === 'file_created') {
+            setTerminalOutput(prev => [...prev, `$ Created: ${data.file_path}`]);
+          } else if (data.type === 'complete') {
+            setTerminalOutput(prev => [...prev, '$ ✓ Project ready!']);
+            // Reload project files
+            if (projectId) {
+              loadPipelineProject(projectId);
+            }
+          } else if (data.type === 'error') {
+            setTerminalOutput(prev => [...prev, `$ ✗ Error: ${data.error_message}`]);
+            toast.error(data.error_message);
+          }
+        } catch (e) {
+          console.error('WebSocket message parse error:', e);
+        }
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      wsRef.current = ws;
+    } catch (error) {
+      console.error('Failed to connect WebSocket:', error);
+    }
+  }, [projectId]);
+
+  // Cleanup WebSocket on unmount
+  useEffect(() => {
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   // Load project from pipeline if projectId provided
   useEffect(() => {
