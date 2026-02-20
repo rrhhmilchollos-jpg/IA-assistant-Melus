@@ -12,7 +12,7 @@ const Weather = ({ city }) => {
       setLoading(true);
       try {
         const response = await axios.get(
-          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=YOUR_API_KEY`
+          `/api/weather?q=${city}&units=metric`
         );
         setData(response.data);
       } catch (err) {
@@ -31,9 +31,7 @@ const Weather = ({ city }) => {
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold">{data.name}</h2>
       <p className="text-lg">Temperature: {data.main.temp}°C</p>
-      <p className="text-lg">Humidity: {data.main.humidity}%</p>
-      <p className="text-lg">Wind Speed: {data.wind.speed} km/h</p>
-      <img src={`http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`} alt="Weather Icon" className="mx-auto" />
+      <p className="text-lg">Weather: {data.weather[0].description}</p>
     </div>
   );
 };
