@@ -460,18 +460,65 @@ const HomePage = () => {
         
         {/* Chat Area */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-          {/* Welcome Message */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
-              <Sparkles size={32} className="text-cyan-500" />
+          {/* Generation Progress */}
+          {isGenerating && projectStatus && (
+            <div className="w-full max-w-2xl mb-8">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
+                    <Loader2 size={24} className="text-cyan-600 animate-spin" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-800">Building your project</h3>
+                    <p className="text-sm text-gray-500">{projectStatus.status}</p>
+                  </div>
+                </div>
+                
+                {/* Phase Progress */}
+                <div className="flex items-center gap-2">
+                  {['planning', 'generation', 'execution', 'validation', 'completed'].map((phase, index) => (
+                    <React.Fragment key={phase}>
+                      <div className={`flex items-center gap-1.5 ${
+                        projectStatus.phase === phase ? 'text-cyan-600' :
+                        ['planning', 'generation', 'execution', 'validation', 'completed'].indexOf(projectStatus.phase) > index
+                          ? 'text-green-600' : 'text-gray-300'
+                      }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                          projectStatus.phase === phase ? 'bg-cyan-100' :
+                          ['planning', 'generation', 'execution', 'validation', 'completed'].indexOf(projectStatus.phase) > index
+                            ? 'bg-green-100' : 'bg-gray-100'
+                        }`}>
+                          {['planning', 'generation', 'execution', 'validation', 'completed'].indexOf(projectStatus.phase) > index ? '✓' : index + 1}
+                        </div>
+                        <span className="text-xs capitalize hidden sm:inline">{phase}</span>
+                      </div>
+                      {index < 4 && (
+                        <div className={`flex-1 h-0.5 ${
+                          ['planning', 'generation', 'execution', 'validation', 'completed'].indexOf(projectStatus.phase) > index
+                            ? 'bg-green-300' : 'bg-gray-200'
+                        }`} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </div>
-            <h1 className="text-3xl font-semibold text-gray-800 mb-2">
-              What do you want to build?
-            </h1>
-            <p className="text-gray-500">
-              Describe your app and let AI agents build it for you
-            </p>
-          </div>
+          )}
+          
+          {/* Welcome Message */}
+          {!isGenerating && (
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
+                <Sparkles size={32} className="text-cyan-500" />
+              </div>
+              <h1 className="text-3xl font-semibold text-gray-800 mb-2">
+                What do you want to build?
+              </h1>
+              <p className="text-gray-500">
+                Describe your app and let AI agents build it for you
+              </p>
+            </div>
+          )}
           
           {/* Input Container */}
           <div className="w-full max-w-2xl">
