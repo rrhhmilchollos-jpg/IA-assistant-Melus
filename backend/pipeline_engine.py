@@ -243,7 +243,13 @@ class DevelopmentPipeline:
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         
-        await self.db.projects.insert_one(project)
+        try:
+            result = await self.db.projects.insert_one(project)
+            logger.info(f"Created project {project_id}, inserted_id: {result.inserted_id}")
+        except Exception as e:
+            logger.error(f"Failed to create project: {e}")
+            raise
+        
         project.pop("_id", None)
         
         return project
