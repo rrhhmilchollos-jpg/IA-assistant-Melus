@@ -86,12 +86,13 @@ const HomePage = () => {
   const loadRecentProjects = async () => {
     const token = localStorage.getItem('session_token');
     try {
-      const response = await fetch(`${API_BASE}/api/workspace/recent`, {
+      // Load from new pipeline API
+      const response = await fetch(`${API_BASE}/api/pipeline/projects`, {
         headers: { 'X-Session-Token': token }
       });
       if (response.ok) {
         const data = await response.json();
-        setRecentProjects(data.workspaces || []);
+        setRecentProjects(data || []);
       }
     } catch (error) {
       console.error('Failed to load recent projects:', error);
@@ -103,15 +104,85 @@ const HomePage = () => {
     navigate('/');
   };
 
-  const handleSubmit = () => {
-    if (!prompt.trim() || isLoading) return;
+  // Poll for project status
+  const pollProjectStatus = (projectId) => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
     
-    const params = new URLSearchParams({
-      prompt: prompt,
-      mode: agentMode
-    });
+    pollIntervalRef.current = setInterval(async () => {
+      const token = localStorage.getItem('session_token');
+      try {
+        const response = await fetch(`${API_BASE}/api/pipeline/projects/${projectId}/status`, {
+          headers: { 'X-Session-Token': token }
+        });
+        if (response.ok) {
+          const status = await response.json();
+          setProjectStatus(status);
+          
+          // Stop polling when complete or failed
+          if (status.phase === 'completed' || status.phase === 'failed') {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            setIsGenerating(false);
+            loadRecentProjects();
+            
+            if (status.phase === 'completed') {
+              toast.success('Project generated successfully!');
+              // Navigate to workspace with project
+              navigate(`/workspace?project=${projectId}`);
+            } else {
+              toast.error('Project generation failed');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Status poll error:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+  };
+
+  const handleSubmit = async () => {
+    if (!prompt.trim() || isLoading || isGenerating) return;
     
-    navigate(`/workspace?${params.toString()}`);
+    setIsLoading(true);
+    setIsGenerating(true);
+    setProjectStatus({ phase: 'planning', status: 'Starting...' });
+    
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      // Create project via pipeline API
+      const response = await fetch(`${API_BASE}/api/pipeline/projects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          mode: agentMode
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentProject(data.project_id);
+        toast.info('Building your project...');
+        
+        // Start polling for status
+        pollProjectStatus(data.project_id);
+      } else {
+        throw new Error('Failed to create project');
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast.error('Failed to start project generation');
+      setIsGenerating(false);
+      setProjectStatus(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e) => {
