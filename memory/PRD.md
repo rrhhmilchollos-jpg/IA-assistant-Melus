@@ -64,9 +64,20 @@
 - [x] Quick suggestions: "Build a todo app", "Create an e-commerce site", etc.
 - [x] Footer con modo de agente seleccionado
 
-### 🔲 FASE 3: Workspace/IDE (PENDIENTE)  
-- [ ] Rediseñar `WorkspacePage.jsx` para replicar IDE de Emergent.sh
-- [ ] Conectar WebSocket del sandbox para output real-time
+### ✅ FASE 3: Workspace/IDE (COMPLETADA - Dic 2025)
+- [x] Layout 50/50 - Panel chat izquierdo + Panel código derecho
+- [x] Header con logo "melusAI", nombre de proyecto, Share, Download, Deploy, Credits
+- [x] Panel de chat con mensajes estilo AI/User
+- [x] Input de chat con placeholder dinámico
+- [x] Tabs Code/Preview con indicador activo
+- [x] Explorer de archivos con iconos por tipo (JS, HTML, CSS, JSON)
+- [x] Editor de código estilo VS Code con tema oscuro
+- [x] Números de línea
+- [x] Tabs de archivos con indicador cyan y botón cerrar
+- [x] Preview mode con barra de navegador (botones Mac rojo/amarillo/verde)
+- [x] Selector de dispositivo (Desktop/Tablet/Mobile)
+- [x] Terminal toggle con output de comandos
+- [x] Deploy modal con conexión GitHub
 
 ---
 
