@@ -3,6 +3,7 @@ MelusAI - Multi-Agent Orchestrator API Routes
 Full code generation engine for web apps, 2D/3D games, and mobile applications
 """
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import uuid
@@ -10,11 +11,13 @@ import os
 import asyncio
 import json
 import logging
+from pathlib import Path
 
 from orchestrator_models import (
     Objective, ObjectiveCreate, ObjectiveStatus, ObjectiveType,
     Task, TaskStatus, AgentRole
 )
+from code_generator import ProjectGenerator, get_full_app_prompt, get_enhancement_prompt, PROJECTS_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +46,8 @@ async def call_llm(prompt: str, system_message: str, model: str = "gpt-4o") -> D
         return {
             "success": True,
             "response": response,
-            "tokens_used": len(prompt.split()) + len(response.split()) * 2,  # Estimate
-            "cost": 0.01  # Approximate cost
+            "tokens_used": len(prompt.split()) + len(response.split()) * 2,
+            "cost": 0.01
         }
     except Exception as e:
         logger.error(f"LLM call failed: {e}")
@@ -54,195 +57,49 @@ async def call_llm(prompt: str, system_message: str, model: str = "gpt-4o") -> D
             "response": None
         }
 
-# ============= AGENT SYSTEM PROMPTS =============
+# ============= CODE AGENT PROMPT =============
 
-AGENT_PROMPTS = {
-    "planner": """You are the Strategic Planner Agent for MelusAI - an advanced AI code generation platform.
-Your role is to analyze user requirements and create detailed execution plans.
+CODE_AGENT_PROMPT = """You are the Code Agent for MelusAI - an advanced AI code generation platform.
+You write production-quality, complete applications.
 
-For any project, you must:
-1. Break down the requirements into specific, actionable tasks
-2. Identify the technology stack needed
-3. Define the project structure
-4. List all files that need to be created
-5. Specify dependencies required
+CRITICAL RULES:
+1. Write COMPLETE, WORKING code - no placeholders, no TODOs, no "// add code here"
+2. Every file must be fully functional and ready to run
+3. Include ALL imports, dependencies, and configurations
+4. Add proper error handling
+5. Use modern best practices and clean code principles
+6. Make visually appealing UIs with modern design
 
-Output your plan as a structured JSON with:
-- project_name: string
-- tech_stack: {frontend, backend, database, additional}
-- files_to_create: [{path, description, priority}]
-- dependencies: {npm: [], pip: []}
-- estimated_complexity: low/medium/high""",
-
-    "reasoning": """You are the Architecture Agent for MelusAI.
-Your role is to design the technical architecture for applications.
-
-You specialize in:
-- System design and architecture patterns
-- Database schema design
-- API endpoint design
-- Component hierarchy for frontends
-- Game architecture (for 2D/3D games)
-
-Output detailed technical specifications that other agents can implement.""",
-
-    "code": """You are the Code Agent for MelusAI - the primary code generator.
-You write production-quality code for:
-- Full-stack web applications (React, Next.js, Vue, FastAPI, Node.js)
-- 2D games (Phaser, PixiJS, Canvas)
-- 3D games (Three.js, Babylon.js, Unity WebGL)
-- Mobile apps (React Native, Flutter concepts)
-
-IMPORTANT RULES:
-1. Write complete, working code - no placeholders or TODOs
-2. Include all imports and dependencies
-3. Add proper error handling
-4. Follow best practices for the framework
-5. Make code production-ready
-
-When generating files, output as JSON:
+OUTPUT FORMAT - Always respond with valid JSON:
 {
     "files": [
-        {"path": "relative/path/to/file.ext", "content": "full file content here"}
-    ]
-}""",
-
-    "content": """You are the Content Agent for MelusAI.
-You create:
-- Documentation and README files
-- Comments and code documentation
-- User-facing text content
-- SEO metadata
-- Game narratives and dialogues""",
-
-    "qa": """You are the QA Agent for MelusAI.
-Review code for:
-1. Bugs and logical errors
-2. Security vulnerabilities
-3. Performance issues
-4. Best practice violations
-5. Missing error handling
-
-Output a quality report with issues found and fixes needed.""",
-
-    "security": """You are the Security Agent for MelusAI.
-Audit code for:
-1. SQL injection vulnerabilities
-2. XSS vulnerabilities
-3. Authentication/authorization issues
-4. Exposed secrets or credentials
-5. Insecure dependencies
-
-Output a security report with severity levels.""",
-
-    "optimization": """You are the Optimization Agent for MelusAI.
-Optimize code for:
-1. Performance (loading time, runtime)
-2. Bundle size
-3. Memory usage
-4. Database queries
-5. API response times
-
-Suggest specific optimizations with code changes.""",
-
-    "research": """You are the Research Agent for MelusAI.
-Research and provide information about:
-1. Best libraries and frameworks for the task
-2. Code examples and patterns
-3. API documentation
-4. Game development techniques
-5. Current best practices""",
-
-    "automation": """You are the Automation Agent for MelusAI.
-Create automation configurations for:
-1. CI/CD pipelines
-2. Build scripts
-3. Deployment configurations
-4. Testing automation
-5. Environment setup"""
+        {"path": "relative/path/to/file.ext", "content": "COMPLETE file content here"}
+    ],
+    "summary": "Brief description of what was generated"
 }
+
+You generate:
+- Full-stack web applications (React, Vue, FastAPI, Node.js)
+- 2D games (Phaser 3, PixiJS, Canvas)
+- 3D games (Three.js, Babylon.js)
+- Mobile-first web apps
+- Landing pages and marketing sites
+- Complete with styling, animations, and interactivity"""
 
 # ============= DEFAULT AGENTS =============
 
 DEFAULT_AGENTS = [
-    {"id": "agent_planner", "role": "planner", "name": "Strategic Planner", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_research", "role": "research", "name": "Research Agent", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_reasoning", "role": "reasoning", "name": "Architecture Agent", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_content", "role": "content", "name": "Content Creator", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_code", "role": "code", "name": "Code Agent", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_automation", "role": "automation", "name": "Automation Agent", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_qa", "role": "qa", "name": "QA Agent", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_security", "role": "security", "name": "Security Agent", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_optimization", "role": "optimization", "name": "Optimization Agent", "model": "gpt-4o", "status": "active"},
-    {"id": "agent_cost_control", "role": "cost_control", "name": "Cost Controller", "model": "gpt-4o", "status": "active"},
+    {"id": "agent_planner", "role": "planner", "name": "Strategic Planner", "model": "gpt-4o", "status": "active", "color": "#0ea5e9"},
+    {"id": "agent_research", "role": "research", "name": "Research Agent", "model": "gpt-4o", "status": "active", "color": "#f97316"},
+    {"id": "agent_reasoning", "role": "reasoning", "name": "Architecture Agent", "model": "gpt-4o", "status": "active", "color": "#eab308"},
+    {"id": "agent_content", "role": "content", "name": "Content Creator", "model": "gpt-4o", "status": "active", "color": "#22c55e"},
+    {"id": "agent_code", "role": "code", "name": "Code Agent", "model": "gpt-4o", "status": "active", "color": "#6366f1"},
+    {"id": "agent_automation", "role": "automation", "name": "Automation Agent", "model": "gpt-4o", "status": "active", "color": "#0ea5e9"},
+    {"id": "agent_qa", "role": "qa", "name": "QA Agent", "model": "gpt-4o", "status": "active", "color": "#10b981"},
+    {"id": "agent_security", "role": "security", "name": "Security Agent", "model": "gpt-4o", "status": "active", "color": "#ef4444"},
+    {"id": "agent_optimization", "role": "optimization", "name": "Optimization Agent", "model": "gpt-4o", "status": "active", "color": "#06b6d4"},
+    {"id": "agent_cost_control", "role": "cost_control", "name": "Cost Controller", "model": "gpt-4o", "status": "active", "color": "#84cc16"},
 ]
-
-# ============= TASK TEMPLATES BY PROJECT TYPE =============
-
-TASK_TEMPLATES = {
-    "web_app": [
-        {"title": "Project Planning", "agent": "planner", "phase": 1},
-        {"title": "Architecture Design", "agent": "reasoning", "phase": 2},
-        {"title": "Backend Implementation", "agent": "code", "phase": 3},
-        {"title": "Frontend Implementation", "agent": "code", "phase": 4},
-        {"title": "Database Setup", "agent": "code", "phase": 5},
-        {"title": "API Integration", "agent": "code", "phase": 6},
-        {"title": "Testing & QA", "agent": "qa", "phase": 7},
-        {"title": "Security Audit", "agent": "security", "phase": 8},
-        {"title": "Optimization", "agent": "optimization", "phase": 9},
-    ],
-    "game_2d": [
-        {"title": "Game Design Document", "agent": "planner", "phase": 1},
-        {"title": "Game Architecture", "agent": "reasoning", "phase": 2},
-        {"title": "Game Engine Setup", "agent": "code", "phase": 3},
-        {"title": "Sprite & Asset System", "agent": "code", "phase": 4},
-        {"title": "Game Logic Implementation", "agent": "code", "phase": 5},
-        {"title": "UI/Menu System", "agent": "code", "phase": 6},
-        {"title": "Sound Integration", "agent": "code", "phase": 7},
-        {"title": "Game Testing", "agent": "qa", "phase": 8},
-        {"title": "Performance Optimization", "agent": "optimization", "phase": 9},
-    ],
-    "game_3d": [
-        {"title": "3D Game Design", "agent": "planner", "phase": 1},
-        {"title": "3D Architecture", "agent": "reasoning", "phase": 2},
-        {"title": "Three.js/Babylon Setup", "agent": "code", "phase": 3},
-        {"title": "3D Models & Scenes", "agent": "code", "phase": 4},
-        {"title": "Camera & Controls", "agent": "code", "phase": 5},
-        {"title": "Physics & Collision", "agent": "code", "phase": 6},
-        {"title": "Lighting & Effects", "agent": "code", "phase": 7},
-        {"title": "Game Mechanics", "agent": "code", "phase": 8},
-        {"title": "Performance Testing", "agent": "qa", "phase": 9},
-        {"title": "WebGL Optimization", "agent": "optimization", "phase": 10},
-    ],
-    "mobile_app": [
-        {"title": "Mobile App Planning", "agent": "planner", "phase": 1},
-        {"title": "Mobile Architecture", "agent": "reasoning", "phase": 2},
-        {"title": "React Native Setup", "agent": "code", "phase": 3},
-        {"title": "Screen Implementation", "agent": "code", "phase": 4},
-        {"title": "Navigation System", "agent": "code", "phase": 5},
-        {"title": "State Management", "agent": "code", "phase": 6},
-        {"title": "API Integration", "agent": "code", "phase": 7},
-        {"title": "Mobile Testing", "agent": "qa", "phase": 8},
-        {"title": "Mobile Optimization", "agent": "optimization", "phase": 9},
-    ],
-    "landing_page": [
-        {"title": "Landing Page Planning", "agent": "planner", "phase": 1},
-        {"title": "Design Architecture", "agent": "reasoning", "phase": 2},
-        {"title": "HTML/CSS Implementation", "agent": "code", "phase": 3},
-        {"title": "Responsive Design", "agent": "code", "phase": 4},
-        {"title": "Animations & Effects", "agent": "code", "phase": 5},
-        {"title": "SEO Optimization", "agent": "content", "phase": 6},
-        {"title": "Performance Check", "agent": "optimization", "phase": 7},
-    ],
-    "code": [  # Default for general code projects
-        {"title": "Planning", "agent": "planner", "phase": 1},
-        {"title": "Architecture Design", "agent": "reasoning", "phase": 2},
-        {"title": "Implementation", "agent": "code", "phase": 3},
-        {"title": "Testing", "agent": "qa", "phase": 4},
-        {"title": "Security Review", "agent": "security", "phase": 5},
-        {"title": "Optimization", "agent": "optimization", "phase": 6},
-    ],
-}
 
 # ============= DATABASE HELPERS =============
 
@@ -274,6 +131,23 @@ async def init_agents_if_empty(db):
             }
             await db.orchestrator_agents.insert_one(agent_doc)
 
+# ============= PROJECT TYPE DETECTION =============
+
+def detect_project_type(description: str) -> str:
+    """Detect the type of project from description"""
+    desc_lower = description.lower()
+    
+    if any(word in desc_lower for word in ["3d", "three.js", "babylon", "webgl", "3d game"]):
+        return "game_3d"
+    elif any(word in desc_lower for word in ["2d game", "phaser", "pixi", "canvas game", "platformer", "shooter", "arcade"]):
+        return "game_2d"
+    elif any(word in desc_lower for word in ["mobile", "react native", "flutter", "ios", "android", "app store"]):
+        return "mobile_app"
+    elif any(word in desc_lower for word in ["landing", "landing page", "marketing", "portfolio", "one page"]):
+        return "landing_page"
+    else:
+        return "web_app"
+
 # ============= OBJECTIVES ENDPOINTS =============
 
 @router.post("/objectives")
@@ -284,8 +158,6 @@ async def create_objective(data: ObjectiveCreate, request: Request):
     await init_agents_if_empty(db)
     
     obj_id = f"obj_{uuid.uuid4().hex[:12]}"
-    
-    # Detect project type from description
     project_type = detect_project_type(data.description)
     
     objective = {
@@ -300,31 +172,15 @@ async def create_objective(data: ObjectiveCreate, request: Request):
         "cost_used": 0,
         "auto_mode": data.auto_mode,
         "quality_score": None,
+        "project_path": None,
         "generated_files": [],
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.orchestrator_objectives.insert_one(objective)
-    
-    # Remove MongoDB _id from response
     objective.pop("_id", None)
     return objective
-
-def detect_project_type(description: str) -> str:
-    """Detect the type of project from description"""
-    desc_lower = description.lower()
-    
-    if any(word in desc_lower for word in ["3d", "three.js", "babylon", "webgl", "3d game"]):
-        return "game_3d"
-    elif any(word in desc_lower for word in ["2d game", "phaser", "pixi", "canvas game", "platformer", "shooter"]):
-        return "game_2d"
-    elif any(word in desc_lower for word in ["mobile", "react native", "flutter", "ios", "android", "app store"]):
-        return "mobile_app"
-    elif any(word in desc_lower for word in ["landing", "landing page", "marketing", "portfolio"]):
-        return "landing_page"
-    else:
-        return "web_app"
 
 @router.get("/objectives")
 async def get_objectives(request: Request):
@@ -338,15 +194,11 @@ async def get_objective(objective_id: str, request: Request):
     """Get a specific objective with its tasks"""
     db = get_db(request)
     
-    objective = await db.orchestrator_objectives.find_one(
-        {"id": objective_id}, {"_id": 0}
-    )
+    objective = await db.orchestrator_objectives.find_one({"id": objective_id}, {"_id": 0})
     if not objective:
         raise HTTPException(status_code=404, detail="Objective not found")
     
-    tasks = await db.orchestrator_tasks.find(
-        {"objective_id": objective_id}, {"_id": 0}
-    ).to_list(100)
+    tasks = await db.orchestrator_tasks.find({"objective_id": objective_id}, {"_id": 0}).to_list(100)
     
     return {
         "objective": objective,
@@ -357,179 +209,200 @@ async def get_objective(objective_id: str, request: Request):
 
 @router.post("/objectives/{objective_id}/start")
 async def start_objective(objective_id: str, request: Request):
-    """Start processing an objective - creates tasks and begins execution"""
+    """Start processing an objective - generates the complete application"""
     db = get_db(request)
     
     objective = await db.orchestrator_objectives.find_one({"id": objective_id})
     if not objective:
         raise HTTPException(status_code=404, detail="Objective not found")
     
-    # Update status
+    # Update status to running
     await db.orchestrator_objectives.update_one(
         {"id": objective_id},
         {"$set": {"status": "in_progress", "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     
-    # Create tasks based on project type
-    project_type = objective.get("project_type", "code")
-    templates = TASK_TEMPLATES.get(project_type, TASK_TEMPLATES["code"])
+    # Initialize project generator
+    generator = ProjectGenerator(db)
     
-    for template in templates:
-        task_id = f"task_{uuid.uuid4().hex[:12]}"
-        task = {
-            "id": task_id,
-            "objective_id": objective_id,
-            "title": template["title"],
-            "agent_role": template["agent"],
-            "agent_id": f"agent_{template['agent']}",
-            "phase": template["phase"],
-            "status": "queued",
-            "progress": 0,
-            "input_data": {
-                "objective_title": objective["title"],
-                "objective_description": objective["description"],
-                "project_type": project_type
-            },
-            "output_data": None,
-            "generated_files": [],
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-        await db.orchestrator_tasks.insert_one(task)
+    # Create project directory and initialize structure
+    init_result = await generator.initialize_project_structure(
+        objective_id,
+        objective.get("project_type", "web_app"),
+        objective["title"]
+    )
     
-    # If auto_mode is enabled, start executing tasks in background
-    if objective.get("auto_mode", True):
-        asyncio.create_task(execute_objective_tasks(db, objective_id))
+    # Create the main generation task
+    task_id = f"task_{uuid.uuid4().hex[:12]}"
+    task = {
+        "id": task_id,
+        "objective_id": objective_id,
+        "title": "Generate Complete Application",
+        "agent_role": "code",
+        "agent_id": "agent_code",
+        "phase": 1,
+        "status": "queued",
+        "progress": 0,
+        "input_data": {
+            "objective_title": objective["title"],
+            "objective_description": objective["description"],
+            "project_type": objective.get("project_type", "web_app"),
+            "project_path": init_result["project_dir"]
+        },
+        "output_data": None,
+        "generated_files": [],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.orchestrator_tasks.insert_one(task)
     
-    return {"status": "started", "objective_id": objective_id, "project_type": project_type}
+    # Start generation in background
+    asyncio.create_task(generate_complete_application(db, objective_id, task_id, generator))
+    
+    return {
+        "status": "started",
+        "objective_id": objective_id,
+        "project_type": objective.get("project_type"),
+        "project_path": init_result["project_dir"],
+        "message": "Generation started. Check the Tasks tab for progress."
+    }
 
-async def execute_objective_tasks(db, objective_id: str):
-    """Execute all tasks for an objective sequentially"""
+async def generate_complete_application(db, objective_id: str, task_id: str, generator: ProjectGenerator):
+    """Generate the complete application using LLM"""
     try:
-        tasks = await db.orchestrator_tasks.find(
-            {"objective_id": objective_id}
-        ).sort("phase", 1).to_list(100)
+        # Get objective details
+        objective = await db.orchestrator_objectives.find_one({"id": objective_id})
+        if not objective:
+            return
         
-        accumulated_context = ""
-        generated_files = []
-        
-        for task in tasks:
-            task_id = task["id"]
-            agent_role = task["agent_role"]
-            
-            # Update task status to running
-            await db.orchestrator_tasks.update_one(
-                {"id": task_id},
-                {"$set": {"status": "running", "started_at": datetime.now(timezone.utc).isoformat()}}
-            )
-            
-            # Get the system prompt for this agent
-            system_prompt = AGENT_PROMPTS.get(agent_role, AGENT_PROMPTS["code"])
-            
-            # Build the task prompt
-            task_prompt = build_task_prompt(task, accumulated_context, generated_files)
-            
-            # Call LLM
-            result = await call_llm(task_prompt, system_prompt)
-            
-            if result["success"]:
-                # Parse output for generated files (for code agent)
-                files_from_task = []
-                if agent_role == "code":
-                    files_from_task = parse_generated_files(result["response"])
-                    generated_files.extend(files_from_task)
-                
-                # Update task with results
-                await db.orchestrator_tasks.update_one(
-                    {"id": task_id},
-                    {"$set": {
-                        "status": "completed",
-                        "output_data": {"response": result["response"][:5000]},  # Truncate for storage
-                        "generated_files": files_from_task,
-                        "tokens_used": result.get("tokens_used", 0),
-                        "cost": result.get("cost", 0),
-                        "completed_at": datetime.now(timezone.utc).isoformat()
-                    }}
-                )
-                
-                # Add to accumulated context for next tasks
-                accumulated_context += f"\n\n--- {task['title']} Output ---\n{result['response'][:2000]}"
-                
-                # Update agent stats
-                await db.orchestrator_agents.update_one(
-                    {"id": task["agent_id"]},
-                    {"$inc": {"tasks_completed": 1}}
-                )
-            else:
-                await db.orchestrator_tasks.update_one(
-                    {"id": task_id},
-                    {"$set": {
-                        "status": "failed",
-                        "error_message": result.get("error", "Unknown error"),
-                        "completed_at": datetime.now(timezone.utc).isoformat()
-                    }}
-                )
-        
-        # Update objective with all generated files
-        await db.orchestrator_objectives.update_one(
-            {"id": objective_id},
-            {"$set": {
-                "status": "completed",
-                "generated_files": generated_files,
-                "completed_at": datetime.now(timezone.utc).isoformat()
-            }}
+        # Update task status
+        await db.orchestrator_tasks.update_one(
+            {"id": task_id},
+            {"$set": {"status": "running", "started_at": datetime.now(timezone.utc).isoformat()}}
         )
         
+        # Generate the application
+        project_type = objective.get("project_type", "web_app")
+        prompt = get_full_app_prompt(project_type, objective["description"], objective["title"])
+        
+        result = await call_llm(prompt, CODE_AGENT_PROMPT)
+        
+        if result["success"]:
+            response = result["response"]
+            
+            # Parse generated files
+            files = parse_generated_files(response)
+            
+            # Save all files to project directory
+            saved_files = []
+            for file in files:
+                if file.get("path") and file.get("content"):
+                    success = await generator.save_generated_file(
+                        objective_id,
+                        file["path"],
+                        file["content"]
+                    )
+                    if success:
+                        saved_files.append(file)
+            
+            # Update task
+            await db.orchestrator_tasks.update_one(
+                {"id": task_id},
+                {"$set": {
+                    "status": "completed",
+                    "output_data": {"response": response[:10000], "files_count": len(saved_files)},
+                    "generated_files": [{"path": f["path"]} for f in saved_files],
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            # Update objective
+            await db.orchestrator_objectives.update_one(
+                {"id": objective_id},
+                {"$set": {
+                    "status": "completed",
+                    "generated_files": [{"path": f["path"]} for f in saved_files],
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            logger.info(f"Generated {len(saved_files)} files for objective {objective_id}")
+            
+        else:
+            await db.orchestrator_tasks.update_one(
+                {"id": task_id},
+                {"$set": {
+                    "status": "failed",
+                    "error_message": result.get("error", "Unknown error"),
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            await db.orchestrator_objectives.update_one(
+                {"id": objective_id},
+                {"$set": {"status": "failed"}}
+            )
+            
     except Exception as e:
-        logger.error(f"Error executing tasks for {objective_id}: {e}")
+        logger.error(f"Error generating application: {e}")
         await db.orchestrator_objectives.update_one(
             {"id": objective_id},
             {"$set": {"status": "failed", "error": str(e)}}
         )
 
-def build_task_prompt(task: dict, context: str, generated_files: list) -> str:
-    """Build the prompt for a specific task"""
-    input_data = task.get("input_data", {})
-    
-    prompt = f"""Project: {input_data.get('objective_title', 'Unknown')}
-Description: {input_data.get('objective_description', 'No description')}
-Project Type: {input_data.get('project_type', 'web_app')}
-Current Task: {task['title']}
-
-"""
-    
-    if context:
-        prompt += f"Previous work done:\n{context}\n\n"
-    
-    if generated_files:
-        prompt += f"Files already generated: {[f['path'] for f in generated_files]}\n\n"
-    
-    prompt += f"""Now complete the task: {task['title']}
-
-Be thorough and generate complete, production-ready output."""
-    
-    return prompt
-
-def parse_generated_files(response: str) -> list:
+def parse_generated_files(response: str) -> List[Dict[str, str]]:
     """Parse generated files from LLM response"""
     files = []
     
     try:
-        # Try to find JSON with files array
-        if '{"files":' in response or '"files":' in response:
-            import re
-            json_match = re.search(r'\{[^{}]*"files"\s*:\s*\[[^\]]*\][^{}]*\}', response, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-                files = data.get("files", [])
+        # Try to find JSON in response
+        import re
         
-        # Also look for code blocks with file paths
+        # Look for JSON object with files array
+        json_patterns = [
+            r'\{[^{}]*"files"\s*:\s*\[.*?\][^{}]*\}',
+            r'```json\s*(\{.*?\})\s*```',
+            r'```\s*(\{.*?"files".*?\})\s*```'
+        ]
+        
+        for pattern in json_patterns:
+            matches = re.findall(pattern, response, re.DOTALL)
+            for match in matches:
+                try:
+                    data = json.loads(match if isinstance(match, str) else match)
+                    if "files" in data:
+                        files.extend(data["files"])
+                        break
+                except json.JSONDecodeError:
+                    continue
+            if files:
+                break
+        
+        # If no JSON found, try to extract code blocks with file paths
         if not files:
-            import re
-            # Match patterns like ```javascript // path/to/file.js or ```python # path/to/file.py
-            code_blocks = re.findall(r'```(\w+)?\s*(?://|#)\s*([^\n]+)\n(.*?)```', response, re.DOTALL)
-            for lang, path, content in code_blocks:
-                if path and content:
-                    files.append({"path": path.strip(), "content": content.strip()})
+            # Pattern: ```language // filepath or # filepath
+            code_block_pattern = r'```(\w+)?\s*(?://|#|<!--)\s*([^\n]+?)\s*(?:-->)?\n(.*?)```'
+            blocks = re.findall(code_block_pattern, response, re.DOTALL)
+            
+            for lang, path, content in blocks:
+                path = path.strip()
+                if path and not path.startswith('http'):
+                    files.append({
+                        "path": path,
+                        "content": content.strip()
+                    })
+        
+        # Also check for file content markers
+        if not files:
+            # Pattern: File: path/to/file.ext followed by code
+            file_marker_pattern = r'(?:File|Path|Filename):\s*[`"]?([^\n`"]+)[`"]?\s*\n```\w*\n(.*?)```'
+            markers = re.findall(file_marker_pattern, response, re.DOTALL)
+            
+            for path, content in markers:
+                files.append({
+                    "path": path.strip(),
+                    "content": content.strip()
+                })
+                
     except Exception as e:
         logger.error(f"Error parsing files: {e}")
     
@@ -549,25 +422,6 @@ async def pause_objective(objective_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Objective not found")
     
     return {"status": "paused"}
-
-@router.post("/objectives/{objective_id}/resume")
-async def resume_objective(objective_id: str, request: Request):
-    """Resume a paused objective"""
-    db = get_db(request)
-    
-    objective = await db.orchestrator_objectives.find_one({"id": objective_id})
-    if not objective:
-        raise HTTPException(status_code=404, detail="Objective not found")
-    
-    await db.orchestrator_objectives.update_one(
-        {"id": objective_id},
-        {"$set": {"status": "in_progress", "updated_at": datetime.now(timezone.utc).isoformat()}}
-    )
-    
-    # Continue execution
-    asyncio.create_task(execute_objective_tasks(db, objective_id))
-    
-    return {"status": "resumed"}
 
 # ============= TASKS ENDPOINTS =============
 
@@ -603,48 +457,50 @@ async def execute_single_task(task_id: str, request: Request):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
+    objective = await db.orchestrator_objectives.find_one({"id": task["objective_id"]})
+    if not objective:
+        raise HTTPException(status_code=404, detail="Objective not found")
+    
     # Update status
     await db.orchestrator_tasks.update_one(
         {"id": task_id},
         {"$set": {"status": "running", "started_at": datetime.now(timezone.utc).isoformat()}}
     )
     
-    # Get context from previous tasks
-    previous_tasks = await db.orchestrator_tasks.find({
-        "objective_id": task["objective_id"],
-        "phase": {"$lt": task["phase"]},
-        "status": "completed"
-    }).to_list(100)
+    generator = ProjectGenerator(db)
     
-    context = ""
-    generated_files = []
-    for pt in previous_tasks:
-        if pt.get("output_data"):
-            context += f"\n{pt['title']}: {pt['output_data'].get('response', '')[:1000]}"
-        generated_files.extend(pt.get("generated_files", []))
+    # Generate using full app prompt
+    project_type = objective.get("project_type", "web_app")
+    prompt = get_full_app_prompt(project_type, objective["description"], objective["title"])
     
-    # Execute
-    system_prompt = AGENT_PROMPTS.get(task["agent_role"], AGENT_PROMPTS["code"])
-    task_prompt = build_task_prompt(task, context, generated_files)
-    
-    result = await call_llm(task_prompt, system_prompt)
+    result = await call_llm(prompt, CODE_AGENT_PROMPT)
     
     if result["success"]:
-        files = parse_generated_files(result["response"]) if task["agent_role"] == "code" else []
+        files = parse_generated_files(result["response"])
+        
+        saved_files = []
+        for file in files:
+            if file.get("path") and file.get("content"):
+                success = await generator.save_generated_file(
+                    task["objective_id"],
+                    file["path"],
+                    file["content"]
+                )
+                if success:
+                    saved_files.append(file)
         
         await db.orchestrator_tasks.update_one(
             {"id": task_id},
             {"$set": {
                 "status": "completed",
-                "output_data": {"response": result["response"][:5000]},
-                "generated_files": files,
+                "output_data": {"response": result["response"][:10000], "files_count": len(saved_files)},
+                "generated_files": saved_files,
                 "completed_at": datetime.now(timezone.utc).isoformat()
             }}
         )
         
         task["status"] = "completed"
-        task["output_data"] = {"response": result["response"][:2000]}
-        task["generated_files"] = files
+        task["generated_files"] = saved_files
     else:
         await db.orchestrator_tasks.update_one(
             {"id": task_id},
@@ -667,17 +523,6 @@ async def get_agents(request: Request):
     agents = await db.orchestrator_agents.find({}, {"_id": 0}).to_list(20)
     return agents
 
-@router.get("/agents/{agent_id}")
-async def get_agent(agent_id: str, request: Request):
-    """Get a specific agent"""
-    db = get_db(request)
-    
-    agent = await db.orchestrator_agents.find_one({"id": agent_id}, {"_id": 0})
-    if not agent:
-        raise HTTPException(status_code=404, detail="Agent not found")
-    
-    return agent
-
 @router.post("/agents/{agent_id}/toggle")
 async def toggle_agent(agent_id: str, request: Request):
     """Toggle agent active status"""
@@ -698,6 +543,87 @@ async def toggle_agent(agent_id: str, request: Request):
     agent.pop("_id", None)
     return agent
 
+# ============= PROJECT FILES & PREVIEW =============
+
+@router.get("/objectives/{objective_id}/files")
+async def get_project_files(objective_id: str, request: Request):
+    """Get all files in the project directory"""
+    db = get_db(request)
+    
+    generator = ProjectGenerator(db)
+    files = await generator.get_project_files(objective_id)
+    
+    return {"files": files, "count": len(files)}
+
+@router.get("/objectives/{objective_id}/download")
+async def download_project(objective_id: str, request: Request):
+    """Download project as ZIP"""
+    db = get_db(request)
+    
+    generator = ProjectGenerator(db)
+    zip_path = await generator.create_zip(objective_id)
+    
+    if not zip_path or not Path(zip_path).exists():
+        raise HTTPException(status_code=404, detail="Project not found or empty")
+    
+    return FileResponse(
+        zip_path,
+        media_type="application/zip",
+        filename=f"project_{objective_id[:8]}.zip"
+    )
+
+@router.get("/preview/{objective_id}")
+async def preview_project(objective_id: str, request: Request):
+    """Preview the generated project (serves index.html)"""
+    db = get_db(request)
+    
+    objective = await db.orchestrator_objectives.find_one({"id": objective_id})
+    if not objective or not objective.get("project_path"):
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    project_dir = Path(objective["project_path"])
+    index_path = project_dir / "index.html"
+    
+    if not index_path.exists():
+        raise HTTPException(status_code=404, detail="No index.html found")
+    
+    with open(index_path, 'r') as f:
+        content = f.read()
+    
+    return HTMLResponse(content=content)
+
+@router.get("/preview/{objective_id}/{path:path}")
+async def serve_project_file(objective_id: str, path: str, request: Request):
+    """Serve static files from the project"""
+    db = get_db(request)
+    
+    objective = await db.orchestrator_objectives.find_one({"id": objective_id})
+    if not objective or not objective.get("project_path"):
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    project_dir = Path(objective["project_path"])
+    file_path = project_dir / path
+    
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Determine content type
+    suffix = file_path.suffix.lower()
+    content_types = {
+        ".html": "text/html",
+        ".css": "text/css",
+        ".js": "application/javascript",
+        ".json": "application/json",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".svg": "image/svg+xml",
+        ".ico": "image/x-icon"
+    }
+    
+    return FileResponse(file_path, media_type=content_types.get(suffix, "text/plain"))
+
 # ============= DASHBOARD STATS =============
 
 @router.get("/stats")
@@ -706,21 +632,17 @@ async def get_dashboard_stats(request: Request):
     db = get_db(request)
     await init_agents_if_empty(db)
     
-    # Count objectives
     total_objectives = await db.orchestrator_objectives.count_documents({})
     active_objectives = await db.orchestrator_objectives.count_documents({"status": "in_progress"})
     completed_objectives = await db.orchestrator_objectives.count_documents({"status": "completed"})
     
-    # Count tasks
     total_tasks = await db.orchestrator_tasks.count_documents({})
     completed_tasks = await db.orchestrator_tasks.count_documents({"status": "completed"})
     running_tasks = await db.orchestrator_tasks.count_documents({"status": "running"})
     
-    # Get agents
     agents = await db.orchestrator_agents.find({}, {"_id": 0}).to_list(20)
     active_agents = len([a for a in agents if a.get("status") == "active"])
     
-    # Calculate total cost
     pipeline = [{"$group": {"_id": None, "total": {"$sum": "$cost_used"}}}]
     cost_result = await db.orchestrator_objectives.aggregate(pipeline).to_list(1)
     total_cost = cost_result[0]["total"] if cost_result else 0
@@ -760,7 +682,6 @@ async def get_recent_activity(request: Request):
     
     activities = []
     
-    # Get recent tasks
     tasks = await db.orchestrator_tasks.find({}, {"_id": 0}).sort("created_at", -1).to_list(15)
     for task in tasks:
         activities.append({
@@ -771,7 +692,6 @@ async def get_recent_activity(request: Request):
             "timestamp": task.get("created_at")
         })
     
-    # Get recent objectives
     objectives = await db.orchestrator_objectives.find({}, {"_id": 0}).sort("created_at", -1).to_list(5)
     for obj in objectives:
         activities.append({
@@ -781,33 +701,6 @@ async def get_recent_activity(request: Request):
             "timestamp": obj.get("created_at")
         })
     
-    # Sort by timestamp
     activities.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
     
     return activities[:15]
-
-# ============= FILES ENDPOINT =============
-
-@router.get("/objectives/{objective_id}/files")
-async def get_generated_files(objective_id: str, request: Request):
-    """Get all generated files for an objective"""
-    db = get_db(request)
-    
-    objective = await db.orchestrator_objectives.find_one({"id": objective_id}, {"_id": 0})
-    if not objective:
-        raise HTTPException(status_code=404, detail="Objective not found")
-    
-    # Collect files from objective and all tasks
-    all_files = objective.get("generated_files", [])
-    
-    tasks = await db.orchestrator_tasks.find(
-        {"objective_id": objective_id, "generated_files": {"$exists": True, "$ne": []}},
-        {"_id": 0, "generated_files": 1, "title": 1}
-    ).to_list(100)
-    
-    for task in tasks:
-        for f in task.get("generated_files", []):
-            f["source_task"] = task.get("title")
-            all_files.append(f)
-    
-    return {"files": all_files, "count": len(all_files)}
