@@ -266,16 +266,23 @@ class DevelopmentPipeline:
         return project
     
     async def run_pipeline(self, project_id: str) -> Dict[str, Any]:
-        """Execute the full development pipeline"""
+        """Execute the full development pipeline with learning integration"""
         project = await self.db.projects.find_one({"id": project_id})
         if not project:
             return {"error": "Project not found"}
         
+        start_time = time.time()
+        
         try:
+            # Get enhanced context from learning system
+            learning_engine = await self._get_learning_engine()
+            enhanced_context = await learning_engine.get_enhanced_context(project["prompt"])
+            
             # Phase 1: Planning
             await self._update_phase(project_id, ProjectPhase.PLANNING, "Analyzing requirements...")
-            plan = await self._phase_planning(project["prompt"])
+            plan = await self._phase_planning(project["prompt"], enhanced_context)
             if not plan:
+                await learning_engine.learn_from_error(project_id, "planning_failed", "Could not generate plan")
                 return await self._handle_failure(project_id, "Planning failed")
             
             await self.db.projects.update_one(
@@ -285,8 +292,9 @@ class DevelopmentPipeline:
             
             # Phase 2: Generation
             await self._update_phase(project_id, ProjectPhase.GENERATION, "Generating code...")
-            generated = await self._phase_generation(plan, project["prompt"])
+            generated = await self._phase_generation(plan, project["prompt"], enhanced_context)
             if not generated:
+                await learning_engine.learn_from_error(project_id, "generation_failed", "Could not generate code")
                 return await self._handle_failure(project_id, "Generation failed")
             
             # Create project directory and save files
@@ -311,7 +319,9 @@ class DevelopmentPipeline:
             validation = await self._phase_validation(generated["files"])
             
             # If validation found issues, try to fix them
+            had_errors = False
             if validation and not validation.get("valid", True):
+                had_errors = True
                 await self._update_phase(project_id, ProjectPhase.VALIDATION, "Fixing issues...")
                 fixed = await self._phase_fix_issues(generated["files"], validation["issues"])
                 if fixed:
@@ -332,26 +342,49 @@ class DevelopmentPipeline:
             # Phase 5: Completed
             await self._update_phase(project_id, ProjectPhase.COMPLETED, "Project ready!")
             
+            generation_time = time.time() - start_time
             preview_url = f"/api/preview/{project_id}"
+            
             await self.db.projects.update_one(
                 {"id": project_id},
                 {"$set": {
                     "preview_url": preview_url,
                     "validation": validation,
+                    "generation_time": generation_time,
                     "completed_at": datetime.now(timezone.utc).isoformat()
                 }}
             )
+            
+            # Learn from this generation
+            try:
+                await learning_engine.learn_from_generation(
+                    project_id=project_id,
+                    prompt=project["prompt"],
+                    plan=plan,
+                    generated_files={f["path"]: f["content"] for f in generated["files"]},
+                    validation_result=validation or {"valid": True, "score": 80},
+                    generation_time=generation_time,
+                    user_id=project.get("user_id")
+                )
+            except Exception as learn_error:
+                logger.warning(f"Learning failed (non-critical): {learn_error}")
             
             return {
                 "success": True,
                 "project_id": project_id,
                 "preview_url": preview_url,
                 "files_count": len(generated["files"]),
-                "plan": plan
+                "plan": plan,
+                "generation_time": round(generation_time, 2)
             }
             
         except Exception as e:
             logger.error(f"Pipeline error: {e}")
+            try:
+                learning_engine = await self._get_learning_engine()
+                await learning_engine.learn_from_error(project_id, "pipeline_error", str(e))
+            except:
+                pass
             return await self._handle_failure(project_id, str(e))
     
     async def iterate_project(self, project_id: str, modification: str) -> Dict[str, Any]:
