@@ -43,9 +43,10 @@ import { Toaster, toast } from '../components/ui/sonner';
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 const WS_BASE = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
 
-// File tree component with folder structure
-const FileTree = ({ files, selectedFile, onSelectFile }) => {
+// File tree component with folder structure and regenerate option
+const FileTree = ({ files, selectedFile, onSelectFile, onRegenerateFile, regeneratingFile }) => {
   const fileList = Object.keys(files || {}).sort();
+  const [contextMenu, setContextMenu] = useState(null);
   
   // Group files by folder
   const structure = {};
@@ -65,37 +66,69 @@ const FileTree = ({ files, selectedFile, onSelectFile }) => {
     const ext = filename.split('.').pop();
     const icons = {
       'js': { color: 'text-yellow-400', label: 'JS' },
-      'jsx': { color: 'text-yellow-400', label: 'JS' },
+      'jsx': { color: 'text-yellow-400', label: 'JSX' },
       'ts': { color: 'text-blue-400', label: 'TS' },
-      'tsx': { color: 'text-blue-400', label: 'TS' },
+      'tsx': { color: 'text-blue-400', label: 'TSX' },
       'css': { color: 'text-blue-500', label: 'CSS' },
       'html': { color: 'text-orange-400', label: 'HTML' },
-      'json': { color: 'text-yellow-300', label: '{ }' },
+      'json': { color: 'text-yellow-300', label: 'JSON' },
       'py': { color: 'text-green-400', label: 'PY' },
-      'md': { color: 'text-gray-400', label: 'MD' }
+      'md': { color: 'text-gray-400', label: 'MD' },
+      'svg': { color: 'text-pink-400', label: 'SVG' },
+      'png': { color: 'text-purple-400', label: 'IMG' },
+      'jpg': { color: 'text-purple-400', label: 'IMG' }
     };
     return icons[ext] || { color: 'text-gray-400', label: '•' };
   };
 
+  const handleContextMenu = (e, filename) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, file: filename });
+  };
+
+  // Close context menu on click outside
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
   return (
-    <div className="py-1 text-sm">
+    <div className="py-1 text-sm relative">
       {fileList.map((filename) => {
         const icon = getFileIcon(filename);
         const displayName = filename.split('/').pop();
+        const isRegenerating = regeneratingFile === filename;
         
         return (
           <button
             key={filename}
             onClick={() => onSelectFile(filename)}
-            className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+            onContextMenu={(e) => handleContextMenu(e, filename)}
+            className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors group ${
               selectedFile === filename 
                 ? 'bg-[#37373d] text-white' 
                 : 'text-gray-400 hover:bg-[#2a2d2e] hover:text-gray-200'
             }`}
             data-testid={`file-${filename}`}
           >
-            <span className={`text-xs font-bold w-6 ${icon.color}`}>{icon.label}</span>
-            <span className="truncate">{displayName}</span>
+            {isRegenerating ? (
+              <Loader2 size={12} className="animate-spin text-cyan-400" />
+            ) : (
+              <span className={`text-xs font-bold w-6 ${icon.color}`}>{icon.label}</span>
+            )}
+            <span className="truncate flex-1">{displayName}</span>
+            {/* Regenerate button on hover */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRegenerateFile?.(filename);
+              }}
+              className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-600 rounded transition-opacity"
+              title="Regenerate file"
+            >
+              <Wand2 size={12} className="text-cyan-400" />
+            </button>
           </button>
         );
       })}
