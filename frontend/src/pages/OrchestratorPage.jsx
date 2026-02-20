@@ -89,6 +89,14 @@ const OrchestratorPage = () => {
     priority: 5,
     auto_mode: true
   });
+  
+  // Task execution state
+  const [executingTask, setExecutingTask] = useState(null);
+  const [selectedObjective, setSelectedObjective] = useState(null);
+  const [objectiveTasks, setObjectiveTasks] = useState([]);
+  const [generatedFiles, setGeneratedFiles] = useState([]);
+  const [showFilesModal, setShowFilesModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
