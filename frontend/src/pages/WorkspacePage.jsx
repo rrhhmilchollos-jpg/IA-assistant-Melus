@@ -268,6 +268,12 @@ const WorkspacePage = () => {
   const [deployLoading, setDeployLoading] = useState(false);
   const [repoName, setRepoName] = useState('');
   
+  // Regenerate state
+  const [regeneratingFile, setRegeneratingFile] = useState(null);
+  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
+  const [regeneratePrompt, setRegeneratePrompt] = useState('');
+  const [fileToRegenerate, setFileToRegenerate] = useState(null);
+  
   const messagesEndRef = useRef(null);
   const hasInitialized = useRef(false);
   const inputRef = useRef(null);
