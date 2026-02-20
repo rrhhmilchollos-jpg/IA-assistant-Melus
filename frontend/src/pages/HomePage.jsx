@@ -52,11 +52,17 @@ const HomePage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState([]);
   
+  // Pipeline state
+  const [currentProject, setCurrentProject] = useState(null);
+  const [projectStatus, setProjectStatus] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
   // Refs
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const pollIntervalRef = useRef(null);
 
   useEffect(() => {
     loadRecentProjects();
