@@ -2,31 +2,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Home,
   Send,
   Zap,
-  Sparkles,
   Clock,
   Rocket,
-  MoreHorizontal,
-  User,
   LogOut,
-  Receipt,
   Shield,
   Loader2,
-  Store,
   Paperclip,
   Mic,
   MicOff,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-  Brain,
-  Cpu,
-  Wand2,
   X,
-  Check,
-  Volume2
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+  User,
+  CreditCard,
+  FolderOpen,
+  Trash2,
+  ExternalLink,
+  Menu
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,72 +36,44 @@ import { Toaster, toast } from '../components/ui/sonner';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
-// Matrix background effect
-const MatrixBackground = () => (
-  <div className="absolute inset-0 overflow-hidden opacity-5 pointer-events-none">
-    <div className="matrix-rain" style={{
-      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ctext x='0' y='15' fill='%2300ff00' font-family='monospace' font-size='12'%3E01%3C/text%3E%3C/svg%3E")`,
-      backgroundRepeat: 'repeat',
-      animation: 'matrix 20s linear infinite',
-      width: '100%',
-      height: '200%'
-    }} />
-  </div>
-);
-
-// AI Model options
-const AI_MODELS = [
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', icon: '🤖', description: 'Modelo rápido y eficiente' },
-  { id: 'claude-opus', name: 'Claude 4.5 Opus', provider: 'Anthropic', icon: '🧠', description: 'Máxima calidad y razonamiento' },
-  { id: 'claude-sonnet', name: 'Claude 4.5 Sonnet', provider: 'Anthropic', icon: '✨', description: 'Balance entre velocidad y calidad' },
-  { id: 'gemini-pro', name: 'Gemini 3 Pro', provider: 'Google', icon: '💎', description: 'Multimodal avanzado' },
-];
-
-// Agent modes
+// Agent modes - E1 and E2 like Emergent
 const AGENT_MODES = [
-  { id: 'e1', name: 'E1', description: 'Estándar - Generación básica', cost: 1 },
-  { id: 'e2', name: 'E2', description: 'Avanzado - Múltiples agentes', cost: 2 },
+  { id: 'e1', name: 'E1', description: 'Standard agent' },
+  { id: 'e1.5', name: 'E1.5', description: 'Enhanced agent' },
+  { id: 'e2', name: 'E2', description: 'Advanced multi-agent' },
 ];
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { user, logout, updateCredits } = useAuth();
+  const { user, logout } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [recentTasks, setRecentTasks] = useState([]);
-  const [activeTab, setActiveTab] = useState('recent');
-  const [deployedApps, setDeployedApps] = useState([]);
+  const [recentProjects, setRecentProjects] = useState([]);
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
-  
-  // New state for controls
-  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [agentMode, setAgentMode] = useState('e1');
-  const [ultraMode, setUltraMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState([]);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
   
   // Refs
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  // Suggestions - Simple ideas
-  const suggestions = [
-    { id: 'meltbot', label: 'MeltBot', prompt: 'Crea un chatbot inteligente con interfaz moderna' },
-    { id: 'ideas', label: 'Registrador de ideas', prompt: 'Crea una app para guardar y organizar ideas con categorías' },
-    { id: 'bakery', label: 'Delicias horneadas', prompt: 'Crea una tienda online de panadería con carrito' },
-    { id: 'surprise', label: 'Sorpréndeme', prompt: 'Crea algo creativo e innovador que me sorprenda' },
-  ];
-
   useEffect(() => {
-    loadRecentTasks();
-    loadDeployedApps();
+    loadRecentProjects();
   }, []);
 
-  const loadRecentTasks = async () => {
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+    }
+  }, [prompt]);
+
+  const loadRecentProjects = async () => {
     const token = localStorage.getItem('session_token');
     try {
       const response = await fetch(`${API_BASE}/api/workspace/recent`, {
@@ -113,57 +81,42 @@ const HomePage = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setRecentTasks(data.workspaces || []);
+        setRecentProjects(data.workspaces || []);
       }
     } catch (error) {
-      console.error('Failed to load recent tasks:', error);
-    }
-  };
-
-  const loadDeployedApps = async () => {
-    const token = localStorage.getItem('session_token');
-    try {
-      const response = await fetch(`${API_BASE}/api/workspace/deployed`, {
-        headers: { 'X-Session-Token': token }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setDeployedApps(data.workspaces || []);
-      }
-    } catch (error) {
-      console.error('Failed to load deployed apps:', error);
+      console.error('Failed to load recent projects:', error);
     }
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setPrompt(suggestion.prompt);
+    navigate('/');
   };
 
   const handleSubmit = () => {
     if (!prompt.trim() || isLoading) return;
     
-    // Build query params with all settings
     const params = new URLSearchParams({
       prompt: prompt,
-      model: selectedModel.id,
-      mode: agentMode,
-      ultra: ultraMode.toString()
+      mode: agentMode
     });
     
     navigate(`/workspace?${params.toString()}`);
   };
 
-  // File attachment handler
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  // File attachment
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
       setAttachedFiles(prev => [...prev, ...files]);
-      toast.success(`${files.length} archivo(s) adjuntado(s)`);
+      toast.success(`${files.length} file(s) attached`);
     }
   };
 
@@ -171,7 +124,7 @@ const HomePage = () => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Voice recording handler
+  // Voice recording
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -191,10 +144,9 @@ const HomePage = () => {
 
       mediaRecorder.start();
       setIsRecording(true);
-      toast.info('Grabando... Habla ahora');
+      toast.info('Recording... Speak now');
     } catch (error) {
-      console.error('Error accessing microphone:', error);
-      toast.error('No se pudo acceder al micrófono');
+      toast.error('Could not access microphone');
     }
   };
 
@@ -202,7 +154,7 @@ const HomePage = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      toast.info('Procesando audio...');
+      toast.info('Processing audio...');
     }
   };
 
@@ -222,235 +174,210 @@ const HomePage = () => {
         const data = await response.json();
         if (data.text) {
           setPrompt(prev => prev + (prev ? ' ' : '') + data.text);
-          toast.success('Audio transcrito');
+          toast.success('Audio transcribed');
         }
-      } else {
-        toast.error('Error al transcribir audio');
       }
     } catch (error) {
-      console.error('Transcription error:', error);
-      toast.error('Error de transcripción');
+      toast.error('Transcription error');
     }
   };
 
-  // Credits display
+  const openProject = (project) => {
+    navigate(`/workspace?workspace=${project.workspace_id}`);
+  };
+
   const displayCredits = () => {
     if (user?.unlimited_credits || user?.is_owner) {
-      return '∞ ILIMITADO';
+      return '∞';
     }
     return user?.credits || 0;
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-white relative overflow-hidden">
-      <MatrixBackground />
+    <div className="min-h-screen bg-black text-white flex">
       <Toaster />
       
-      {/* Header */}
-      <header className="relative z-20 border-b border-gray-800/50 bg-[#0d1117]/80 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Sparkles size={18} className="text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-lg">Melus AI</span>
-              <span className="text-xs text-gray-500 ml-2">Constructor Universal de Apps</span>
-            </div>
-          </div>
-          
-          {/* Right Side */}
-          <div className="flex items-center gap-3">
-            {/* Credits */}
-            <button 
-              onClick={() => setIsCreditModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full text-sm"
-            >
-              <Zap size={14} className="text-yellow-400" />
-              <span className="text-yellow-400 font-medium">{displayCredits()}</span>
-            </button>
-            
-            {/* User Avatar */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button 
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm hover:ring-2 hover:ring-purple-500/50 transition-all"
-                  data-testid="user-menu"
-                >
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-[#1a1a2e] border-gray-700 text-gray-200">
-                <div className="px-3 py-2 border-b border-gray-700">
-                  <div className="font-medium">{user?.name || 'Usuario'}</div>
-                  <div className="text-xs text-gray-400">{user?.email}</div>
-                </div>
-                <DropdownMenuItem onClick={() => setIsCreditModalOpen(true)} className="cursor-pointer">
-                  <Zap className="mr-2 h-4 w-4 text-yellow-400" />
-                  Créditos
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/marketplace')} className="cursor-pointer">
-                  <Store className="mr-2 h-4 w-4 text-cyan-400" />
-                  Marketplace
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Receipt className="mr-2 h-4 w-4" />
-                  Historial
-                </DropdownMenuItem>
-                {user?.is_admin && (
-                  <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
-                    <Shield className="mr-2 h-4 w-4 text-yellow-400" />
-                    Admin
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-400 cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Cerrar Sesión
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="relative z-10 max-w-4xl mx-auto px-4 pt-12 pb-8">
-        {/* Agent Mode Selector - E1/E2 */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          {AGENT_MODES.map(mode => (
-            <button
-              key={mode.id}
-              onClick={() => setAgentMode(mode.id)}
-              data-testid={`agent-mode-${mode.id}`}
-              className={`px-6 py-2 rounded-full font-medium transition-all ${
-                agentMode === mode.id
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
-              }`}
-              title={mode.description}
-            >
-              {mode.name}
-              {mode.id === 'e2' && <span className="ml-1 text-xs opacity-70">Avanzado</span>}
-            </button>
-          ))}
-          
-          {/* Ultra Mode Toggle */}
+      {/* Sidebar */}
+      <aside 
+        className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-gray-800 flex flex-col overflow-hidden`}
+      >
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-gray-800">
           <button
             onClick={() => {
-              setUltraMode(!ultraMode);
-              toast.info(ultraMode ? 'Ultra Mode desactivado' : 'Ultra Mode activado - 2x créditos, máxima calidad');
+              setPrompt('');
+              setAttachedFiles([]);
             }}
-            data-testid="ultra-mode-toggle"
-            className={`px-4 py-2 rounded-full font-medium transition-all flex items-center gap-2 ${
-              ultraMode
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}
+            className="w-full flex items-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg transition-colors"
+            data-testid="new-chat-btn"
           >
-            <Zap size={16} className={ultraMode ? 'text-yellow-300' : ''} />
-            Ultra
+            <Plus size={18} />
+            <span className="font-medium">New Chat</span>
           </button>
         </div>
-
-        {/* Main Title */}
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
-          ¿Qué quieres crear?
-        </h1>
-        <p className="text-center text-gray-400 mb-8">
-          Describe tu idea y los agentes de IA la construirán automáticamente
-        </p>
-
-        {/* Input Box - Enhanced */}
-        <div className="relative mb-6">
-          <div className="bg-[#1a1a2e]/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden focus-within:border-purple-500/50 transition-colors">
-            {/* Top toolbar */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/30">
-              {/* AI Model Selector */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowModelDropdown(!showModelDropdown)}
-                  data-testid="model-selector-btn"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors"
-                >
-                  <Brain size={16} className="text-purple-400" />
-                  <span>{selectedModel.name}</span>
-                  <ChevronDown size={14} className={`transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {showModelDropdown && (
-                  <div className="absolute top-full left-0 mt-2 w-72 bg-[#1a1a2e] border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
-                    {AI_MODELS.map(model => (
-                      <button
-                        key={model.id}
-                        onClick={() => {
-                          setSelectedModel(model);
-                          setShowModelDropdown(false);
-                          toast.success(`Modelo cambiado a ${model.name}`);
-                        }}
-                        className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-800 transition-colors text-left ${
-                          selectedModel.id === model.id ? 'bg-purple-500/20' : ''
-                        }`}
-                      >
-                        <span className="text-2xl">{model.icon}</span>
-                        <div className="flex-1">
-                          <div className="font-medium text-white">{model.name}</div>
-                          <div className="text-xs text-gray-400">{model.description}</div>
-                        </div>
-                        {selectedModel.id === model.id && (
-                          <Check size={16} className="text-purple-400" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Settings button */}
-              <button
-                onClick={() => {
-                  setShowSettings(!showSettings);
-                  toast.info(showSettings ? 'Configuración cerrada' : 'Configuración abierta');
-                }}
-                data-testid="settings-btn"
-                className={`p-2 rounded-lg transition-colors ${
-                  showSettings ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-gray-800 text-gray-400'
-                }`}
-              >
-                <Settings size={18} />
-              </button>
+        
+        {/* Projects List */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-2">
+            <div className="text-xs text-gray-500 uppercase px-3 py-2 font-medium">
+              Recent Projects
             </div>
             
-            {/* Settings Panel */}
-            {showSettings && (
-              <div className="px-4 py-3 bg-gray-800/50 border-b border-gray-700/30">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <label className="text-gray-400 block mb-1">Temperatura</label>
-                    <input type="range" min="0" max="100" defaultValue="70" className="w-full" />
-                  </div>
-                  <div>
-                    <label className="text-gray-400 block mb-1">Max Tokens</label>
-                    <input type="number" defaultValue="4096" className="w-full bg-gray-700 rounded px-2 py-1 text-white" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
-                      <input type="checkbox" className="rounded" defaultChecked />
-                      <span>Incluir código de ejemplo</span>
-                    </label>
-                  </div>
-                </div>
+            {recentProjects.length === 0 ? (
+              <div className="px-3 py-8 text-center text-gray-600 text-sm">
+                No projects yet.<br/>Start by describing what you want to build.
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {recentProjects.map((project) => (
+                  <button
+                    key={project.workspace_id}
+                    onClick={() => openProject(project)}
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-900 transition-colors group"
+                    data-testid={`project-${project.workspace_id}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FolderOpen size={14} className="text-gray-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-300 truncate flex-1">
+                        {project.name || project.prompt?.slice(0, 30) || 'Untitled'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600 mt-0.5 pl-6">
+                      {new Date(project.updated_at || project.created_at).toLocaleDateString()}
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
+          </div>
+        </div>
+        
+        {/* Sidebar Footer - User */}
+        <div className="p-3 border-t border-gray-800">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-900 transition-colors"
+                data-testid="user-menu-sidebar"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-medium text-gray-200 truncate">
+                    {user?.name || 'User'}
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {user?.email}
+                  </div>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 bg-gray-900 border-gray-700 text-gray-200">
+              <DropdownMenuItem onClick={() => setIsCreditModalOpen(true)} className="cursor-pointer">
+                <Zap className="mr-2 h-4 w-4 text-yellow-400" />
+                Credits: {displayCredits()}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              {user?.is_admin && (
+                <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+                  <Shield className="mr-2 h-4 w-4 text-yellow-400" />
+                  Admin Panel
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator className="bg-gray-700" />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-400 cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+      
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="h-14 border-b border-gray-800 flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            {/* Toggle Sidebar */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-gray-900 rounded-lg transition-colors"
+              data-testid="toggle-sidebar"
+            >
+              {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+            </button>
             
-            {/* Attached files preview */}
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-black border border-gray-700 flex items-center justify-center">
+                <span className="text-lg font-bold text-white">e</span>
+              </div>
+              <span className="font-semibold text-gray-200">Melus AI</span>
+            </div>
+          </div>
+          
+          {/* Agent Mode Selector */}
+          <div className="flex items-center gap-1 bg-gray-900 rounded-lg p-1">
+            {AGENT_MODES.map(mode => (
+              <button
+                key={mode.id}
+                onClick={() => setAgentMode(mode.id)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  agentMode === mode.id
+                    ? 'bg-white text-black'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                data-testid={`mode-${mode.id}`}
+                title={mode.description}
+              >
+                {mode.name}
+              </button>
+            ))}
+          </div>
+          
+          {/* Right side - Credits */}
+          <button
+            onClick={() => setIsCreditModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+            data-testid="credits-btn"
+          >
+            <Zap size={16} className="text-yellow-400" />
+            <span className="text-sm font-medium">{displayCredits()}</span>
+          </button>
+        </header>
+        
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+          {/* Welcome Message */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-semibold text-white mb-2">
+              What do you want to build?
+            </h1>
+            <p className="text-gray-500">
+              Describe your app and let AI agents build it for you
+            </p>
+          </div>
+          
+          {/* Input Container */}
+          <div className="w-full max-w-3xl">
+            {/* Attached Files */}
             {attachedFiles.length > 0 && (
-              <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-700/30">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {attachedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 px-3 py-1 bg-gray-800 rounded-full text-sm">
-                    <span className="truncate max-w-[150px]">{file.name}</span>
-                    <button onClick={() => removeFile(index)} className="text-gray-400 hover:text-red-400">
+                  <div 
+                    key={index} 
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-sm"
+                  >
+                    <span className="text-gray-300 truncate max-w-[150px]">{file.name}</span>
+                    <button 
+                      onClick={() => removeFile(index)} 
+                      className="text-gray-500 hover:text-red-400 transition-colors"
+                    >
                       <X size={14} />
                     </button>
                   </div>
@@ -458,26 +385,22 @@ const HomePage = () => {
               </div>
             )}
             
-            {/* Text input */}
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe lo que quieres crear..."
-              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none text-lg p-4 min-h-[120px]"
-              data-testid="main-prompt-input"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-            />
-            
-            {/* Bottom toolbar */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700/30">
-              {/* Left side - Attachment & Voice */}
-              <div className="flex items-center gap-2">
-                {/* File attachment */}
+            {/* Main Input */}
+            <div className="relative bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden focus-within:border-gray-600 transition-colors">
+              <textarea
+                ref={textareaRef}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Describe what you want to build..."
+                className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none p-4 pr-24 min-h-[56px] max-h-[200px]"
+                data-testid="main-input"
+                rows={1}
+              />
+              
+              {/* Input Actions */}
+              <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                {/* File Attachment */}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -488,209 +411,75 @@ const HomePage = () => {
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  data-testid="file-attach-btn"
-                  className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-                  title="Adjuntar archivo"
+                  className="p-2 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                  data-testid="attach-btn"
+                  title="Attach files"
                 >
-                  <Paperclip size={20} />
+                  <Paperclip size={18} />
                 </button>
                 
-                {/* Voice input */}
+                {/* Voice Input */}
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
-                  data-testid="mic-btn"
                   className={`p-2 rounded-lg transition-colors ${
                     isRecording 
-                      ? 'bg-red-500/20 text-red-400 animate-pulse' 
-                      : 'hover:bg-gray-800 text-gray-400 hover:text-white'
+                      ? 'bg-red-500/20 text-red-400' 
+                      : 'text-gray-500 hover:text-white hover:bg-gray-800'
                   }`}
-                  title={isRecording ? 'Detener grabación' : 'Grabar audio'}
+                  data-testid="voice-btn"
+                  title={isRecording ? 'Stop recording' : 'Voice input'}
                 >
-                  {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
+                  {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
                 </button>
                 
-                {/* Expand/Collapse */}
+                {/* Submit */}
                 <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  data-testid="expand-collapse-btn"
-                  className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-                  title={isExpanded ? 'Colapsar' : 'Expandir'}
+                  onClick={handleSubmit}
+                  disabled={!prompt.trim() || isLoading}
+                  className="p-2 bg-white text-black rounded-lg hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  data-testid="submit-btn"
                 >
-                  {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  {isLoading ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Send size={18} />
+                  )}
                 </button>
               </div>
-              
-              {/* Right side - Submit */}
-              <button
-                onClick={handleSubmit}
-                disabled={!prompt.trim() || isLoading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                data-testid="submit-btn"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Creando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    <span>Crear App</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Action - New button */}
-        <div className="flex justify-center mb-6">
-          <button
-            onClick={() => {
-              setPrompt('');
-              setAttachedFiles([]);
-              toast.info('Nuevo proyecto');
-            }}
-            className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-full text-sm hover:bg-cyan-500/30 transition-colors flex items-center gap-2"
-          >
-            <Wand2 size={16} />
-            Nuevo
-          </button>
-        </div>
-
-        {/* Suggestions */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-          {suggestions.map(suggestion => (
-            <button
-              key={suggestion.id}
-              onClick={() => handleSuggestionClick(suggestion)}
-              className="px-4 py-2 bg-[#1a1a2e]/60 border border-gray-700/50 rounded-full text-sm text-gray-300 hover:bg-purple-500/20 hover:border-purple-500/30 hover:text-white transition-all"
-              data-testid={`suggestion-${suggestion.id}`}
-            >
-              {suggestion.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Recent Projects Section */}
-        {isExpanded && (
-          <div className="bg-[#1a1a2e]/60 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden">
-            {/* Tabs */}
-            <div className="flex items-center gap-1 px-4 pt-4 border-b border-gray-700/50">
-              <button
-                onClick={() => setActiveTab('recent')}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative ${
-                  activeTab === 'recent' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
-                }`}
-                data-testid="tab-recent"
-              >
-                <Clock size={16} />
-                Tareas recientes
-                {activeTab === 'recent' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500" />
-                )}
-              </button>
-              <span className="text-gray-600">|</span>
-              <button
-                onClick={() => setActiveTab('deployed')}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative ${
-                  activeTab === 'deployed' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
-                }`}
-                data-testid="tab-deployed"
-              >
-                <Rocket size={16} />
-                Aplicaciones desplegadas
-                {activeTab === 'deployed' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500" />
-                )}
-              </button>
             </div>
             
-            {/* Content */}
-            <div className="p-4">
-              {activeTab === 'recent' ? (
-                recentTasks.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Clock size={32} className="mx-auto mb-2 opacity-50" />
-                    <p>No hay tareas recientes</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="text-left text-xs text-gray-500 uppercase">
-                          <th className="pb-2 font-medium">Proyecto</th>
-                          <th className="pb-2 font-medium text-right">Última vez</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recentTasks.slice(0, 5).map((task) => (
-                          <tr 
-                            key={task.workspace_id}
-                            onClick={() => navigate(`/workspace?workspace=${task.workspace_id}`)}
-                            className="cursor-pointer hover:bg-gray-800/50 transition-colors"
-                          >
-                            <td className="py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-green-500" />
-                                <span className="text-gray-200">{task.name || 'Sin nombre'}</span>
-                              </div>
-                            </td>
-                            <td className="py-2 text-right text-sm text-gray-400">
-                              {new Date(task.updated_at || task.created_at).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )
-              ) : (
-                deployedApps.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Rocket size={32} className="mx-auto mb-2 opacity-50" />
-                    <p>No hay aplicaciones desplegadas</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {deployedApps.slice(0, 5).map((app) => (
-                      <div 
-                        key={app.workspace_id}
-                        onClick={() => window.open(app.deploy_url, '_blank')}
-                        className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg cursor-pointer hover:bg-gray-800/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded bg-green-500/20 flex items-center justify-center">
-                            <Rocket size={16} className="text-green-400" />
-                          </div>
-                          <div>
-                            <div className="text-gray-200">{app.name}</div>
-                            <div className="text-xs text-gray-500">{app.deploy_url}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )
-              )}
+            {/* Quick Suggestions */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+              {[
+                'Build a todo app',
+                'Create an e-commerce site',
+                'Make a portfolio website',
+                'Build a chat application'
+              ].map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => setPrompt(suggestion)}
+                  className="px-4 py-2 bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 rounded-full text-sm text-gray-400 hover:text-white transition-all"
+                  data-testid={`suggestion-${index}`}
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
           </div>
-        )}
+        </div>
+        
+        {/* Footer */}
+        <footer className="py-3 text-center text-xs text-gray-600">
+          Powered by AI agents • <span className="text-gray-500">{agentMode.toUpperCase()}</span> mode selected
+        </footer>
       </main>
-
+      
       {/* Credit Modal */}
       <CreditModal 
         isOpen={isCreditModalOpen} 
         onClose={() => setIsCreditModalOpen(false)} 
       />
-      
-      {/* Click outside to close dropdowns */}
-      {showModelDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowModelDropdown(false)}
-        />
-      )}
     </div>
   );
 };
