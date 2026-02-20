@@ -360,6 +360,9 @@ const WorkspacePage = () => {
           setSelectedFile(fileNames[0]);
         }
         
+        // Connect to WebSocket for real-time updates
+        connectWebSocket(projId);
+        
         // Add welcome message
         addMessage('assistant', `✅ Project loaded: **${project.plan?.project_name || 'Your Project'}**
 
