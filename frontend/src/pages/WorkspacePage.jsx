@@ -707,6 +707,59 @@ I'm working on your request. This may take a moment...`);
     }
   };
 
+  // Regenerate a single file
+  const handleRegenerateFile = (filename) => {
+    setFileToRegenerate(filename);
+    setRegeneratePrompt('');
+    setShowRegenerateModal(true);
+  };
+
+  const executeRegenerateFile = async () => {
+    if (!fileToRegenerate || !projectId) return;
+    
+    setShowRegenerateModal(false);
+    setRegeneratingFile(fileToRegenerate);
+    setTerminalOutput(prev => [...prev, `$ Regenerating ${fileToRegenerate}...`]);
+    
+    const token = localStorage.getItem('session_token');
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/pipeline/projects/${projectId}/regenerate-file`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({
+          file_path: fileToRegenerate,
+          instruction: regeneratePrompt || `Improve and fix this file: ${fileToRegenerate}`
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Update the file content
+        setFiles(prev => ({
+          ...prev,
+          [fileToRegenerate]: data.content
+        }));
+        
+        setTerminalOutput(prev => [...prev, `$ ✓ Regenerated ${fileToRegenerate}`]);
+        toast.success(`File regenerated: ${fileToRegenerate}`);
+        addMessage('assistant', `✅ Regenerated **${fileToRegenerate}**\n\n${data.summary || 'File has been updated.'}`);
+      } else {
+        throw new Error(data.error || 'Failed to regenerate file');
+      }
+    } catch (error) {
+      setTerminalOutput(prev => [...prev, `$ ✗ Error: ${error.message}`]);
+      toast.error(error.message);
+    } finally {
+      setRegeneratingFile(null);
+      setFileToRegenerate(null);
+    }
+  };
+
   const handleDownload = () => {
     if (Object.keys(files).length === 0) {
       toast.error('No files to download');
