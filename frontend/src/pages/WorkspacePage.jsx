@@ -3,37 +3,60 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Send,
-  Home,
+  ChevronLeft,
   X,
   Code,
   Eye,
   Rocket,
   Check,
-  Copy,
-  Save,
-  Sparkles,
   Loader2,
   Zap,
   Download,
   Terminal,
   File,
-  ChevronLeft,
   GitBranch,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  RotateCcw,
+  ExternalLink,
+  Play,
+  Square,
+  Maximize2,
+  Minimize2,
+  MoreHorizontal,
+  RefreshCw,
+  Share2,
+  Settings,
+  Smartphone,
+  Monitor,
+  Tablet
 } from 'lucide-react';
 import CreditModal from '../components/CreditModal';
 import { Toaster, toast } from '../components/ui/sonner';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
-// Simple code editor
-const CodeEditor = ({ code, filename, onChange }) => {
+// Code editor component
+const CodeEditor = ({ code, filename, onChange, readOnly = false }) => {
+  const lineCount = (code || '').split('\n').length;
+  
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex bg-[#1e1e1e] font-mono text-sm overflow-hidden">
+      {/* Line numbers */}
+      <div className="py-4 pr-4 pl-4 text-right text-gray-500 select-none bg-[#1e1e1e] border-r border-gray-800">
+        {Array.from({ length: lineCount }, (_, i) => (
+          <div key={i + 1} className="leading-6 text-xs">
+            {i + 1}
+          </div>
+        ))}
+      </div>
+      
+      {/* Code area */}
       <textarea
         value={code || ''}
         onChange={(e) => onChange?.(e.target.value)}
-        className="flex-1 w-full bg-transparent text-gray-800 font-mono text-sm p-4 resize-none outline-none leading-6"
+        readOnly={readOnly}
+        className="flex-1 bg-transparent text-gray-300 p-4 resize-none outline-none leading-6 overflow-auto"
         spellCheck={false}
         data-testid="code-editor"
       />
@@ -41,43 +64,130 @@ const CodeEditor = ({ code, filename, onChange }) => {
   );
 };
 
-// File tree component
+// File tree component with folder structure
 const FileTree = ({ files, selectedFile, onSelectFile }) => {
   const fileList = Object.keys(files || {}).sort();
   
-  const getIcon = (filename) => {
-    if (filename.endsWith('.jsx') || filename.endsWith('.js')) {
-      return <span className="text-yellow-500 text-xs font-bold">JS</span>;
+  // Group files by folder
+  const structure = {};
+  fileList.forEach(file => {
+    const parts = file.split('/');
+    if (parts.length > 1) {
+      const folder = parts[0];
+      if (!structure[folder]) structure[folder] = [];
+      structure[folder].push(file);
+    } else {
+      if (!structure['root']) structure['root'] = [];
+      structure['root'].push(file);
     }
-    if (filename.endsWith('.css')) {
-      return <span className="text-blue-500 text-xs font-bold">CSS</span>;
-    }
-    if (filename.endsWith('.html')) {
-      return <span className="text-orange-500 text-xs font-bold">HTML</span>;
-    }
-    if (filename.endsWith('.json')) {
-      return <span className="text-yellow-600 text-xs font-bold">{ }</span>;
-    }
-    return <File size={14} className="text-gray-400" />;
+  });
+
+  const getFileIcon = (filename) => {
+    const ext = filename.split('.').pop();
+    const icons = {
+      'js': { color: 'text-yellow-400', label: 'JS' },
+      'jsx': { color: 'text-yellow-400', label: 'JS' },
+      'ts': { color: 'text-blue-400', label: 'TS' },
+      'tsx': { color: 'text-blue-400', label: 'TS' },
+      'css': { color: 'text-blue-500', label: 'CSS' },
+      'html': { color: 'text-orange-400', label: 'HTML' },
+      'json': { color: 'text-yellow-300', label: '{ }' },
+      'py': { color: 'text-green-400', label: 'PY' },
+      'md': { color: 'text-gray-400', label: 'MD' }
+    };
+    return icons[ext] || { color: 'text-gray-400', label: '•' };
   };
 
   return (
-    <div className="py-2">
-      {fileList.map((filename) => (
-        <button
-          key={filename}
-          onClick={() => onSelectFile(filename)}
-          className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors ${
-            selectedFile === filename 
-              ? 'bg-cyan-50 text-cyan-700 border-l-2 border-cyan-500' 
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-          data-testid={`file-${filename}`}
+    <div className="py-1 text-sm">
+      {fileList.map((filename) => {
+        const icon = getFileIcon(filename);
+        const displayName = filename.split('/').pop();
+        
+        return (
+          <button
+            key={filename}
+            onClick={() => onSelectFile(filename)}
+            className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+              selectedFile === filename 
+                ? 'bg-[#37373d] text-white' 
+                : 'text-gray-400 hover:bg-[#2a2d2e] hover:text-gray-200'
+            }`}
+            data-testid={`file-${filename}`}
+          >
+            <span className={`text-xs font-bold w-6 ${icon.color}`}>{icon.label}</span>
+            <span className="truncate">{displayName}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+// Tab component for code editor
+const EditorTabs = ({ files, selectedFile, onSelectFile, onCloseFile }) => {
+  const openFiles = selectedFile ? [selectedFile] : [];
+  
+  const getFileIcon = (filename) => {
+    const ext = filename.split('.').pop();
+    const colors = {
+      'js': 'text-yellow-400',
+      'jsx': 'text-yellow-400',
+      'css': 'text-blue-500',
+      'html': 'text-orange-400',
+      'json': 'text-yellow-300'
+    };
+    return colors[ext] || 'text-gray-400';
+  };
+  
+  return (
+    <div className="h-9 bg-[#252526] flex items-center border-b border-[#1e1e1e]">
+      {openFiles.map(file => (
+        <div
+          key={file}
+          className="flex items-center gap-2 px-3 h-full bg-[#1e1e1e] border-t-2 border-cyan-500 text-sm text-white"
         >
-          <span className="w-5 flex justify-center">{getIcon(filename)}</span>
-          <span className="truncate">{filename}</span>
-        </button>
+          <span className={`text-xs ${getFileIcon(file)}`}>●</span>
+          <span>{file.split('/').pop()}</span>
+          <button 
+            onClick={() => onCloseFile?.(file)}
+            className="p-0.5 hover:bg-gray-700 rounded"
+          >
+            <X size={12} />
+          </button>
+        </div>
       ))}
+    </div>
+  );
+};
+
+// Preview device frame selector
+const DeviceSelector = ({ device, onChange }) => {
+  const devices = [
+    { id: 'desktop', icon: Monitor, label: 'Desktop' },
+    { id: 'tablet', icon: Tablet, label: 'Tablet' },
+    { id: 'mobile', icon: Smartphone, label: 'Mobile' }
+  ];
+  
+  return (
+    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+      {devices.map(d => {
+        const Icon = d.icon;
+        return (
+          <button
+            key={d.id}
+            onClick={() => onChange(d.id)}
+            className={`p-1.5 rounded transition-colors ${
+              device === d.id 
+                ? 'bg-white text-gray-800 shadow-sm' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+            title={d.label}
+          >
+            <Icon size={16} />
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -98,12 +208,15 @@ const WorkspacePage = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isAgentRunning, setIsAgentRunning] = useState(false);
   const [currentStep, setCurrentStep] = useState('');
+  const [agentThinking, setAgentThinking] = useState(false);
   
   // UI state
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
-  const [rightPanelMode, setRightPanelMode] = useState('code');
+  const [rightPanelMode, setRightPanelMode] = useState('code'); // 'code' | 'preview'
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState('desktop');
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [terminalOutput, setTerminalOutput] = useState(['$ Ready']);
   
   // Deploy state
   const [githubStatus, setGithubStatus] = useState(null);
@@ -112,6 +225,7 @@ const WorkspacePage = () => {
   
   const messagesEndRef = useRef(null);
   const hasInitialized = useRef(false);
+  const inputRef = useRef(null);
 
   // Auto-scroll messages
   useEffect(() => {
@@ -169,8 +283,12 @@ const WorkspacePage = () => {
         const fileNames = Object.keys(data.files || {});
         if (fileNames.length > 0) {
           setSelectedFile(fileNames[0]);
-          setRightPanelOpen(true);
-          setRightPanelMode('code');
+        }
+        
+        // Add welcome message
+        if (data.prompt) {
+          addMessage('user', data.prompt);
+          addMessage('assistant', `Project loaded with ${fileNames.length} files.`);
         }
       }
     } catch (error) {
@@ -180,7 +298,7 @@ const WorkspacePage = () => {
 
   const addMessage = (role, content, type = 'text') => {
     setMessages(prev => [...prev, {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       role,
       content,
       type,
@@ -193,15 +311,17 @@ const WorkspacePage = () => {
     
     setInputMessage('');
     setIsAgentRunning(true);
+    setAgentThinking(true);
     
     addMessage('user', messageText);
-    addMessage('assistant', 'Analyzing request...', 'progress');
     
     const token = localStorage.getItem('session_token');
     
     try {
       if (!workspaceId) {
-        setCurrentStep('Starting generation...');
+        // New project generation
+        setCurrentStep('Analyzing your request...');
+        addMessage('assistant', 'Starting to build your app...', 'progress');
         
         const startResponse = await fetch(`${API_BASE}/api/agents/v2/generate-async`, {
           method: 'POST',
@@ -227,7 +347,9 @@ const WorkspacePage = () => {
         
         setWorkspaceId(wsId);
         window.history.replaceState(null, '', `/workspace?workspace=${wsId}`);
+        setTerminalOutput(prev => [...prev, `$ Creating project: ${startData.name || 'app'}`, '$ Initializing workspace...']);
         
+        // Poll for status
         let completed = false;
         while (!completed) {
           await new Promise(r => setTimeout(r, 2000));
@@ -240,6 +362,7 @@ const WorkspacePage = () => {
           
           if (statusData.current_step) {
             setCurrentStep(statusData.current_step);
+            setTerminalOutput(prev => [...prev, `$ ${statusData.current_step}`]);
           }
           
           if (statusData.status === 'completed') {
@@ -254,17 +377,18 @@ const WorkspacePage = () => {
             const fileNames = Object.keys(statusData.files || {});
             if (fileNames.length > 0) {
               setSelectedFile(fileNames[0]);
-              setRightPanelOpen(true);
-              setRightPanelMode('code');
             }
             
-            addMessage('assistant', `Project created with ${fileNames.length} files. You can view and edit the code in the right panel.`);
+            setTerminalOutput(prev => [...prev, `$ ✓ Generated ${fileNames.length} files`, '$ Ready to preview']);
+            addMessage('assistant', `I've created your app with ${fileNames.length} files. You can view the code on the right panel or preview it live.`);
           } else if (statusData.status === 'failed') {
             throw new Error(statusData.error || 'Generation failed');
           }
         }
       } else {
-        setCurrentStep('Processing modification...');
+        // Modify existing project
+        setCurrentStep('Processing your changes...');
+        setTerminalOutput(prev => [...prev, `$ Modifying project...`]);
         
         const response = await fetch(`${API_BASE}/api/agents/v2/modify`, {
           method: 'POST',
@@ -282,15 +406,19 @@ const WorkspacePage = () => {
         
         if (response.ok) {
           setFiles(data.files || files);
-          addMessage('assistant', `Modified ${data.modified_files?.length || 0} files.`);
+          const modCount = data.modified_files?.length || 0;
+          setTerminalOutput(prev => [...prev, `$ ✓ Modified ${modCount} files`]);
+          addMessage('assistant', `Done! I've updated ${modCount} file${modCount !== 1 ? 's' : ''}.`);
         } else {
           throw new Error(data.detail || 'Modification error');
         }
       }
     } catch (error) {
-      addMessage('assistant', `Error: ${error.message}`);
+      addMessage('assistant', `Sorry, I encountered an error: ${error.message}`);
+      setTerminalOutput(prev => [...prev, `$ Error: ${error.message}`]);
     } finally {
       setIsAgentRunning(false);
+      setAgentThinking(false);
       setCurrentStep('');
     }
   };
@@ -302,7 +430,7 @@ const WorkspacePage = () => {
     }
   };
 
-  const handleDeploy = async () => {
+  const handleDeploy = () => {
     if (!workspaceId || Object.keys(files).length === 0) {
       toast.error('No project to deploy');
       return;
@@ -336,8 +464,9 @@ const WorkspacePage = () => {
       
       if (response.ok) {
         setShowDeployModal(false);
-        toast.success('Pushed to GitHub successfully!');
-        addMessage('assistant', `Project pushed to GitHub: ${data.repo_url}`);
+        toast.success('Pushed to GitHub!');
+        setTerminalOutput(prev => [...prev, `$ ✓ Pushed to GitHub: ${data.repo_url}`]);
+        addMessage('assistant', `Your code is now on GitHub: ${data.repo_url}`);
       } else {
         throw new Error(data.detail || 'Push failed');
       }
@@ -348,7 +477,7 @@ const WorkspacePage = () => {
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (Object.keys(files).length === 0) {
       toast.error('No files to download');
       return;
@@ -362,11 +491,18 @@ const WorkspacePage = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${projectName.replace(/\s+/g, '_')}_code.txt`;
+    a.download = `${projectName.replace(/\s+/g, '_')}.txt`;
     a.click();
     URL.revokeObjectURL(url);
     
-    toast.success('Code downloaded');
+    toast.success('Downloaded!');
+  };
+
+  const copyCode = () => {
+    if (selectedFile && files[selectedFile]) {
+      navigator.clipboard.writeText(files[selectedFile]);
+      toast.success('Copied to clipboard');
+    }
   };
 
   const displayCredits = () => {
@@ -377,90 +513,49 @@ const WorkspacePage = () => {
   const hasFiles = Object.keys(files).length > 0;
 
   return (
-    <div className="h-screen flex flex-col bg-[#f8f9fa] text-gray-800" data-testid="workspace-page">
+    <div className="h-screen flex flex-col bg-[#f5f5f5]" data-testid="workspace-page">
       <Toaster />
       
       {/* Header */}
-      <header className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          {/* Home button */}
+      <header className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 flex-shrink-0">
+        <div className="flex items-center gap-4">
+          {/* Back button */}
           <button
             onClick={() => navigate('/home')}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            data-testid="home-btn"
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            data-testid="back-btn"
           >
-            <Home size={18} />
+            <ChevronLeft size={20} />
           </button>
           
           {/* Logo */}
-          <span className="text-lg font-light tracking-tight text-gray-800">
+          <span className="text-lg tracking-tight text-gray-800 font-light">
             melus<span className="font-normal">AI</span>
           </span>
           
+          {/* Separator */}
+          <div className="h-5 w-px bg-gray-200" />
+          
           {/* Project name */}
-          <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-lg ml-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
-            <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">{projectName}</span>
-          </div>
+          <span className="text-sm text-gray-600">{projectName}</span>
         </div>
         
-        {/* Center - Mode toggles */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
-          <button
-            onClick={() => {
-              setRightPanelOpen(true);
-              setRightPanelMode('code');
-            }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition-colors ${
-              rightPanelOpen && rightPanelMode === 'code'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            data-testid="code-btn"
-          >
-            <Code size={16} />
-            Code
-          </button>
-          <button
-            onClick={() => {
-              setRightPanelOpen(true);
-              setRightPanelMode('preview');
-            }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition-colors ${
-              rightPanelOpen && rightPanelMode === 'preview'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            data-testid="preview-btn"
-          >
-            <Eye size={16} />
-            Preview
-          </button>
-          <button
-            onClick={() => {
-              setRightPanelOpen(true);
-              setRightPanelMode('terminal');
-            }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition-colors ${
-              rightPanelOpen && rightPanelMode === 'terminal'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            data-testid="terminal-btn"
-          >
-            <Terminal size={16} />
-            Terminal
-          </button>
-        </div>
-        
-        {/* Right side */}
+        {/* Right side actions */}
         <div className="flex items-center gap-2">
+          {/* Share */}
+          <button 
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Share"
+          >
+            <Share2 size={18} />
+          </button>
+          
           {/* Download */}
           <button
             onClick={handleDownload}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             data-testid="download-btn"
-            title="Download code"
+            title="Download"
           >
             <Download size={18} />
           </button>
@@ -471,86 +566,92 @@ const WorkspacePage = () => {
             className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-full text-sm font-medium transition-colors"
             data-testid="deploy-btn"
           >
-            <Rocket size={16} />
+            <Rocket size={14} />
             Deploy
           </button>
           
           {/* Credits */}
           <button
             onClick={() => setIsCreditModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             data-testid="credits-btn"
           >
             <Zap size={14} className="text-yellow-500" />
-            <span className="text-sm font-medium text-gray-700">{displayCredits()}</span>
-          </button>
-          
-          {/* User */}
-          <button className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
-            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            <span className="text-sm font-medium">{displayCredits()}</span>
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Two Panel Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Chat/Agent */}
-        <div className="flex-1 flex flex-col min-w-[400px] bg-white border-r border-gray-200">
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-2xl mx-auto space-y-4">
+        {/* Left Panel - Chat */}
+        <div className="w-1/2 flex flex-col bg-white border-r border-gray-200">
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-xl mx-auto py-8 px-6">
               {messages.length === 0 && !isAgentRunning && (
-                <div className="text-center py-20">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
-                    <Sparkles size={32} className="text-cyan-500" />
+                <div className="text-center py-16">
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                      <path d="M2 17l10 5 10-5" />
+                      <path d="M2 12l10 5 10-5" />
+                    </svg>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                  <h1 className="text-2xl font-medium text-gray-800 mb-2">
                     What do you want to build?
-                  </h2>
+                  </h1>
                   <p className="text-gray-500">
-                    Describe your app and AI agents will create it
+                    Describe your app and I'll create it for you
                   </p>
                 </div>
               )}
               
               {messages.map((msg) => (
-                <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                  {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-white">AI</span>
-                    </div>
-                  )}
-                  
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    msg.role === 'user' 
-                      ? 'bg-gray-900 text-white' 
-                      : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {msg.type === 'progress' ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 size={16} className="animate-spin" />
-                        <span>{msg.content}</span>
+                <div key={msg.id} className="mb-6">
+                  <div className="flex items-start gap-3">
+                    {/* Avatar */}
+                    {msg.role === 'assistant' ? (
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor">
+                          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        </svg>
                       </div>
                     ) : (
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-sm font-medium text-gray-600">
+                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
                     )}
-                  </div>
-                  
-                  {msg.role === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-white">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                    
+                    {/* Message */}
+                    <div className="flex-1 pt-1">
+                      <div className="text-xs text-gray-400 mb-1">
+                        {msg.role === 'assistant' ? 'AI' : 'You'}
+                      </div>
+                      {msg.type === 'progress' ? (
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Loader2 size={14} className="animate-spin" />
+                          <span className="text-sm">{msg.content}</span>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 text-sm leading-relaxed">{msg.content}</p>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
               
-              {isAgentRunning && currentStep && (
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-                    <Loader2 size={14} className="animate-spin text-white" />
-                  </div>
-                  <div className="bg-gray-100 rounded-2xl px-4 py-3">
-                    <p className="text-sm text-gray-600">{currentStep}</p>
+              {/* Agent thinking indicator */}
+              {agentThinking && (
+                <div className="mb-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                      <Loader2 size={14} className="animate-spin text-white" />
+                    </div>
+                    <div className="flex-1 pt-1">
+                      <div className="text-xs text-gray-400 mb-1">AI</div>
+                      <p className="text-gray-500 text-sm">{currentStep || 'Thinking...'}</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -559,29 +660,31 @@ const WorkspacePage = () => {
             </div>
           </div>
           
-          {/* Input Area */}
+          {/* Chat Input */}
           <div className="p-4 border-t border-gray-100">
-            <div className="max-w-2xl mx-auto">
-              <div className="relative bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden focus-within:border-gray-300 focus-within:shadow-sm transition-all">
+            <div className="max-w-xl mx-auto">
+              <div className="relative">
                 <textarea
+                  ref={inputRef}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={workspaceId ? "Ask to modify your project..." : "Describe what you want to build..."}
-                  className="w-full bg-transparent text-gray-800 placeholder-gray-400 resize-none outline-none p-4 pr-14 min-h-[56px] max-h-[120px]"
+                  placeholder={hasFiles ? "Ask me to make changes..." : "Describe the app you want to build..."}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-12 text-gray-800 placeholder-gray-400 text-sm resize-none outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-100 transition-all"
                   data-testid="chat-input"
                   rows={1}
+                  style={{ minHeight: '48px', maxHeight: '120px' }}
                 />
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!inputMessage.trim() || isAgentRunning}
-                  className="absolute bottom-3 right-3 p-2 bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors"
+                  className="absolute bottom-2.5 right-2.5 p-1.5 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg transition-colors"
                   data-testid="send-btn"
                 >
                   {isAgentRunning ? (
-                    <Loader2 size={18} className="animate-spin" />
+                    <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} />
                   )}
                 </button>
               </div>
@@ -589,122 +692,185 @@ const WorkspacePage = () => {
           </div>
         </div>
         
-        {/* Right Panel - Code/Preview/Terminal */}
-        {rightPanelOpen && (
-          <div className="w-1/2 flex flex-col bg-white">
-            {/* Panel Header */}
-            <div className="h-10 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4">
-              <div className="flex items-center gap-2 text-gray-600">
-                {rightPanelMode === 'code' && <><Code size={14} /> Code Editor</>}
-                {rightPanelMode === 'preview' && <><Eye size={14} /> Preview</>}
-                {rightPanelMode === 'terminal' && <><Terminal size={14} /> Terminal</>}
-              </div>
+        {/* Right Panel - Code/Preview */}
+        <div className="w-1/2 flex flex-col bg-[#1e1e1e]">
+          {/* Panel Header */}
+          <div className="h-10 bg-[#252526] border-b border-[#1e1e1e] flex items-center justify-between px-3 flex-shrink-0">
+            <div className="flex items-center gap-1">
               <button
-                onClick={() => setRightPanelOpen(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
-                data-testid="close-panel-btn"
+                onClick={() => setRightPanelMode('code')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded text-sm transition-colors ${
+                  rightPanelMode === 'code'
+                    ? 'bg-[#1e1e1e] text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                data-testid="code-tab"
               >
-                <X size={16} />
+                <Code size={14} />
+                Code
+              </button>
+              <button
+                onClick={() => setRightPanelMode('preview')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded text-sm transition-colors ${
+                  rightPanelMode === 'preview'
+                    ? 'bg-[#1e1e1e] text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                data-testid="preview-tab"
+              >
+                <Eye size={14} />
+                Preview
               </button>
             </div>
             
-            {/* Panel Content */}
-            <div className="flex-1 flex overflow-hidden">
-              {rightPanelMode === 'code' && (
-                <>
-                  {/* File Explorer */}
-                  <div className="w-48 border-r border-gray-200 overflow-y-auto bg-white">
-                    <div className="px-3 py-2 text-xs text-gray-400 uppercase font-medium">Files</div>
-                    {hasFiles ? (
-                      <FileTree 
-                        files={files} 
+            {/* Actions */}
+            <div className="flex items-center gap-1">
+              {rightPanelMode === 'code' && selectedFile && (
+                <button
+                  onClick={copyCode}
+                  className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                  title="Copy code"
+                >
+                  <Copy size={14} />
+                </button>
+              )}
+              {rightPanelMode === 'preview' && (
+                <DeviceSelector device={previewDevice} onChange={setPreviewDevice} />
+              )}
+              <button
+                onClick={() => setTerminalOpen(!terminalOpen)}
+                className={`p-1.5 rounded transition-colors ${
+                  terminalOpen ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
+                title="Toggle terminal"
+              >
+                <Terminal size={14} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Content Area */}
+          <div className="flex-1 flex overflow-hidden">
+            {rightPanelMode === 'code' ? (
+              <>
+                {/* File Explorer */}
+                <div className="w-48 bg-[#252526] border-r border-[#1e1e1e] overflow-y-auto flex-shrink-0">
+                  <div className="px-3 py-2 text-xs text-gray-500 uppercase font-medium">Explorer</div>
+                  {hasFiles ? (
+                    <FileTree
+                      files={files}
+                      selectedFile={selectedFile}
+                      onSelectFile={setSelectedFile}
+                    />
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-gray-500">No files</div>
+                  )}
+                </div>
+                
+                {/* Code Editor */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {selectedFile ? (
+                    <>
+                      <EditorTabs
+                        files={files}
                         selectedFile={selectedFile}
                         onSelectFile={setSelectedFile}
                       />
-                    ) : (
-                      <div className="px-3 py-4 text-sm text-gray-400">
-                        No files yet
+                      <div className="flex-1 overflow-hidden">
+                        <CodeEditor
+                          code={files[selectedFile]}
+                          filename={selectedFile}
+                          onChange={(newCode) => {
+                            setFiles(prev => ({
+                              ...prev,
+                              [selectedFile]: newCode
+                            }));
+                          }}
+                        />
                       </div>
-                    )}
-                  </div>
-                  
-                  {/* Editor */}
-                  <div className="flex-1 flex flex-col">
-                    {selectedFile && (
-                      <>
-                        {/* File tabs */}
-                        <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center px-2">
-                          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-t border border-b-0 border-gray-200 text-sm text-gray-700">
-                            <span>{selectedFile}</span>
-                            <button className="text-gray-400 hover:text-gray-600">
-                              <X size={12} />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        {/* Code area */}
-                        <div className="flex-1 overflow-auto">
-                          <CodeEditor
-                            code={files[selectedFile]}
-                            filename={selectedFile}
-                            onChange={(newCode) => {
-                              setFiles(prev => ({
-                                ...prev,
-                                [selectedFile]: newCode
-                              }));
-                            }}
-                          />
-                        </div>
-                      </>
-                    )}
-                    
-                    {!selectedFile && hasFiles && (
-                      <div className="flex-1 flex items-center justify-center text-gray-400">
-                        Select a file to edit
-                      </div>
-                    )}
-                    
-                    {!hasFiles && (
-                      <div className="flex-1 flex items-center justify-center text-gray-400">
-                        Generate a project to see code
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-              
-              {rightPanelMode === 'preview' && (
-                <div className="flex-1 flex items-center justify-center bg-gray-50">
-                  {hasFiles ? (
-                    <div className="text-center">
-                      <Eye size={48} className="mx-auto mb-4 text-gray-300" />
-                      <p className="text-gray-500 mb-4">Preview coming soon</p>
-                      <button
-                        onClick={() => setRightPanelMode('code')}
-                        className="text-cyan-600 hover:text-cyan-700 text-sm"
-                      >
-                        View code instead →
-                      </button>
-                    </div>
+                    </>
                   ) : (
-                    <p className="text-gray-400">Generate a project first</p>
+                    <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+                      {hasFiles ? 'Select a file to view' : 'Generate a project to see code'}
+                    </div>
                   )}
                 </div>
-              )}
-              
-              {rightPanelMode === 'terminal' && (
-                <div className="flex-1 bg-gray-900 p-4 font-mono text-sm">
-                  <div className="text-green-400">
-                    $ melus-ai workspace {workspaceId || 'new'}
+              </>
+            ) : (
+              /* Preview Mode */
+              <div className="flex-1 flex flex-col bg-gray-100">
+                {/* Preview toolbar */}
+                <div className="h-10 bg-white border-b border-gray-200 flex items-center justify-between px-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-red-400" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                      <div className="w-3 h-3 rounded-full bg-green-400" />
+                    </div>
+                    <div className="ml-4 px-3 py-1 bg-gray-100 rounded text-xs text-gray-500 flex items-center gap-2">
+                      <span>preview.melus.ai</span>
+                    </div>
                   </div>
-                  <div className="text-gray-400 mt-2">
-                    Terminal functionality coming soon...
+                  <div className="flex items-center gap-1">
+                    <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded">
+                      <RefreshCw size={14} />
+                    </button>
+                    <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded">
+                      <ExternalLink size={14} />
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
+                
+                {/* Preview content */}
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div 
+                    className={`bg-white rounded-lg shadow-lg overflow-hidden transition-all ${
+                      previewDevice === 'desktop' ? 'w-full h-full' :
+                      previewDevice === 'tablet' ? 'w-[768px] h-full' :
+                      'w-[375px] h-full'
+                    }`}
+                  >
+                    {hasFiles ? (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <div className="text-center">
+                          <Eye size={48} className="mx-auto mb-4 text-gray-300" />
+                          <p className="text-sm">Live preview coming soon</p>
+                          <p className="text-xs text-gray-300 mt-1">View your code in the Code tab</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                        Generate a project first
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+          
+          {/* Terminal Panel */}
+          {terminalOpen && (
+            <div className="h-40 bg-[#1e1e1e] border-t border-gray-700 flex-shrink-0">
+              <div className="h-7 bg-[#252526] flex items-center justify-between px-3 border-b border-gray-700">
+                <span className="text-xs text-gray-400">Terminal</span>
+                <button
+                  onClick={() => setTerminalOpen(false)}
+                  className="p-0.5 text-gray-400 hover:text-white"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+              <div className="p-3 font-mono text-xs text-gray-300 overflow-y-auto h-[calc(100%-28px)]">
+                {terminalOutput.map((line, i) => (
+                  <div key={i} className={line.includes('✓') ? 'text-green-400' : line.includes('Error') ? 'text-red-400' : ''}>
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Credit Modal */}
@@ -716,39 +882,39 @@ const WorkspacePage = () => {
       {/* Deploy Modal */}
       {showDeployModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Deploy to GitHub</h3>
             
             {githubStatus?.connected ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-green-600 text-sm">
+                <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 px-3 py-2 rounded-lg">
                   <Check size={16} />
-                  Connected as {githubStatus.username}
+                  Connected as <span className="font-medium">{githubStatus.username}</span>
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Repository Name</label>
+                  <label className="block text-sm text-gray-600 mb-1.5">Repository Name</label>
                   <input
                     type="text"
                     value={repoName}
                     onChange={(e) => setRepoName(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-gray-300"
-                    placeholder="my-project"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 text-sm focus:outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-100"
+                    placeholder="my-awesome-app"
                     data-testid="repo-name-input"
                   />
                 </div>
                 
-                <div className="flex gap-3">
+                <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowDeployModal(false)}
-                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                    className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handlePushToGithub}
                     disabled={deployLoading || !repoName.trim()}
-                    className="flex-1 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
                     data-testid="push-github-btn"
                   >
                     {deployLoading ? (
@@ -761,11 +927,14 @@ const WorkspacePage = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-4">
-                <p className="text-gray-500 mb-4">Connect your GitHub account to deploy</p>
+              <div className="text-center py-6">
+                <div className="w-12 h-12 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <GitBranch size={24} className="text-gray-400" />
+                </div>
+                <p className="text-gray-600 mb-4">Connect your GitHub account to deploy</p>
                 <button
                   onClick={() => window.open(`${API_BASE}/api/github/auth/login`, '_blank')}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                  className="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-colors"
                 >
                   Connect GitHub
                 </button>
