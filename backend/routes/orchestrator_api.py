@@ -6,7 +6,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import uuid
 
-from models.orchestrator_models import (
+from orchestrator_models import (
     Objective, ObjectiveCreate, ObjectiveStatus, ObjectiveType,
     Task, TaskStatus, Agent, AgentRole, PerformanceLog,
     AutonomousLoop, LoopState
