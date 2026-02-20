@@ -1,19 +1,35 @@
 {
-  "name": "debug-test-project_proj_899",
+  "name": "debug-test-project",
   "version": "1.0.0",
+  "description": "A comprehensive full stack web application intended to facilitate debugging and testing of features and integrations.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "build": "webpack --mode production",
+    "test": "jest --coverage",
+    "cypress:open": "cypress open"
+  },
   "dependencies": {
-    "express": "4.17.1",
-    "react": "17.0.0",
-    "react-dom": "17.0.0",
-    "bootstrap": "5.1.3",
-    "mongoose": "5.13.5",
-    "jest": "27.0.0",
-    "cypress": "9.0.0",
-    "webpack": "5.38.1",
-    "webpack-cli": "4.7.2",
-    "babel-loader": "8.2.2",
-    "@babel/core": "7.14.3",
-    "@babel/preset-env": "7.14.2",
-    "@babel/preset-react": "7.13.13"
+    "express": "^4.17.1",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "bootstrap": "^5.1.3",
+    "mongoose": "^5.13.5"
+  },
+  "devDependencies": {
+    "jest": "^27.0.0",
+    "cypress": "^9.0.0",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2",
+    "babel-loader": "^8.2.2",
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.2",
+    "@babel/preset-react": "^7.13.13"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "testPathIgnorePatterns": ["/node_modules/", "/cypress/"]
   }
 }

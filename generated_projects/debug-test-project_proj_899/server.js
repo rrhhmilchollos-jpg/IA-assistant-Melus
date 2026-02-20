@@ -8,7 +8,12 @@ mongoose.connect('mongodb://localhost:27017/debugTestDB', {
 });
 
 const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
+db.on('error', (err) => {
+  console.error('connection error:', err);
+  app.use((req, res) => {
+    res.status(500).send('Database connection error');
+  });
+});
 db.once('open', function() {
   console.log('Connected to MongoDB');
 });
