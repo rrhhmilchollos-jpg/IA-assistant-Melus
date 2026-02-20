@@ -31,10 +31,19 @@ class ChatMessage(BaseModel):
 def get_db(request: Request):
     return request.app.state.db
 
-def get_user_id(request: Request) -> str:
-    """Get user ID from session token"""
+async def get_user_id(request: Request) -> str:
+    """Get user ID from session token - validates against DB"""
     token = request.headers.get("X-Session-Token")
-    # For now return a default - in production would validate token
+    if not token:
+        return "anonymous"
+    
+    db = get_db(request)
+    user = await db.users.find_one({"session_token": token}, {"user_id": 1})
+    
+    if user:
+        return user["user_id"]
+    
+    # Fallback to token itself for testing
     return token or "anonymous"
 
 # ============= PROJECT ENDPOINTS =============
