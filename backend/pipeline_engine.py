@@ -653,7 +653,7 @@ Return the complete fixed files.
     # ============= HELPER METHODS =============
     
     async def _save_files(self, project_id: str, project_name: str, files: List[Dict]) -> Path:
-        """Save generated files to disk"""
+        """Save generated files to disk with WebSocket notifications"""
         safe_name = "".join(c for c in project_name if c.isalnum() or c in (' ', '-', '_')).strip()
         safe_name = safe_name.replace(' ', '_').lower()
         
@@ -666,6 +666,10 @@ Return the complete fixed files.
             
             with open(file_path, "w") as f:
                 f.write(file["content"])
+            
+            # Stream file creation notification
+            await stream_file_created(project_id, file["path"], len(file["content"]))
+            await stream_log(project_id, "file", f"Created: {file['path']}", {"size": len(file["content"])})
         
         return project_path
     
