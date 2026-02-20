@@ -20,12 +20,13 @@
 4. **Validation** - Valida código, detecta errores
 5. **Completed** - Proyecto listo para preview/download
 
-### Sistema de Aprendizaje Continuo (NUEVO)
+### Sistema de Aprendizaje Continuo ✅
 Implementado en `/app/backend/learning/`:
 
 1. **Vector Memory Store** (`vector_memory.py`)
    - Almacena embeddings de prompts, código, errores y soluciones
    - Búsqueda semántica para contexto relevante
+   - Soporta OpenAI embeddings (text-embedding-3-small) o fallback hash-based
    - Puntuación de calidad por entrada
 
 2. **Feedback System** (`feedback_system.py`)
@@ -49,6 +50,20 @@ Implementado en `/app/backend/learning/`:
    - Aprende de generaciones exitosas
    - Proporciona contexto mejorado
 
+### WebSocket Streaming ✅
+Implementado en `/app/backend/websocket_manager.py`:
+- Streaming en tiempo real de logs del pipeline
+- Notificaciones de creación de archivos
+- Actualizaciones de fase en vivo
+- Conexión: `ws://host/api/ws/projects/{project_id}`
+
+### WorkspacePage Integrado ✅
+- Carga proyectos del pipeline
+- Conecta a WebSocket para logs en tiempo real
+- Sistema de rating integrado
+- Editor de código con preview
+- Terminal para ver logs
+
 ### API de Aprendizaje
 ```
 POST /api/learning/initialize - Inicializar sistema
@@ -62,36 +77,11 @@ GET  /api/learning/metrics/* - Métricas detalladas
 GET  /api/learning/prompts/* - Rendimiento de prompts
 ```
 
-### Frontend Learning Dashboard
-- Ruta: `/learning`
-- Tabs: Overview, Memory, Metrics, Settings
-- Visualización de métricas
-- Configuración de aprendizaje automático
-
-### Interfaz de Chat como Control de Proyectos
-- El chat interpreta órdenes de proyecto (no conversación)
-- `Usuario → Orden → Sistema ejecuta → Usuario ajusta`
-- Barra de progreso visual de las 5 fases
-- Toast notifications de estado
-
-### Backend API Pipeline
-```
-POST /api/pipeline/projects - Crear proyecto
-GET  /api/pipeline/projects - Listar proyectos del usuario
-GET  /api/pipeline/projects/{id} - Detalles del proyecto
-GET  /api/pipeline/projects/{id}/status - Estado (para polling)
-POST /api/pipeline/projects/{id}/iterate - Modificación incremental
-POST /api/pipeline/projects/{id}/chat - Chat de control
-GET  /api/pipeline/projects/{id}/files - Listar archivos
-GET  /api/pipeline/projects/{id}/download - Descargar ZIP
-GET  /api/pipeline/preview/{id} - Preview HTML
-POST /api/pipeline/projects/{id}/regenerate - Regenerar proyecto
-```
-
-### Persistencia
-- MongoDB para proyectos, usuarios, estado, learning data
-- Archivos en disco: `/app/generated_projects/`
-- ZIP on-demand para descarga
+### Frontend
+- **HomePage** - Chat de control + progreso visual + botón Learning System
+- **LearningDashboard** (`/learning`) - Visualiza métricas, memoria, feedback
+- **WorkspacePage** (`/workspace`) - IDE completo con preview, código y terminal
+- **ProjectRating** - Componente de rating por estrellas
 
 ---
 
@@ -100,28 +90,29 @@ POST /api/pipeline/projects/{id}/regenerate - Regenerar proyecto
 ```
 /app
 ├── backend/
-│   ├── server.py                    # FastAPI principal
-│   ├── pipeline_engine.py           # Motor de 5 fases con LLM + Learning
+│   ├── server.py                    # FastAPI con WebSocket
+│   ├── pipeline_engine.py           # Motor de 5 fases + streaming
+│   ├── websocket_manager.py         # NUEVO: WebSocket streaming
 │   ├── code_generator.py            # Generador de proyectos
-│   ├── learning/                    # NUEVO: Sistema de aprendizaje
+│   ├── learning/                    # Sistema de aprendizaje
 │   │   ├── __init__.py
-│   │   ├── vector_memory.py         # Memoria vectorial
+│   │   ├── vector_memory.py         # Memoria vectorial + OpenAI embeddings
 │   │   ├── feedback_system.py       # Sistema de feedback
 │   │   ├── prompt_optimizer.py      # Optimización de prompts
 │   │   ├── metrics_tracker.py       # Tracking de métricas
 │   │   └── learning_engine.py       # Motor principal
 │   ├── routes/
 │   │   ├── pipeline_api.py          # API del pipeline
-│   │   ├── learning_api.py          # NUEVO: API de aprendizaje
+│   │   ├── learning_api.py          # API de aprendizaje
 │   │   └── ...
 ├── frontend/
 │   └── src/
 │       ├── pages/
-│       │   ├── HomePage.jsx         # Chat de control + progreso visual
-│       │   ├── LearningDashboard.jsx # NUEVO: Dashboard de aprendizaje
-│       │   └── WorkspacePage.jsx    # IDE con preview
+│       │   ├── HomePage.jsx         # Chat de control + progreso
+│       │   ├── LearningDashboard.jsx # Dashboard de aprendizaje
+│       │   └── WorkspacePage.jsx    # IDE con WebSocket + rating
 │       └── components/
-│           └── ProjectRating.jsx    # NUEVO: Componente de rating
+│           └── ProjectRating.jsx    # Componente de rating
 ├── generated_projects/              # Proyectos generados
 └── memory/PRD.md
 ```
@@ -130,9 +121,10 @@ POST /api/pipeline/projects/{id}/regenerate - Regenerar proyecto
 
 ## Stack Tecnológico
 
-- **Frontend**: React, TailwindCSS, shadcn/ui
-- **Backend**: FastAPI, Pydantic, BackgroundTasks
+- **Frontend**: React, TailwindCSS, shadcn/ui, WebSocket client
+- **Backend**: FastAPI, Pydantic, BackgroundTasks, WebSocket
 - **LLM**: OpenAI GPT-4o via Emergent Integrations
+- **Embeddings**: OpenAI text-embedding-3-small (opcional)
 - **Database**: MongoDB Atlas
 - **Storage**: Disco local + ZIP
 
@@ -140,19 +132,15 @@ POST /api/pipeline/projects/{id}/regenerate - Regenerar proyecto
 
 ## Próximas Mejoras
 
-### P0 - Crítico
-1. ~~Sistema de Aprendizaje Continuo~~ ✅ COMPLETADO
-2. Integrar embeddings reales de OpenAI para mejor búsqueda semántica
-
 ### P1 - Alta
-3. Streaming de progreso vía WebSocket
-4. Editor de código funcional en WorkspacePage
-5. Regenerar archivos individuales
+1. Editor de código funcional completo en WorkspacePage
+2. Regenerar archivos individuales
+3. Mejorar parseo de código LLM
 
 ### P2 - Media
-6. Export a GitHub
-7. Deploy automático
-8. Templates predefinidos
+4. Export a GitHub
+5. Deploy automático
+6. Templates predefinidos
 
 ---
 
@@ -161,12 +149,21 @@ POST /api/pipeline/projects/{id}/regenerate - Regenerar proyecto
 - Los proyectos se asocian al user_id del session_token
 - Preview disponible en `/api/pipeline/preview/{project_id}`
 - Learning Dashboard en `/learning`
+- WebSocket en `ws://host/api/ws/projects/{project_id}`
 
 ---
 
 ## Changelog
 
-### 2026-02-20
+### 2026-02-20 (Sesión 2)
+- ✅ Integrado OpenAI embeddings (text-embedding-3-small) en Vector Memory
+- ✅ Implementado WebSocket streaming para logs en tiempo real
+- ✅ Integrado WorkspacePage con pipeline y WebSocket
+- ✅ Añadido sistema de rating en WorkspacePage
+- ✅ Añadido botón "Learning System" en HomePage
+- ✅ Stream de notificaciones de archivos creados
+
+### 2026-02-20 (Sesión 1)
 - ✅ Implementado Sistema de Aprendizaje Continuo completo
 - ✅ Creado Vector Memory Store para embeddings
 - ✅ Creado Feedback System con ratings y métricas implícitas
@@ -175,5 +172,3 @@ POST /api/pipeline/projects/{id}/regenerate - Regenerar proyecto
 - ✅ Creado Learning Engine como coordinador
 - ✅ Creada API REST completa para Learning System
 - ✅ Creado Learning Dashboard en frontend
-- ✅ Integrado aprendizaje con pipeline de generación
-- ✅ Añadido botón Learning System en HomePage
