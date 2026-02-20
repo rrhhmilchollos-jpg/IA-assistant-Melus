@@ -313,6 +313,16 @@ const HomePage = () => {
             <Bot size={18} />
             <span className="font-medium">Orchestrator</span>
           </button>
+          
+          {/* Learning Dashboard Button */}
+          <button
+            onClick={() => navigate('/learning')}
+            className="w-full flex items-center gap-2 px-4 py-2.5 mt-2 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border border-purple-200 rounded-lg transition-colors text-purple-700"
+            data-testid="learning-btn"
+          >
+            <Sparkles size={18} />
+            <span className="font-medium">Learning System</span>
+          </button>
         </div>
         
         {/* Projects List */}
