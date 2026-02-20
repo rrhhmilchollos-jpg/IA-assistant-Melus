@@ -474,23 +474,45 @@ const OrchestratorPage = () => {
                       {obj.status === 'pending' && (
                         <button
                           onClick={() => startObjective(obj.id)}
-                          className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg"
-                          title="Start Objective"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-700"
+                          title="Start Generation"
                         >
-                          <Play size={18} />
+                          <Play size={14} />
+                          Generate
                         </button>
                       )}
                       {obj.status === 'in_progress' && (
-                        <button className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg" title="Pause">
-                          <Pause size={18} />
-                        </button>
+                        <div className="flex items-center gap-2 text-cyan-600">
+                          <Loader2 size={18} className="animate-spin" />
+                          <span className="text-sm">Generating...</span>
+                        </div>
+                      )}
+                      {obj.status === 'completed' && (
+                        <>
+                          <button
+                            onClick={() => openPreview(obj.id)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200"
+                            title="Preview App"
+                          >
+                            <Eye size={14} />
+                            Preview
+                          </button>
+                          <button
+                            onClick={() => downloadProject(obj.id)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200"
+                            title="Download ZIP"
+                          >
+                            <Download size={14} />
+                            Download
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => {
                           loadObjectiveTasks(obj.id);
                           setSelectedTab('tasks');
                         }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
                         title="View Tasks"
                       >
                         <Layers size={18} />
