@@ -898,6 +898,52 @@ const OrchestratorPage = () => {
           </div>
         </div>
       )}
+
+      {/* Project Preview Modal */}
+      {showPreview && previewObjective && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl overflow-hidden max-w-6xl w-full mx-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-semibold text-gray-800">Project Preview</h3>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Live Preview</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => downloadProject(previewObjective)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200"
+                >
+                  <Download size={14} />
+                  Download ZIP
+                </button>
+                <button
+                  onClick={() => window.open(`${API_BASE}/api/orchestrator/preview/${previewObjective}`, '_blank')}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
+                >
+                  Open in New Tab
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPreview(false);
+                    setPreviewObjective(null);
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 bg-gray-100 p-4">
+              <iframe
+                src={`${API_BASE}/api/orchestrator/preview/${previewObjective}`}
+                className="w-full h-[70vh] bg-white rounded-lg border border-gray-200 shadow-inner"
+                title="Project Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
