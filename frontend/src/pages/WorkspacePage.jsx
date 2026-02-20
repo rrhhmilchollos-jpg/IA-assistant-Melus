@@ -30,42 +30,18 @@ import {
   Smartphone,
   Monitor,
   Tablet,
-  Star
+  Star,
+  Wand2,
+  FileCode,
+  Trash2
 } from 'lucide-react';
 import CreditModal from '../components/CreditModal';
 import ProjectRating from '../components/ProjectRating';
+import MonacoCodeEditor from '../components/MonacoCodeEditor';
 import { Toaster, toast } from '../components/ui/sonner';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 const WS_BASE = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
-
-// Code editor component
-const CodeEditor = ({ code, filename, onChange, readOnly = false }) => {
-  const lineCount = (code || '').split('\n').length;
-  
-  return (
-    <div className="h-full flex bg-[#1e1e1e] font-mono text-sm overflow-hidden">
-      {/* Line numbers */}
-      <div className="py-4 pr-4 pl-4 text-right text-gray-500 select-none bg-[#1e1e1e] border-r border-gray-800">
-        {Array.from({ length: lineCount }, (_, i) => (
-          <div key={i + 1} className="leading-6 text-xs">
-            {i + 1}
-          </div>
-        ))}
-      </div>
-      
-      {/* Code area */}
-      <textarea
-        value={code || ''}
-        onChange={(e) => onChange?.(e.target.value)}
-        readOnly={readOnly}
-        className="flex-1 bg-transparent text-gray-300 p-4 resize-none outline-none leading-6 overflow-auto"
-        spellCheck={false}
-        data-testid="code-editor"
-      />
-    </div>
-  );
-};
 
 // File tree component with folder structure
 const FileTree = ({ files, selectedFile, onSelectFile }) => {
