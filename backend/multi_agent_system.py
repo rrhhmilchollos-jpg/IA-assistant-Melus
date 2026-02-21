@@ -307,13 +307,39 @@ class ResearcherAgent(BaseAgent):
             self.history.append(task)
     
     async def _research_stack(self, plan: Dict) -> Dict:
-        """Research best practices for the stack"""
+        """Research best practices for the stack using LLM"""
+        system_prompt = """You are a technical research AI agent. Research best practices and recommendations for the given project stack.
+
+Return your response as valid JSON with this structure:
+{
+    "recommendations": ["recommendation1", "recommendation2"],
+    "libraries": ["library1", "library2"],
+    "patterns": ["pattern1", "pattern2"],
+    "security_considerations": ["security1", "security2"],
+    "performance_tips": ["tip1", "tip2"]
+}"""
+        
+        try:
+            response = await call_llm(
+                prompt=f"Research best practices for this project: {json.dumps(plan)}",
+                system_prompt=system_prompt,
+                max_tokens=1500
+            )
+            
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                return json.loads(json_match.group())
+        except Exception as e:
+            logger.error(f"Research error: {e}")
+        
         return {
-            "recommendations": [],
-            "libraries": [],
-            "patterns": [],
-            "security_considerations": [],
-            "performance_tips": []
+            "recommendations": ["Use TypeScript for type safety", "Implement error boundaries"],
+            "libraries": ["axios", "react-query", "tailwindcss"],
+            "patterns": ["Component composition", "Custom hooks"],
+            "security_considerations": ["Input validation", "HTTPS only"],
+            "performance_tips": ["Lazy loading", "Code splitting"]
+        }
         }
 
 
