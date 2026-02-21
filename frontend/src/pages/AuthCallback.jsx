@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { authAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -7,44 +7,64 @@ import { Loader2 } from 'lucide-react';
 const AuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, checkAuth } = useAuth();
   const hasProcessed = useRef(false);
 
   useEffect(() => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    
     if (hasProcessed.current) return;
     hasProcessed.current = true;
 
     const processAuth = async () => {
       try {
-        // Extract session_id from URL fragment
-        const hash = location.hash;
-        const sessionIdMatch = hash.match(/session_id=([^&]+)/);
-        
-        if (!sessionIdMatch) {
-          navigate('/login');
+        // Check for error in URL params
+        const error = searchParams.get('error');
+        if (error) {
+          console.error('OAuth error:', error);
+          navigate(`/?error=${error}`);
           return;
         }
 
-        const sessionId = sessionIdMatch[1];
+        // CASE 1: Token from self-hosted OAuth (Google/Facebook)
+        const token = searchParams.get('token');
+        if (token) {
+          // Store the token
+          localStorage.setItem('session_token', token);
+          
+          // Fetch user data with the new token
+          try {
+            const userData = await authAPI.getCurrentUser();
+            login(userData);
+            navigate('/home', { replace: true });
+          } catch (err) {
+            console.error('Error fetching user after OAuth:', err);
+            navigate('/?error=auth_failed');
+          }
+          return;
+        }
 
-        // Exchange session_id for session_token
-        const response = await authAPI.createSession(sessionId);
+        // CASE 2: Legacy session_id from Emergent OAuth (keeping for backwards compatibility)
+        const hash = location.hash;
+        const sessionIdMatch = hash.match(/session_id=([^&]+)/);
         
-        // Set user in context
-        login(response.user);
+        if (sessionIdMatch) {
+          const sessionId = sessionIdMatch[1];
+          const response = await authAPI.createSession(sessionId);
+          login(response.user);
+          navigate('/home', { replace: true, state: { user: response.user } });
+          return;
+        }
 
-        // Redirect to home
-        navigate('/home', { replace: true, state: { user: response.user } });
+        // No valid auth params found
+        navigate('/');
       } catch (error) {
         console.error('Auth error:', error);
-        navigate('/login');
+        navigate('/?error=auth_error');
       }
     };
 
     processAuth();
-  }, [location, navigate, login]);
+  }, [location, navigate, login, searchParams, checkAuth]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
