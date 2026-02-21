@@ -5,11 +5,15 @@ const App = () => {
     const [count, setCount] = useState(0);
     
     const increment = () => {
-        setCount(count + 1);
+        setCount(prevCount => prevCount + 1);
     };
 
     const decrement = () => {
-        setCount(count - 1);
+        setCount(prevCount => prevCount - 1);
+    };
+
+    const reset = () => {
+        setCount(0);
     };
 
     return (
@@ -20,6 +24,7 @@ const App = () => {
                 <span className="count-value">{count}</span>
                 <button onClick={increment} className="counter-button" id="increment">+</button>
             </div>
+            <button onClick={reset} className="reset-button" id="reset">Reset</button>
         </div>
     );
 };
