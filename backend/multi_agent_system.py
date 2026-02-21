@@ -384,11 +384,40 @@ class DeveloperAgent(BaseAgent):
             self.history.append(task)
     
     async def _generate_code(self, plan: Dict, research: Dict) -> Dict:
-        """Generate code files"""
+        """Generate code files using LLM"""
+        system_prompt = """You are a code generation AI agent. Generate complete, working code files for the project.
+
+Return your response as valid JSON with this structure:
+{
+    "files": [
+        {"path": "src/App.jsx", "content": "// code here"},
+        {"path": "src/index.js", "content": "// code here"}
+    ],
+    "dependencies": {"react": "^18.2.0"},
+    "scripts": {"start": "react-scripts start"}
+}"""
+        
+        try:
+            response = await call_llm(
+                prompt=f"Generate code for this project plan: {json.dumps(plan)}\nResearch: {json.dumps(research)}",
+                system_prompt=system_prompt,
+                max_tokens=4000
+            )
+            
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                return json.loads(json_match.group())
+        except Exception as e:
+            logger.error(f"Code generation error: {e}")
+        
         return {
-            "files": [],
-            "dependencies": {},
-            "scripts": {}
+            "files": [
+                {"path": "src/App.jsx", "content": "import React from 'react';\n\nexport default function App() {\n  return <div>Hello World</div>;\n}"},
+                {"path": "src/index.js", "content": "import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\n\nReactDOM.createRoot(document.getElementById('root')).render(<App />);"}
+            ],
+            "dependencies": {"react": "^18.2.0", "react-dom": "^18.2.0"},
+            "scripts": {"start": "react-scripts start", "build": "react-scripts build"}
         }
 
 
