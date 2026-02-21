@@ -54,6 +54,7 @@ from routes.sandbox import router as sandbox_router
 from routes.orchestrator_api import router as orchestrator_router
 from routes.pipeline_api import router as pipeline_router
 from routes.learning_api import router as learning_router
+from routes.multi_agent_api import router as multi_agent_router  # New multi-agent system
 
 # Import WebSocket manager
 from websocket_manager import websocket_endpoint, ws_manager
@@ -75,6 +76,7 @@ app.include_router(sandbox_router, prefix="/api")
 app.include_router(orchestrator_router)
 app.include_router(pipeline_router)
 app.include_router(learning_router)
+app.include_router(multi_agent_router)  # Multi-agent system routes
 
 # WebSocket endpoint for project streaming
 @app.websocket("/api/ws/projects/{project_id}")
