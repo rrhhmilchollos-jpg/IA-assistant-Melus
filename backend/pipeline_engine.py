@@ -718,30 +718,120 @@ Return the complete fixed files.
         return {"error": error, "project_id": project_id}
     
     def _parse_json_response(self, response: str) -> Optional[Dict]:
-        """Parse JSON from LLM response"""
+        """
+        Parse JSON from LLM response with enhanced error handling.
+        Handles various formats: raw JSON, markdown code blocks, mixed content.
+        """
+        import re
+        
+        if not response or not response.strip():
+            logger.error("Empty response to parse")
+            return None
+        
+        response = response.strip()
+        
+        # 1. Try direct JSON parse
         try:
-            # Try direct parse
             return json.loads(response)
-        except:
+        except json.JSONDecodeError:
             pass
         
-        # Try to extract JSON from markdown code blocks
-        import re
+        # 2. Try to extract JSON from markdown code blocks
         patterns = [
-            r'```json\s*([\s\S]*?)\s*```',
-            r'```\s*([\s\S]*?)\s*```',
-            r'\{[\s\S]*\}'
+            r'```json\s*([\s\S]*?)\s*```',   # ```json ... ```
+            r'```javascript\s*([\s\S]*?)\s*```',  # ```javascript ... ```
+            r'```\s*([\s\S]*?)\s*```',        # ``` ... ```
         ]
         
         for pattern in patterns:
-            matches = re.findall(pattern, response)
+            matches = re.findall(pattern, response, re.IGNORECASE)
             for match in matches:
                 try:
-                    return json.loads(match)
-                except:
+                    return json.loads(match.strip())
+                except json.JSONDecodeError:
                     continue
         
-        logger.error(f"Could not parse JSON from response: {response[:200]}")
+        # 3. Find JSON object boundaries and extract
+        try:
+            # Find the first { and the matching }
+            start_idx = response.find('{')
+            if start_idx != -1:
+                depth = 0
+                end_idx = start_idx
+                in_string = False
+                escape_next = False
+                
+                for i, char in enumerate(response[start_idx:], start_idx):
+                    if escape_next:
+                        escape_next = False
+                        continue
+                    
+                    if char == '\\':
+                        escape_next = True
+                        continue
+                    
+                    if char == '"' and not escape_next:
+                        in_string = not in_string
+                        continue
+                    
+                    if not in_string:
+                        if char == '{':
+                            depth += 1
+                        elif char == '}':
+                            depth -= 1
+                            if depth == 0:
+                                end_idx = i + 1
+                                break
+                
+                if end_idx > start_idx:
+                    json_str = response[start_idx:end_idx]
+                    try:
+                        return json.loads(json_str)
+                    except json.JSONDecodeError:
+                        pass
+        except Exception as e:
+            logger.debug(f"JSON extraction error: {e}")
+        
+        # 4. Try fixing common JSON issues
+        try:
+            # Remove trailing commas before } or ]
+            fixed = re.sub(r',\s*([}\]])', r'\1', response)
+            # Fix single quotes to double quotes
+            fixed = fixed.replace("'", '"')
+            return json.loads(fixed)
+        except json.JSONDecodeError:
+            pass
+        
+        # 5. Try to find array
+        try:
+            start_idx = response.find('[')
+            if start_idx != -1:
+                end_idx = response.rfind(']')
+                if end_idx > start_idx:
+                    return json.loads(response[start_idx:end_idx + 1])
+        except json.JSONDecodeError:
+            pass
+        
+        # 6. Last resort: Try to extract files array manually
+        try:
+            files_match = re.search(r'"files"\s*:\s*\[([\s\S]*?)\]', response)
+            if files_match:
+                files_content = files_match.group(1)
+                # Try to parse each file object
+                file_objects = re.findall(r'\{[^{}]*"path"[^{}]*"content"[^{}]*\}', files_content, re.DOTALL)
+                if file_objects:
+                    files = []
+                    for fo in file_objects:
+                        try:
+                            files.append(json.loads(fo))
+                        except:
+                            pass
+                    if files:
+                        return {"files": files}
+        except Exception as e:
+            logger.debug(f"File extraction fallback error: {e}")
+        
+        logger.error(f"Could not parse JSON from response: {response[:300]}...")
         return None
     
     async def get_project(self, project_id: str) -> Optional[Dict]:
@@ -756,3 +846,4 @@ Return the complete fixed files.
             {"_id": 0}
         ).sort("created_at", -1).to_list(50)
         return projects
+
