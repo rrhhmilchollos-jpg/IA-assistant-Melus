@@ -38,7 +38,7 @@ db = client[os.environ['DB_NAME']]
 app.state.db = db
 
 # Import routers
-from routes.auth import router as auth_router
+from routes.auth_oauth import router as auth_router  # New OAuth system
 from routes.billing import router as billing_router
 from routes.admin import router as admin_router
 from routes.agents import router as agents_router
