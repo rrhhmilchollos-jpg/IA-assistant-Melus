@@ -9,7 +9,7 @@ import Register from "./pages/Register";
 import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./pages/HomePage";
-import LandingPage from "./pages/LandingPage";
+import LandingPage from "./pages/LandingPageNew";
 import Pricing from "./pages/Pricing";
 import Success from "./pages/Success";
 import AdminPanel from "./pages/AdminPanel";
