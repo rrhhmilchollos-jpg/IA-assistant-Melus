@@ -344,8 +344,8 @@ async def google_auth_callback(request: Request, code: str = None, state: str = 
 @router.get("/facebook")
 async def facebook_auth_redirect(request: Request):
     """Redirect to Facebook OAuth"""
-    if not FACEBOOK_APP_ID:
-        raise HTTPException(status_code=500, detail="Facebook OAuth not configured")
+    if not FACEBOOK_APP_ID or not FACEBOOK_APP_SECRET:
+        return RedirectResponse(url=f"{get_base_url()}/login?error=facebook_not_configured")
     
     state = secrets.token_urlsafe(32)
     
