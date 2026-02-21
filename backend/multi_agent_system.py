@@ -9,9 +9,32 @@ from datetime import datetime
 import logging
 import asyncio
 import json
+import os
 from utils import generate_id, utc_now
 
 logger = logging.getLogger(__name__)
+
+# LLM Integration
+async def call_llm(prompt: str, system_prompt: str = None, max_tokens: int = 4000) -> str:
+    """Call LLM using Emergent integration"""
+    try:
+        from emergentintegrations.llm.chat import chat, Message
+        
+        messages = []
+        if system_prompt:
+            messages.append(Message(role="system", content=system_prompt))
+        messages.append(Message(role="user", content=prompt))
+        
+        response = await chat(
+            api_key=os.environ.get("EMERGENT_LLM_KEY"),
+            model="gpt-4o",
+            messages=messages,
+            max_tokens=max_tokens
+        )
+        return response.message
+    except Exception as e:
+        logger.error(f"LLM call error: {e}")
+        return f"Error calling LLM: {str(e)}"
 
 
 class AgentType(str, Enum):
