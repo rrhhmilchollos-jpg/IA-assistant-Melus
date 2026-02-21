@@ -188,8 +188,9 @@ async def login_user(user_login: UserLogin, response: Response, request: Request
 @router.get("/google")
 async def google_auth_redirect(request: Request):
     """Redirect to Google OAuth"""
-    if not GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=500, detail="Google OAuth not configured")
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        # Redirect to login page with error message instead of 500
+        return RedirectResponse(url=f"{get_base_url()}/login?error=google_not_configured")
     
     # Generate state for CSRF protection
     state = secrets.token_urlsafe(32)
