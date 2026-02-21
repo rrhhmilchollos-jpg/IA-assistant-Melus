@@ -340,7 +340,6 @@ Return your response as valid JSON with this structure:
             "security_considerations": ["Input validation", "HTTPS only"],
             "performance_tips": ["Lazy loading", "Code splitting"]
         }
-        }
 
 
 class DeveloperAgent(BaseAgent):
