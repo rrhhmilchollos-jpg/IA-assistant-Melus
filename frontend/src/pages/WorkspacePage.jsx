@@ -1265,9 +1265,6 @@ I'm working on your request. This may take a moment...`);
           </div>
         </div>
       )}
-    </div>
-  );
-};
 
       {/* Regenerate File Modal */}
       {showRegenerateModal && (
