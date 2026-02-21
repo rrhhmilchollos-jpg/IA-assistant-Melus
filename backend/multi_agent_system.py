@@ -210,8 +210,44 @@ class PlannerAgent(BaseAgent):
             self.history.append(task)
     
     async def _generate_plan(self, prompt: str) -> Dict:
-        """Generate project plan from prompt"""
-        # This will use the LLM
+        """Generate project plan from prompt using LLM"""
+        system_prompt = """You are a project planning AI agent. Analyze the user's requirements and create a detailed project plan.
+        
+Return your response as valid JSON with this structure:
+{
+    "project_name": "string",
+    "description": "string",
+    "type": "web_app|mobile_app|api|fullstack",
+    "stack": {
+        "frontend": "React + TailwindCSS",
+        "backend": "FastAPI",
+        "database": "MongoDB",
+        "auth": "JWT"
+    },
+    "features": ["feature1", "feature2"],
+    "pages": ["page1", "page2"],
+    "apis": ["/api/endpoint1", "/api/endpoint2"],
+    "estimated_complexity": "low|medium|high",
+    "estimated_files": number
+}"""
+        
+        try:
+            response = await call_llm(
+                prompt=f"Create a project plan for: {prompt}",
+                system_prompt=system_prompt,
+                max_tokens=2000
+            )
+            
+            # Parse JSON from response
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                plan = json.loads(json_match.group())
+                return plan
+        except Exception as e:
+            logger.error(f"Plan generation error: {e}")
+        
+        # Fallback
         return {
             "project_name": f"Project_{generate_id('proj')[:8]}",
             "description": prompt,
