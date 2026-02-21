@@ -28,7 +28,7 @@ FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '')
 
 # Get base URL from environment
 def get_base_url():
-    return os.environ.get('BASE_URL', 'https://adaptive-devflow.preview.emergentagent.com')
+    return os.environ.get('BASE_URL', 'https://melus-dev-studio.preview.emergentagent.com')
 
 # ============= EMAIL/PASSWORD AUTH =============
 

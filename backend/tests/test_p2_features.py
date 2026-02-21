@@ -8,7 +8,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://adaptive-devflow.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://melus-dev-studio.preview.emergentagent.com')
 
 TEST_CREDENTIALS = {
     "email": "rrhh.milchollos@gmail.com",
