@@ -103,7 +103,12 @@ const LandingPage = () => {
     window.location.href = `${API_BASE}/api/auth/google`;
   };
 
-  // Handle GitHub login
+  // Handle Facebook login
+  const handleFacebookAuth = () => {
+    window.location.href = `${API_BASE}/api/auth/facebook`;
+  };
+
+  // Handle GitHub login (disabled for now)
   const handleGitHubAuth = () => {
     window.location.href = `${API_BASE}/api/github/auth`;
   };
