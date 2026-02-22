@@ -1,0 +1,11 @@
+.welcome-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
+/* Ensure no global styles are hiding images */
+img {
+    display: inline-block;
+}
