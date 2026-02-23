@@ -96,6 +96,18 @@ function AppRouter() {
           <LearningDashboard />
         </ProtectedRoute>
       } />
+      {/* AI Builder - Chat interface to build apps */}
+      <Route path="/build" element={
+        <ProtectedRoute>
+          <AIBuilder />
+        </ProtectedRoute>
+      } />
+      {/* Agent Dashboard */}
+      <Route path="/agents" element={
+        <ProtectedRoute>
+          <AgentDashboard />
+        </ProtectedRoute>
+      } />
       {/* Landing page for unauthenticated users, redirect to home for authenticated */}
       <Route path="/" element={<LandingPageRoute />} />
       <Route path="*" element={<Navigate to="/" replace />} />
