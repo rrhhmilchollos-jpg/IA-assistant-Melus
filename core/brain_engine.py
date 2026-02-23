@@ -137,6 +137,7 @@ class BrainEngine:
     ) -> GenerationContext:
         """
         Main entry point for processing a user prompt
+        Supports both simple template generation and full multi-agent pipeline
         """
         # Create context
         context = GenerationContext(
@@ -147,29 +148,56 @@ class BrainEngine:
         self.active_contexts[project_id] = context
         
         try:
-            # Stage 1: Intent Analysis
+            # Stage 1: Intent Analysis (always)
             await self._stage_intent_analysis(context)
             
-            # Stage 2: Template Selection
-            await self._stage_template_selection(context)
-            
-            # Stage 3: Planning
-            await self._stage_planning(context)
-            
-            # Stage 4: Code Generation
-            await self._stage_code_generation(context)
-            
-            # Stage 5: Customization
-            await self._stage_customization(context)
-            
-            # Stage 6: Validation
-            await self._stage_validation(context)
+            # Check if we should use multi-agent pipeline
+            if use_multi_agent and self.orchestrator:
+                # Use full multi-agent pipeline
+                logger.info(f"Using multi-agent pipeline for project {project_id}")
+                
+                result = await self.orchestrator.run_full_pipeline(
+                    prompt=prompt,
+                    project_id=project_id,
+                    intent_type=context.intent_result.intent_type.value if context.intent_result else "web_app",
+                    features=context.intent_result.features if context.intent_result else []
+                )
+                
+                # Update context with results
+                context.files = result.get("files", [])
+                context.metadata["architecture"] = result.get("architecture", {})
+                context.metadata["security_report"] = result.get("security_report", {})
+                context.metadata["deploy_commands"] = result.get("deploy_commands", [])
+                context.metadata["phases"] = result.get("phases", {})
+                
+                if result.get("errors"):
+                    context.errors.extend(result["errors"])
+                    
+            else:
+                # Use simple template-based generation
+                logger.info(f"Using simple pipeline for project {project_id}")
+                
+                # Stage 2: Template Selection
+                await self._stage_template_selection(context)
+                
+                # Stage 3: Planning
+                await self._stage_planning(context)
+                
+                # Stage 4: Code Generation
+                await self._stage_code_generation(context)
+                
+                # Stage 5: Customization with LLM (if available)
+                await self._stage_customization(context)
+                
+                # Stage 6: Validation
+                await self._stage_validation(context)
             
             # Complete
             context.current_stage = PipelineStage.COMPLETE
             await self._notify_update("pipeline_completed", {
                 "project_id": project_id,
-                "files_count": len(context.files)
+                "files_count": len(context.files),
+                "used_multi_agent": use_multi_agent and self.orchestrator is not None
             })
             
         except Exception as e:
