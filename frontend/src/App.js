@@ -18,6 +18,7 @@ import MarketplacePage from "./pages/MarketplacePage";
 import OrchestratorPage from "./pages/OrchestratorPage";
 import LearningDashboard from "./pages/LearningDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
+import AIBuilder from "./pages/AIBuilder";
 
 // Landing page route - shows landing for unauthenticated, redirects to home for authenticated
 function LandingPageRoute() {
