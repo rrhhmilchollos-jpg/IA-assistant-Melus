@@ -1,88 +1,99 @@
 # MelusAI - Product Requirements Document
 
-## Arquitectura v3.0 - Brain Engine & Multi-Agent System
+## Arquitectura v3.0 - Multi-Model AI System
 
 ---
 
-## Estado Actual: ✅ Fase 2 COMPLETADA
+## Estado Actual: ✅ Fase 3 COMPLETADA
 
-### ✅ Brain Engine con GPT-4o
-- `/app/core/brain_engine.py` - Motor central con integración LLM
-- `/app/core/intent_classifier.py` - Clasificador (11 tipos)
-- `/app/core/code_templates.py` - Templates (7 tipos + games)
-- `/app/core/agent_system.py` - Sistema Multi-Agente (5 agentes)
+### ✅ Multi-Model LLM Support
+| Provider | Modelos | Estado |
+|----------|---------|--------|
+| **OpenAI** | GPT-5.2 Codex, GPT-5.1, GPT-4o, O3 | ✅ Activo |
+| **Anthropic** | Claude 4.6 Opus, Claude 4.6 Sonnet, Claude 4.5 | ✅ Activo |
+| **Google** | Gemini 3 Pro, Gemini 3 Flash, Gemini 2.5 Pro | ✅ Activo |
+| **Sora** | Sora 2, Sora 2 Pro (Video) | ✅ Activo |
 
-### ✅ Sistema Multi-Agente (Activo con GPT-4o)
+### ✅ Agent Modes
+| Modo | Descripción | Modelo Default | Focus |
+|------|-------------|----------------|-------|
+| **E-1** | Estable y meticuloso | GPT-4o | Fullstack |
+| **E-1.5** | Equilibrado | Claude 4 Sonnet | Fullstack |
+| **E-2** | Meticuloso y persistente | Claude 4.6 Opus | Fullstack |
+| **Pro** | Máxima calidad | GPT-5.2 Codex | Fullstack |
+| **Prototipo** | Solo Frontend | Gemini 3 Flash | Frontend |
+| **Móvil** | Apps móviles | Claude 4.5 Sonnet | Mobile |
+
+### ✅ Sistema Multi-Agente (6 Agentes)
 | Agente | Función | LLM | Estado |
 |--------|---------|-----|--------|
-| 🏗 **Architect** | Define arquitectura y tecnologías | ✅ GPT-4o | Activo |
-| 💻 **Coder** | Genera código + APIs Backend | ✅ | Activo |
-| 🎨 **Designer** | Personaliza textos y estilos | ✅ GPT-4o | Activo |
-| 🔐 **Security** | Recomendaciones de seguridad | - | Activo |
-| 🚀 **Deployer** | Docker + CI/CD config | - | Activo |
-
-### ✅ Generación por Fases
-1. **Intent Analysis** - Clasifica tipo de proyecto
-2. **Architecture** - Define stack y componentes
-3. **Backend** - Genera APIs automáticamente
-4. **Frontend** - Selecciona y personaliza template
-5. **Design** - Personaliza con GPT-4o
-6. **Security** - Genera reporte de seguridad
-7. **Deployment** - Crea Dockerfile y docker-compose
-
-### ✅ Ejemplo de Output Multi-Agente
-**Input**: "Tienda online de ropa deportiva"
-**Output**: 13 archivos
-- 9 APIs Backend (products, cart, orders, users, payments, wishlist, reviews, search, notifications)
-- 1 Frontend (App.jsx personalizado)
-- 3 Deployment (Dockerfile, docker-compose.yml, .env.example)
-
----
-
-## Templates Disponibles
-
-| Template | Tecnología | Archivos |
-|----------|------------|----------|
-| Todo/Tasks | React + TailwindCSS | 1 (4,959 chars) |
-| E-commerce | React + TailwindCSS | 1 (7,934 chars) |
-| Dashboard | React + TailwindCSS | 1 (6,800 chars) |
-| Landing Page | React + TailwindCSS | 1 (5,500 chars) |
-| SaaS App | React + TailwindCSS | 1 (7,200 chars) |
-| **Game 2D** | **Phaser.js** | 2 (8,619 chars) |
-| **Game 3D** | **Three.js** | 2 (10,923 chars) |
+| 🏗 **Architect** | Define arquitectura | Multi-model | ✅ |
+| 💻 **Coder** | Genera código | Multi-model | ✅ |
+| 🎨 **Designer** | Personaliza UI | GPT-4o | ✅ |
+| 🔐 **Security** | Seguridad | - | ✅ |
+| 🚀 **Deployer** | Docker/CI | - | ✅ |
+| 🎬 **Video** | Sora 2 | Sora 2 | ✅ NEW |
 
 ---
 
 ## API Endpoints
 
-### Brain Engine
+### Models & Modes
 ```
-POST /api/brain/analyze          - Intent classification
-POST /api/brain/generate         - Full generation pipeline
-GET  /api/brain/project/{id}     - Project status + files
-GET  /api/brain/project/{id}/files - Files only
-GET  /api/brain/agents/status    - Multi-agent status
-GET  /api/brain/templates        - Available templates
-GET  /api/brain/intents          - Intent types
+GET  /api/brain/models          - Lista 17 modelos AI
+GET  /api/brain/modes           - Lista 6 modos de agente
+POST /api/brain/set-model       - Cambiar modelo
+POST /api/brain/set-mode        - Cambiar modo
+POST /api/brain/generate-video  - Generar video (Sora 2)
 ```
 
-### Respuesta de Generación
-```json
-{
-  "project_id": "proj_xxx",
-  "status": "complete",
-  "files": [
-    {"path": "App.jsx", "content": "...", "type": "component"},
-    {"path": "backend/routes/products.py", "content": "...", "type": "api"},
-    {"path": "Dockerfile", "content": "...", "type": "config"}
-  ],
-  "metadata": {
-    "architecture": {...},
-    "security_report": {...},
-    "llm_customized": true
-  }
-}
+### Generation
 ```
+POST /api/brain/analyze         - Clasificar intent
+POST /api/brain/generate        - Generar proyecto completo
+GET  /api/brain/project/{id}    - Estado + archivos
+GET  /api/brain/agents/status   - Estado multi-agente
+```
+
+---
+
+## Modelos Disponibles (17 total)
+
+### OpenAI (5)
+- `gpt-5.2-codex` - Best for code generation
+- `gpt-5.1` - Recommended model
+- `gpt-4o` - Fast multimodal
+- `o3` - Advanced reasoning (PRO)
+- `sora-2` - Video generation
+
+### Anthropic Claude (8)
+- `claude-4.6-opus` - Most Advanced
+- `claude-4.6-opus-1m` - 1M Context (PRO)
+- `claude-4.6-opus-fast` - 6x Faster (PRO)
+- `claude-4.6-sonnet` - 200k Context
+- `claude-4.6-sonnet-1m` - 1M Context (PRO)
+- `claude-4.5-opus` - Advanced
+- `claude-4.5-sonnet` - 200k Context
+- `claude-4-sonnet` - Recommended
+
+### Google Gemini (3)
+- `gemini-3-pro` - Latest
+- `gemini-3-flash` - Fast
+- `gemini-2.5-pro` - Recommended
+
+---
+
+## Templates (9 tipos)
+
+| Template | Tecnología | Archivos |
+|----------|------------|----------|
+| Todo/Tasks | React | 1 |
+| E-commerce | React | 1 |
+| Dashboard | React | 1 |
+| Landing Page | React | 1 |
+| SaaS App | React | 1 |
+| **Game 2D** | **Phaser.js** | 2 |
+| **Game 3D** | **Three.js** | 2 |
 
 ---
 
@@ -90,64 +101,57 @@ GET  /api/brain/intents          - Intent types
 
 ```
 /app/
-├── api-gateway/           # ✅ Brain Engine routes
-│   └── brain_routes.py
-├── apps/                  # 🔄 Builders (estructura)
-│   ├── web-builder/
-│   ├── saas-builder/
-│   ├── ecommerce-builder/
-│   ├── game2d-builder/
-│   └── game3d-builder/
-├── core/                  # ✅ Motor central
-│   ├── brain_engine.py    # ✅ Con GPT-4o
-│   ├── intent_classifier.py
-│   ├── code_templates.py  # ✅ +Games
-│   └── agent_system.py    # ✅ 5 agentes
-├── database/              # ✅ PostgreSQL schemas
-└── backend/               # ✅ FastAPI
+├── api-gateway/
+│   └── brain_routes.py        # ✅ Multi-model endpoints
+├── core/
+│   ├── brain_engine.py        # ✅ Multi-model support
+│   ├── intent_classifier.py   # ✅ 11 intents
+│   ├── code_templates.py      # ✅ 9 templates
+│   ├── agent_system.py        # ✅ 6 agents
+│   └── llm_manager.py         # ✅ NEW: 17 models
+├── database/
+│   └── schemas/models.py      # ✅ PostgreSQL ready
+└── backend/
+    └── server.py              # ✅ v3.0
 ```
-
----
-
-## Backlog
-
-### ✅ COMPLETADO
-- [x] Brain Engine con pipeline completo
-- [x] Sistema Multi-Agente (5 agentes)
-- [x] Integración GPT-4o para personalización
-- [x] Templates game2d (Phaser.js)
-- [x] Templates game3d (Three.js)
-- [x] Generación automática de APIs Backend
-- [x] Generación de Dockerfile/docker-compose
-
-### P1 - Próximo
-- [ ] Migración PostgreSQL (ejecutar migrations)
-- [ ] Sandbox Docker para ejecución
-- [ ] Webhook Stripe completos
-- [ ] Versioning de archivos
-
-### P2 - Futuro
-- [ ] Migración a Next.js
-- [ ] Editor visual drag & drop
-- [ ] Marketplace de templates
-- [ ] Admin Dashboard
 
 ---
 
 ## Testing Verificado
 
 ### API Tests
-- ✅ E-commerce: 13 archivos generados
-- ✅ SaaS: 13 archivos generados  
-- ✅ Dashboard: 9 archivos generados
-- ✅ Game 2D: 2 archivos (Phaser.js)
-- ✅ Game 3D: 2 archivos (Three.js)
-- ✅ GPT-4o llamadas exitosas
+- ✅ `/api/brain/models` - 17 modelos listados
+- ✅ `/api/brain/modes` - 6 modos listados
+- ✅ `/api/brain/set-model` - Cambio de modelo OK
+- ✅ `/api/brain/set-mode` - Cambio de modo OK
+- ✅ Generación con PRO mode - 12 archivos
 
-### Frontend
-- ✅ Login funcional
-- ✅ Dashboard accesible
-- ✅ AI Builder operativo
+### Generación
+- ✅ E-commerce PRO: 12 archivos (8 APIs + Frontend + Config)
+- ✅ SaaS: 13 archivos
+- ✅ Dashboard: 9 archivos
+- ✅ Games: 2-4 archivos
+
+---
+
+## Backlog
+
+### ✅ COMPLETADO
+- [x] Multi-model LLM support (17 modelos)
+- [x] 6 Agent modes
+- [x] VideoAgent con Sora 2
+- [x] LLM Manager con providers
+- [x] API endpoints para modelos/modos
+
+### P1 - Próximo
+- [ ] Migración PostgreSQL
+- [ ] Sandbox Docker
+- [ ] Webhooks Stripe
+
+### P2 - Futuro
+- [ ] Next.js frontend
+- [ ] Editor visual
+- [ ] Marketplace templates
 
 ---
 
@@ -161,20 +165,21 @@ GET  /api/brain/intents          - Intent types
 
 ## Changelog
 
+### 2024-02-23 - Sesión 3
+- ✅ Multi-model LLM support (GPT, Claude, Gemini)
+- ✅ 6 Agent modes (E-1, E-1.5, E-2, Pro, Prototype, Mobile)
+- ✅ Sora 2 video generation
+- ✅ LLM Manager con 17 modelos
+- ✅ VideoAgent nuevo agente
+
 ### 2024-02-23 - Sesión 2
-- ✅ Integración GPT-4o via emergentintegrations
-- ✅ Sistema Multi-Agente completo (5 agentes)
-- ✅ Generación automática de APIs Backend
-- ✅ Templates Game 2D (Phaser.js)
-- ✅ Templates Game 3D (Three.js)
-- ✅ Pipeline de 7 fases
-- ✅ Deployment config automático
+- ✅ Sistema Multi-Agente (5 agentes)
+- ✅ GPT-4o personalización
+- ✅ Templates Game 2D/3D
 
 ### 2024-02-23 - Sesión 1
 - ✅ Brain Engine v1.0
-- ✅ Intent Classifier (11 tipos)
-- ✅ Templates pre-construidos (5)
-- ✅ Schemas PostgreSQL
+- ✅ Intent Classifier
 
 ---
 
