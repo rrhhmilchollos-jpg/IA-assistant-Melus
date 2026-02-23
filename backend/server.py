@@ -98,6 +98,11 @@ app.include_router(multi_agent_router)
 app.include_router(preview_router)
 app.include_router(stripe_router)
 
+# Include Brain Engine routes if available
+if BRAIN_ENGINE_AVAILABLE:
+    app.include_router(brain_router)
+    logger.info("Brain Engine API routes registered at /api/brain/*")
+
 # WebSocket endpoint for project streaming
 @app.websocket("/api/ws/projects/{project_id}")
 async def project_websocket(websocket: WebSocket, project_id: str):
