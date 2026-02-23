@@ -251,6 +251,18 @@ class IntentClassifier:
             "complex": "api-enterprise",
             "enterprise": "api-platform"
         },
+        IntentType.GAME_2D: {
+            "simple": "game2d-basic",
+            "medium": "game2d-phaser",
+            "complex": "game2d-advanced",
+            "enterprise": "game2d-multiplayer"
+        },
+        IntentType.GAME_3D: {
+            "simple": "game3d-basic",
+            "medium": "game3d-threejs",
+            "complex": "game3d-advanced",
+            "enterprise": "game3d-multiplayer"
+        },
         IntentType.WEB_APP: {
             "simple": "webapp-basic",
             "medium": "webapp-full",
@@ -268,6 +280,8 @@ class IntentClassifier:
         IntentType.BLOG: "web-builder",
         IntentType.PORTFOLIO: "web-builder",
         IntentType.API_SERVICE: "api-builder",
+        IntentType.GAME_2D: "game2d-builder",
+        IntentType.GAME_3D: "game3d-builder",
         IntentType.WEB_APP: "web-builder",
         IntentType.MOBILE_APP: "mobile-builder",
         IntentType.UNKNOWN: "web-builder"
