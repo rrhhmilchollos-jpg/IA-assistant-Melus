@@ -10,7 +10,7 @@ import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./pages/HomePage";
 import LandingPage from "./pages/LandingPageNew";
-import Pricing from "./pages/Pricing";
+import PricingPage from "./pages/PricingPage";
 import Success from "./pages/Success";
 import AdminPanel from "./pages/AdminPanel";
 import WorkspacePage from "./pages/WorkspacePage";
