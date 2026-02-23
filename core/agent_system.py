@@ -470,12 +470,11 @@ INSTRUCCIONES:
 1. Modifica SOLO los textos para que sean relevantes al proyecto (títulos, descripciones, labels)
 2. Mantén la estructura del código exactamente igual
 3. NO cambies imports, hooks, ni lógica de estado
-4. Responde SOLO con el código modificado, sin explicaciones ni markdown
-4. NO cambies imports ni lógica de estado
+4. Responde SOLO con el código modificado, sin explicaciones ni markdown"""
 
-Responde SOLO con el código JSX modificado, sin explicaciones:"""
-
-            response = await self.llm_client.chat(customize_prompt)
+            # Use the new LlmChat API
+            user_message = UserMessage(text=customize_prompt)
+            response = await self.llm_client.send_message(user_message)
             
             # Clean response
             if "```" in response:
