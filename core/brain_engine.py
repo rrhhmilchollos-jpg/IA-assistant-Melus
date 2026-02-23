@@ -511,7 +511,7 @@ export default App;'''
         return templates.get(intent_type, default)
     
     async def _stage_customization(self, context: GenerationContext):
-        """Apply customizations based on user preferences"""
+        """Apply customizations based on user preferences using LLM"""
         context.current_stage = PipelineStage.CUSTOMIZATION
         await self._notify_update("stage_started", {
             "stage": "customization",
@@ -524,15 +524,66 @@ export default App;'''
             
             # Apply color customizations if specified
             if "colors" in entities:
-                # Could modify generated files to use specified colors
                 context.metadata["colors"] = entities["colors"]
             
             # Apply tech stack preferences
             if "tech_stack" in entities:
                 context.metadata["requested_tech"] = entities["tech_stack"]
         
+        # Use LLM to personalize templates if available
+        if self.llm_client and context.files:
+            try:
+                from emergentintegrations.llm.chat import UserMessage
+                
+                customized_files = []
+                for file in context.files:
+                    if file.get("path", "").endswith((".jsx", ".js")) and "App" in file.get("path", ""):
+                        # Customize main component with LLM
+                        original_content = file.get("content", "")
+                        
+                        customize_prompt = f"""Personaliza los TEXTOS de este componente React para este proyecto:
+
+PROYECTO: {context.prompt}
+
+CÓDIGO (solo modifica textos en español, NO cambies la estructura):
+{original_content[:4000]}
+
+REGLAS:
+1. Solo cambia strings de texto visible (títulos, descripciones, botones)
+2. NO cambies nombres de variables, funciones o imports
+3. NO añadas código nuevo
+4. Responde SOLO con el código modificado"""
+
+                        user_message = UserMessage(text=customize_prompt)
+                        response = await self.llm_client.send_message(user_message)
+                        
+                        # Extract code from response
+                        if "```" in response:
+                            code_start = response.find("```") + 3
+                            if response[code_start:code_start+3] in ["jsx", "js\n"]:
+                                code_start = response.find("\n", code_start) + 1
+                            code_end = response.rfind("```")
+                            if code_end > code_start:
+                                response = response[code_start:code_end].strip()
+                        
+                        # Verify it's valid code
+                        if "import" in response and "export" in response:
+                            customized_files.append({**file, "content": response})
+                            logger.info(f"Customized file {file.get('path')} with LLM")
+                        else:
+                            customized_files.append(file)
+                    else:
+                        customized_files.append(file)
+                
+                context.files = customized_files
+                context.metadata["llm_customized"] = True
+                
+            except Exception as e:
+                logger.warning(f"Could not customize with LLM: {e}")
+        
         await self._notify_update("customization_applied", {
-            "project_id": context.project_id
+            "project_id": context.project_id,
+            "llm_customized": context.metadata.get("llm_customized", False)
         })
     
     async def _stage_validation(self, context: GenerationContext):
