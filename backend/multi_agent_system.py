@@ -47,7 +47,7 @@ class AgentMessage:
             "id": self.id,
             "from_agent": self.from_agent.value,
             "to_agent": self.to_agent.value if self.to_agent else None,
-            "content": content,
+            "content": self.content,
             "data": self.data,
             "timestamp": self.timestamp.isoformat()
         }
