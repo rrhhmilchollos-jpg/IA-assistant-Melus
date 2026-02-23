@@ -30,6 +30,7 @@ class GenerateRequest(BaseModel):
     prompt: str
     project_name: Optional[str] = None
     preferences: Optional[Dict] = None
+    use_multi_agent: Optional[bool] = True  # Enable multi-agent pipeline
 
 
 class IntentAnalysisRequest(BaseModel):
