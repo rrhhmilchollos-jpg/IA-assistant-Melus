@@ -10,6 +10,11 @@ import asyncio
 import logging
 import json
 import os
+import sys
+
+# Ensure core path is in sys.path
+if '/app/core' not in sys.path:
+    sys.path.insert(0, '/app/core')
 
 from .intent_classifier import (
     IntentClassifier, IntentResult, IntentType, 
