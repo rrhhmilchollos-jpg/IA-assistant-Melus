@@ -142,8 +142,13 @@ async def generate_project(data: GenerateRequest, request: Request):
     
     brain.on_update(update_project)
     
-    # Start generation in background
-    asyncio.create_task(brain.process_prompt(data.prompt, project_id, user["user_id"]))
+    # Start generation in background with multi-agent support
+    asyncio.create_task(brain.process_prompt(
+        data.prompt, 
+        project_id, 
+        user["user_id"],
+        use_multi_agent=data.use_multi_agent
+    ))
     
     return {
         "project_id": project_id,
