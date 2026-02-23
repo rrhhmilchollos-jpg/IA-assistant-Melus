@@ -290,34 +290,27 @@ Responde en formato JSON con esta estructura:
         prompt: str,
         plan: Dict
     ) -> List[Dict]:
-        """Generate files based on intent type"""
-        files = []
+        """Generate files based on intent type - uses pre-built templates"""
+        # Import templates
+        try:
+            from templates import get_template_for_intent
+            
+            # Get the best template based on intent and prompt
+            files = get_template_for_intent(intent_type.value, prompt)
+            logger.info(f"Using pre-built template for {intent_type.value}")
+            return files
+            
+        except ImportError as e:
+            logger.warning(f"Could not import templates: {e}")
         
-        # Use LLM for code generation
-        if self.llm_client:
-            generation_prompt = f"""Genera el código completo para una aplicación:
-
-Tipo: {intent_type.value}
-Características: {', '.join(features)}
-Complejidad: {complexity.value}
-Descripción: {prompt}
-
-Plan: {json.dumps(plan, indent=2) if plan else 'No disponible'}
-
-Genera archivos React/TailwindCSS para el frontend. Responde SOLO con JSON:
-{{
-    "files": [
-        {{
-            "path": "ruta/del/archivo.jsx",
-            "content": "código completo del archivo",
-            "type": "component/page/style/util"
-        }}
-    ]
-}}
-
-Incluye:
-1. Componente principal App.jsx
-2. Componentes necesarios
+        # Fallback: Use default template
+        files = [{
+            "path": "App.jsx",
+            "content": self._get_default_template(intent_type),
+            "type": "component"
+        }]
+        
+        return files
 3. Estilos CSS si es necesario
 4. Archivos de utilidad
 
