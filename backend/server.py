@@ -126,13 +126,23 @@ app.add_middleware(
 @app.get("/api/")
 async def root():
     return {
-        "message": "Assistant Melus API",
-        "version": "2.0.0",
+        "message": "MelusAI API - Brain Engine Architecture",
+        "version": "3.0.0",
+        "architecture": "monorepo",
         "features": [
-            "Multi-agent app generation",
-            "Credit-based system",
-            "Stripe payments",
-            "Admin panel"
+            "Brain Engine - Intelligent Intent Classification",
+            "Template-based Code Generation",
+            "Multi-agent Orchestration",
+            "Credit-based System",
+            "Stripe Payments",
+            "Admin Panel"
+        ],
+        "brain_engine": BRAIN_ENGINE_AVAILABLE,
+        "builders": [
+            "web-builder",
+            "saas-builder",
+            "ecommerce-builder"
+        ]
         ]
     }
 
