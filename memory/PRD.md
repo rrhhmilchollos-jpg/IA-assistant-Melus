@@ -159,7 +159,7 @@ GET  /api/brain/agents/status   - Estado multi-agente
 
 - **Email**: demo@melusai.com
 - **Password**: demo123
-- **URL**: https://melus-ai-dev.preview.emergentagent.com
+- **URL**: https://multi-llm-platform.preview.emergentagent.com
 
 ---
 

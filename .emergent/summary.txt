@@ -1,141 +1,145 @@
 <analysis>**original_problem_statement:**
-The user wants to build an AI application generator named Melus AI. The vision has evolved from an Emergent.sh clone to a highly advanced, autonomous, multi-agent SaaS platform for automated software development. The system should follow a complete development lifecycle: Plan -> Generate -> Execute -> Validate -> Iterate.
+The user wants to build a highly advanced, autonomous, multi-agent SaaS platform named Melus AI for automated software development. The vision, detailed in messages #116 and #274, is to create a system that uses a Brain Engine to classify user intent, select an advanced project template, and then use a team of specialized AI agents (Architect, Coder, Designer, etc.) to customize and build the application in phases.
 
-The user's latest and most critical request (Message #274) outlines a new, definitive architecture:
--   **Monorepo Structure:** A modular design with separate builders for different application types (web, e-commerce, SaaS, etc.).
--   **Core Brain Engine:** An intelligent core that performs intent classification on user prompts and selects an appropriate, advanced project template. This replaces the previous approach of generating code from scratch.
--   **Phase-Based Generation:** A multi-agent system (Architect, Coder, Designer, etc.) that works in stages to adapt the selected template.
--   **Tech Stack:** The backend should use FastAPI, **PostgreSQL** (a change from MongoDB), and Redis. The frontend should be Next.js.
--   **Infrastructure:** The system must eventually use Docker for sandboxing, have a robust CI/CD pipeline, and be deployed on a cloud provider.
-
-Previous key requests that have been addressed or superseded include fixing Google OAuth, adding a live preview, implementing Stripe, and translating the UI to Spanish.
+Key architectural requirements include:
+-   A modular monorepo structure.
+-   A Brain Engine for intent classification and template selection, moving away from scratch generation.
+-   A phase-based, multi-agent generation pipeline.
+-   A tech stack of Next.js (frontend), FastAPI (backend), PostgreSQL (database), and Redis.
+-   Integration of numerous advanced LLMs (GPT-5.2, Claude 4.x series, Gemini 3) and video generation (Sora).
+-   A UI for users to select the desired AI model and agent mode for generation.
 
 **User's preferred language**: Spanish
 
 **what currently exists?**
-A full-stack application (React frontend, FastAPI backend, MongoDB) that is functional but now considered architecturally obsolete based on the user's latest request.
--   **Authentication:** A fully working, self-hosted system for Email/Password and Google OAuth.
--   **UI:** A professional, Emergent.sh-style landing page and a functional AI Builder page with a chat interface, file tree, and live preview tab. The entire UI has been translated into Spanish.
--   **Code Generation:** A multi-agent system that is connected to a code generation pipeline and can produce real code based on a prompt.
--   **Billing:** A basic Stripe integration is in place with a pricing page and checkout functionality.
+The application is in a transitional state, having undergone a major backend refactor.
+-   **Backend:** A FastAPI application partially restructured into a monorepo-like format (, , ). The core Brain Engine, a multi-agent orchestrator, and a manager for multiple LLMs () are implemented and functional. It correctly classifies intents (web, e-commerce, saas, game2d, game3d), selects templates, and uses a multi-agent pipeline for code generation and customization with GPT-4o.
+-   **Database:** PostgreSQL schemas have been defined using SQLAlchemy, but the application's data layer still uses the legacy MongoDB connection.
+-   **Frontend:** A React (Create React App) application with a working builder interface. A new component for model/mode selection has been created but is not yet integrated into the main UI.
+-   **Integrations:** A wide range of LLMs (OpenAI, Anthropic, Gemini) and Sora are integrated via  and are selectable from the backend.
 
 **Last working item**:
--   **Last item agent was working:** Acknowledging and preparing to implement a massive architectural overhaul based on the user's detailed blueprint in message #274. This new plan redefines the entire application, shifting to a monorepo structure, a Brain Engine for intent classification, template-based generation, and a switch to PostgreSQL.
--   **Status:** NOT STARTED
+-   **Last item agent was working:** Implementing a model and agent mode selector in the frontend. The agent had just created the new component file  and was preparing to integrate it into the main .
+-   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Manual testing (screenshots, curl). The user has forbidden automated testing agents. However, for the upcoming large-scale refactor, it would be wise to propose using the testing agent to ensure stability.
+-   **Which testing method agent to use?** Frontend testing agent to verify the new UI selector. Backend testing via  to confirm the model/mode parameters are being received and used correctly.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no pending bugs. The entire focus is now on the architectural refactor, which is a planned task, not an issue.
+There are no outstanding bugs. The primary focus is on completing the in-progress feature development.
 
 **In progress Task List**:
--   **Task 1: Implement the New Brain Engine and Monorepo Architecture (P0)**
-    -   **Where to resume:** Begin the complete application refactor based on the blueprint in message #274. This is the highest priority. The first steps should be to restructure the project directories to match the  layout (, , ) and start building the  with its .
-    -   **What will be achieved with this?** This will align the project with the user's ultimate vision for a scalable, modular, and intelligent AI SaaS platform. It's a foundational step for all future development.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Both
+-   **Task 1: Complete Frontend Model & Mode Selector (P0)**
+    -   **Where to resume:** Integrate the newly created  into the . This involves fetching the list of available models and modes from the backend endpoints (, ) and adding state management to pass the user's selection to the project creation API call ().
+    -   **What will be achieved with this?** This will complete the user's request for a UI that allows selecting the specific AI model (e.g., GPT-5.2, Claude Opus) and agent personality (e.g., Pro, E-1) for code generation.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both.
     -   **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1: Database Migration:** Migrate the application from MongoDB to PostgreSQL, including defining new schemas and moving existing user data.
-    -   **P1: Implement Isolated Code Sandbox:** Integrate Docker to create a secure environment for code execution and the live preview feature, as previously requested.
-    -   **P2: Complete Billing System:** Enhance the Stripe integration to handle webhooks, manage subscription states in the PostgreSQL database, and track user credit usage.
+    -   **P1: Database Migration (MongoDB → PostgreSQL):** The SQLAlchemy schemas are defined. The next steps are to execute the migration (e.g., using Alembic) and refactor all data access logic in the services (, , project storage) to use the new PostgreSQL database instead of MongoDB.
+    -   **P1: Frontend Migration (React → Next.js):** Rebuild the frontend application using Next.js to align with the user's specified tech stack.
+    -   **P2: Implement Isolated Code Sandbox (Docker):** Create a secure, containerized environment using Docker for executing the generated code and providing a live preview.
+    -   **P2: Complete Billing System (Stripe):** Implement Stripe webhooks to manage subscription statuses and track credit usage in the PostgreSQL database.
 
 -   **Future Tasks:**
-    -   Develop the specialized builders within the  directory (e-g., , ).
-    -   Implement a visual file versioning system (diffs, rollbacks).
-    -   Build an admin dashboard for platform management.
-    -   Create an automated deployment service ().
+    -   Develop the specialized builders (, ) as distinct modules.
+    -   Implement a visual drag-and-drop editor.
+    -   Build a visual file versioning and rollback system.
+    -   Create a comprehensive admin dashboard.
+    -   Implement the System of Evolution to automatically optimize templates based on usage patterns.
 
 **Completed work in this session**
--   **Google OAuth Fixed:** Successfully debugged and fixed the self-hosted Google login flow, resolving both  and  errors.
--   **New Landing Page & UI:** Implemented a new professional, multi-section landing page and an AI Builder interface.
--   **Spanish Translation:** Translated the entire frontend into Spanish as per the user's request.
--   **Live Preview Feature:** Added an iframe-based live code preview to the AI Builder.
--   **Stripe Integration (Phase 1):** Created a pricing page and backend endpoints for Stripe checkout.
--   **Functional Multi-Agent System:** Connected the agent system to the code generation pipeline to produce real code.
+-   **Architectural Refactor:** Restructured the backend into a modular, service-oriented architecture (, , ).
+-   **Brain Engine & Multi-Agent System:** Implemented the core logic for intent classification, template selection, and a multi-agent pipeline (Architect, Coder, Designer, etc.) coordinated by a Project Orchestrator.
+-   **Multi-LLM Integration:** Integrated a wide array of LLMs (GPT-4o/5.2, Claude 4.x, Gemini) and Sora for video, managed by a central .
+-   **Agent Modes & AI Customization:** Added backend logic for different agent modes and used GPT-4o to dynamically customize template content.
+-   **New Project Templates:** Added templates for 2D (Phaser.js) and 3D (Three.js) games.
+-   **API Expansion:** Created new backend endpoints to list available models/modes and to trigger the new generation pipeline.
+-   **PostgreSQL Schemas:** Defined the initial database schemas using SQLAlchemy.
 
 **Earlier issues found/mentioned but not fixed**
--   None. All previously identified issues have been resolved.
+-   None.
 
 **Known issue recurrence from previous fork**
 -   None.
 
 **Code Architecture**
-The application is about to undergo a complete refactor.
-
-**Current Architecture (Legacy):**
-
-
-**Target Architecture (To be implemented):**
 
 
 **Key Technical Concepts**
--   Frontend: React (to be migrated to Next.js per new spec), TailwindCSS
+-   Frontend: React (target: Next.js), TailwindCSS
 -   Backend: FastAPI
--   Database: Currently MongoDB, with a planned migration to **PostgreSQL**.
--   Architecture: Moving from a simple client-server model to a **template-driven monorepo** with a core **Brain Engine** for intent classification.
+-   Database: MongoDB (legacy), **PostgreSQL** (target) with SQLAlchemy
+-   Architecture: Monorepo-like, Service-Oriented, Template-Driven, Multi-Agent System
+-   AI: Multi-LLM integration via , intent classification, AI-driven customization
 
 **key DB schema**
-A migration to **PostgreSQL** is required. The new schema will need to be designed to support users, projects, billing/subscriptions, and other entities defined in the new architecture.
+-   ****: Contains SQLAlchemy models for , , and . This schema is defined but not yet actively used by the application, which still relies on MongoDB.
 
 **changes in tech stack**
--   **Database:** Mandated migration from **MongoDB to PostgreSQL**.
--   **Frontend Framework:** Mandated migration from **React (CRA) to Next.js**.
--   **Backend Architecture:** Complete overhaul from a single FastAPI app to a microservices-oriented **monorepo**.
+-   **Database:** **In-progress migration from MongoDB to PostgreSQL.**
+-   **Backend:** Overhauled from a monolith to a service-oriented monorepo.
+-   **Frontend:** **Mandated migration from React to Next.js (Not Started).**
 
 **All files of reference**
--   The user's architectural blueprint in **message #274** is the most critical reference document and the source of truth for all upcoming work.
--   : The current build interface.
--   : The current agent logic (to be replaced).
+-   : The core logic hub.
+-   : Coordinates the agent workflow.
+-   : The main FastAPI router.
+-   : The target PostgreSQL schemas.
+-   : The primary UI view.
+-   : The new, unfinished UI component.
+-   : The project's source of truth and historical log.
 
 **Areas that need refactoring**:
-The **entire application** needs to be refactored to align with the new monorepo architecture, Next.js frontend, and PostgreSQL database specified by the user.
+-   The entire data layer needs to be refactored to use PostgreSQL via SQLAlchemy instead of MongoDB.
+-   The legacy  directory must be fully migrated into the new  structure and then removed.
+-   The frontend needs to be completely migrated from React (CRA) to Next.js.
 
 **key api endpoints**
--   : Google OAuth login.
--   : Current entry point for code generation (will be replaced).
--   : Stripe checkout.
+-   : Fetches the list of available LLM models.
+-   : Fetches the list of available agent modes.
+-   : Triggers the project generation pipeline. Accepts , , and .
+-   : Checks the status of a generation task.
 
 **Critical Info for New Agent**
--   **New Architecture is Priority #1:** Your sole focus must be on implementing the new architecture detailed in message #274. This is a complete rebuild, not an incremental update. Deprecate or refactor existing code as needed to fit the new model.
--   **Tech Stack Change:** You must manage the migration from MongoDB to PostgreSQL and from React to Next.js.
--   **Template-Based Generation:** The core logic must shift from LLM-based code generation from scratch to an Intent Classifier that selects and adapts advanced, pre-built templates.
--   **User Wants Speed:** The user is low on credits and expects rapid implementation without many questions. Be decisive and follow the new plan rigorously.
--   **Communicate in Spanish:** All user-facing communication must be in Spanish.
+-   **You must communicate in Spanish.**
+-   Your first task is to complete the frontend Model/Mode selector. This involves integrating  into , fetching data from the backend, and updating the API call.
+-   After the UI task, the **PostgreSQL migration is the next critical priority.** This is a major pending task from the user's architectural plan.
+-   The project is in a hybrid state. All new development should use the new architecture in  and , not the legacy  directory.
 
 **documents and test reports created in this job**
--    (Contains the history of the project's evolution).
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg #206):** Confirmed upcoming tasks: live preview, Docker, Stripe. (Status: Live Preview & Stripe are done, Docker is pending but now lower priority than the refactor).
-2.  **User (Msg #261):** Requested full UI translation to Spanish. (Status: COMPLETED).
-3.  **User (Msg #274):** Sent a detailed, new technical blueprint that changes the entire project architecture. (Status: PENDING - This is the new P0 task that you must start now).
-4.  **Agent (Msg #275):** Acknowledged the new plan.
-5.  **Agent (Msg #276):** Began the process of implementing the new plan.
-
-No pending human messages. Proceed with the architectural refactor.
+1.  **User (Msg #241):** Requested integration of Sora, more Claude models, GPT-5.2, and agent personalities. (Status: COMPLETED)
+2.  **User (Msg #282):** Provided a flowchart and requested a model selector in the frontend. (Status: IN PROGRESS)
+3.  **User (Msg #283):** Confirmed to proceed with the agent system and UI selector. (Status: IN PROGRESS)
+4.  **Agent (Msg #284-289):** Began implementation of the UI selector, culminating in the creation of the  file.
 
 **Project Health Check:**
--   **Broken:** The current architecture is now considered broken/legacy in the context of the new requirements.
+-   **Broken:** The data persistence layer is inconsistent; PostgreSQL schemas are defined, but the application code still operates on MongoDB.
 -   **Mocked:** None.
--   **Working:** Authentication (Email, Google), Stripe (Phase 1), Live Preview, Spanish UI.
+-   **Working:** The core backend generation pipeline, including intent classification, multi-agent orchestration, and multi-LLM integration, is functional and has been tested via .
 
 **3rd Party Integrations**
--   OpenAI GPT-4o (Uses Emergent LLM Key)
+-   OpenAI GPT-4o, GPT-5.2 Codex, Sora (Uses Emergent LLM Key)
+-   Anthropic Claude 4.5 & 4.6 series (Uses Emergent LLM Key)
+-   Google Gemini 3 Pro (Uses Emergent LLM Key)
 -   Google OAuth (via )
--   Stripe
+-   Stripe (Basic checkout, needs completion with webhooks)
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (user has forbidden it).
--   **Test files created:** None.
--   **Known regressions:** None.
+-   **Testing agent used after significant changes:** NO
+-   **Test files created:** None
+-   **Known regressions:** None
 
 **Credentials to test flow:**
--   Email/password:  / .
--   Google OAuth is configured and functional.
+-   Email/password:  / 
 
 **What agent forgot to execute**
-The agent has successfully kept pace with a very demanding and fast-changing set of user requirements. No tasks were forgotten; rather, priorities were completely reshuffled by the user's latest, most ambitious request for a full architectural overhaul. The task of implementing a Docker sandbox is still pending but has been superseded by the P0 refactoring task.</analysis>
+The agent correctly prioritized the user's most recent feature requests. The following major architectural tasks from the user's blueprint were acknowledged but are still pending in the backlog:
+-   The complete data layer migration to PostgreSQL.
+-   The frontend framework migration from React to Next.js.
+-   Implementation of the Docker sandbox for code execution.</analysis>
