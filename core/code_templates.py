@@ -728,24 +728,6 @@ export default App;''',
     ]
 
 
-# Template registry
-TEMPLATES = {
-    "todo": get_todo_app_template,
-    "tasks": get_todo_app_template,
-    "tareas": get_todo_app_template,
-    "ecommerce": get_ecommerce_template,
-    "tienda": get_ecommerce_template,
-    "shop": get_ecommerce_template,
-    "dashboard": get_dashboard_template,
-    "panel": get_dashboard_template,
-    "landing": get_landing_template,
-    "landing_page": get_landing_template,
-    "saas": get_saas_template,
-    "saas_app": get_saas_template,
-    "web_app": get_todo_app_template,
-}
-
-
 def get_game2d_template() -> List[Dict]:
     """Get template for a 2D game using Phaser.js"""
     return [
