@@ -747,9 +747,722 @@ TEMPLATES = {
 
 
 def get_template_for_intent(intent_type: str, prompt: str = "") -> List[Dict]:
+    def get_game2d_template() -> List[Dict]:
+    """Get template for a 2D game using Phaser.js"""
+    return [
+        {
+            "path": "index.html",
+            "content": '''<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Juego 2D</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #1a1a2e; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #game-container {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 18px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <script src="game.js"></script>
+</body>
+</html>''',
+            "type": "html"
+        },
+        {
+            "path": "game.js",
+            "content": '''// Configuración del juego
+const config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    parent: 'game-container',
+    backgroundColor: '#16213e',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 500 },
+            debug: false
+        }
+    },
+    scene: [MenuScene, GameScene, GameOverScene]
+};
+
+// Escena del Menú
+class MenuScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'MenuScene' });
+    }
+
+    create() {
+        const { width, height } = this.cameras.main;
+        
+        // Título
+        this.add.text(width / 2, height / 3, '🎮 MI JUEGO 2D', {
+            fontSize: '48px',
+            fontFamily: 'Arial',
+            color: '#e94560',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Subtítulo
+        this.add.text(width / 2, height / 3 + 60, 'Plataformas con Phaser.js', {
+            fontSize: '20px',
+            color: '#a8d8ea'
+        }).setOrigin(0.5);
+        
+        // Botón de inicio
+        const startBtn = this.add.text(width / 2, height / 2 + 50, '▶ JUGAR', {
+            fontSize: '32px',
+            color: '#ffffff',
+            backgroundColor: '#e94560',
+            padding: { x: 40, y: 15 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        
+        startBtn.on('pointerover', () => startBtn.setStyle({ backgroundColor: '#ff6b6b' }));
+        startBtn.on('pointerout', () => startBtn.setStyle({ backgroundColor: '#e94560' }));
+        startBtn.on('pointerdown', () => this.scene.start('GameScene'));
+        
+        // Instrucciones
+        this.add.text(width / 2, height - 80, '← → para mover | ESPACIO para saltar', {
+            fontSize: '16px',
+            color: '#888888'
+        }).setOrigin(0.5);
+    }
+}
+
+// Escena Principal del Juego
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+        this.score = 0;
+    }
+
+    create() {
+        const { width, height } = this.cameras.main;
+        
+        // Crear plataformas
+        this.platforms = this.physics.add.staticGroup();
+        
+        // Suelo
+        const ground = this.add.rectangle(width / 2, height - 20, width, 40, 0x0f3460);
+        this.platforms.add(ground);
+        
+        // Plataformas flotantes
+        const platformPositions = [
+            { x: 600, y: 450 },
+            { x: 200, y: 350 },
+            { x: 500, y: 250 },
+            { x: 100, y: 150 }
+        ];
+        
+        platformPositions.forEach(pos => {
+            const platform = this.add.rectangle(pos.x, pos.y, 150, 20, 0x533483);
+            this.platforms.add(platform);
+        });
+        
+        // Crear jugador
+        this.player = this.add.rectangle(100, height - 100, 40, 50, 0xe94560);
+        this.physics.add.existing(this.player);
+        this.player.body.setBounce(0.1);
+        this.player.body.setCollideWorldBounds(true);
+        
+        // Colisión con plataformas
+        this.physics.add.collider(this.player, this.platforms);
+        
+        // Crear monedas
+        this.coins = this.physics.add.group();
+        this.createCoins();
+        this.physics.add.collider(this.coins, this.platforms);
+        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
+        
+        // Controles
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        
+        // UI
+        this.scoreText = this.add.text(20, 20, 'Puntos: 0', {
+            fontSize: '24px',
+            color: '#ffffff'
+        });
+        
+        // Crear enemigos
+        this.enemies = this.physics.add.group();
+        this.createEnemies();
+        this.physics.add.collider(this.enemies, this.platforms);
+        this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
+    }
+
+    createCoins() {
+        const coinPositions = [
+            { x: 600, y: 400 },
+            { x: 200, y: 300 },
+            { x: 500, y: 200 },
+            { x: 100, y: 100 },
+            { x: 400, y: 500 },
+            { x: 700, y: 350 }
+        ];
+        
+        coinPositions.forEach(pos => {
+            const coin = this.add.circle(pos.x, pos.y, 15, 0xffd700);
+            this.coins.add(coin);
+            coin.body.setAllowGravity(false);
+            
+            // Animación de brillo
+            this.tweens.add({
+                targets: coin,
+                scale: { from: 1, to: 1.2 },
+                duration: 500,
+                yoyo: true,
+                repeat: -1
+            });
+        });
+    }
+
+    createEnemies() {
+        const enemy = this.add.rectangle(400, 530, 35, 35, 0xff4757);
+        this.enemies.add(enemy);
+        enemy.body.setCollideWorldBounds(true);
+        enemy.body.setBounce(1);
+        enemy.body.setVelocityX(100);
+    }
+
+    collectCoin(player, coin) {
+        coin.destroy();
+        this.score += 10;
+        this.scoreText.setText('Puntos: ' + this.score);
+        
+        // Efecto visual
+        this.cameras.main.flash(100, 255, 215, 0);
+        
+        // Verificar victoria
+        if (this.coins.countActive() === 0) {
+            this.createCoins();
+            this.score += 50; // Bonus por completar ronda
+        }
+    }
+
+    hitEnemy(player, enemy) {
+        this.physics.pause();
+        player.setFillStyle(0x666666);
+        
+        this.time.delayedCall(1000, () => {
+            this.scene.start('GameOverScene', { score: this.score });
+        });
+    }
+
+    update() {
+        // Movimiento horizontal
+        if (this.cursors.left.isDown) {
+            this.player.body.setVelocityX(-200);
+        } else if (this.cursors.right.isDown) {
+            this.player.body.setVelocityX(200);
+        } else {
+            this.player.body.setVelocityX(0);
+        }
+        
+        // Salto
+        if ((this.cursors.up.isDown || this.spaceKey.isDown) && this.player.body.touching.down) {
+            this.player.body.setVelocityY(-400);
+        }
+    }
+}
+
+// Escena Game Over
+class GameOverScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameOverScene' });
+    }
+
+    init(data) {
+        this.finalScore = data.score || 0;
+    }
+
+    create() {
+        const { width, height } = this.cameras.main;
+        
+        this.add.text(width / 2, height / 3, '💀 GAME OVER', {
+            fontSize: '48px',
+            color: '#e94560',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.add.text(width / 2, height / 2, `Puntuación: ${this.finalScore}`, {
+            fontSize: '32px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        
+        const retryBtn = this.add.text(width / 2, height / 2 + 80, '🔄 REINTENTAR', {
+            fontSize: '24px',
+            color: '#ffffff',
+            backgroundColor: '#533483',
+            padding: { x: 30, y: 10 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        
+        retryBtn.on('pointerover', () => retryBtn.setStyle({ backgroundColor: '#6b4c9a' }));
+        retryBtn.on('pointerout', () => retryBtn.setStyle({ backgroundColor: '#533483' }));
+        retryBtn.on('pointerdown', () => this.scene.start('GameScene'));
+        
+        const menuBtn = this.add.text(width / 2, height / 2 + 140, '🏠 MENÚ', {
+            fontSize: '20px',
+            color: '#888888'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        
+        menuBtn.on('pointerdown', () => this.scene.start('MenuScene'));
+    }
+}
+
+// Iniciar juego
+const game = new Phaser.Game(config);''',
+            "type": "javascript"
+        }
+    ]
+
+
+def get_game3d_template() -> List[Dict]:
+    """Get template for a 3D game/experience using Three.js"""
+    return [
+        {
+            "path": "index.html",
+            "content": '''<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Experiencia 3D</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            overflow: hidden;
+            background: #000;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            z-index: 100;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 25px;
+            border-radius: 10px;
+        }
+        #info h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+        #info p {
+            font-size: 14px;
+            color: #888;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #00ff88;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 28px;
+            z-index: 100;
+        }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            z-index: 1000;
+        }
+        #loading.hidden { display: none; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div>
+            <h2>🎮 Cargando Experiencia 3D...</h2>
+            <p>Preparando el mundo virtual</p>
+        </div>
+    </div>
+    <div id="info">
+        <h1>🌌 Experiencia 3D</h1>
+        <p>WASD para mover | Mouse para rotar</p>
+    </div>
+    <div id="score">Puntos: <span id="points">0</span></div>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="game3d.js"></script>
+</body>
+</html>''',
+            "type": "html"
+        },
+        {
+            "path": "game3d.js",
+            "content": '''import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// Variables globales
+let scene, camera, renderer, controls;
+let player, collectibles = [];
+let score = 0;
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+
+// Inicialización
+function init() {
+    // Escena
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a1a);
+    scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
+
+    // Cámara
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    // Controles
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2.2;
+
+    // Luces
+    setupLights();
+
+    // Crear mundo
+    createWorld();
+
+    // Crear jugador
+    createPlayer();
+
+    // Crear coleccionables
+    createCollectibles();
+
+    // Eventos
+    setupEvents();
+
+    // Ocultar loading
+    setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+    }, 1000);
+
+    // Animar
+    animate();
+}
+
+function setupLights() {
+    // Luz ambiental
+    const ambient = new THREE.AmbientLight(0x404080, 0.5);
+    scene.add(ambient);
+
+    // Luz direccional (sol)
+    const sun = new THREE.DirectionalLight(0xffffff, 1);
+    sun.position.set(10, 20, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 2048;
+    sun.shadow.mapSize.height = 2048;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 50;
+    scene.add(sun);
+
+    // Luz puntual decorativa
+    const pointLight = new THREE.PointLight(0x00d4ff, 1, 20);
+    pointLight.position.set(0, 5, 0);
+    scene.add(pointLight);
+}
+
+function createWorld() {
+    // Suelo
+    const groundGeometry = new THREE.PlaneGeometry(100, 100);
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x1a1a2e,
+        roughness: 0.8
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Grid
+    const grid = new THREE.GridHelper(100, 50, 0x333366, 0x222244);
+    scene.add(grid);
+
+    // Plataformas flotantes
+    const platformPositions = [
+        { x: 5, y: 2, z: 0 },
+        { x: -5, y: 3, z: -5 },
+        { x: 0, y: 4, z: -10 },
+        { x: 8, y: 2.5, z: -8 },
+        { x: -8, y: 3.5, z: 5 }
+    ];
+
+    platformPositions.forEach(pos => {
+        const platformGeom = new THREE.BoxGeometry(4, 0.5, 4);
+        const platformMat = new THREE.MeshStandardMaterial({ 
+            color: 0x533483,
+            metalness: 0.3,
+            roughness: 0.7
+        });
+        const platform = new THREE.Mesh(platformGeom, platformMat);
+        platform.position.set(pos.x, pos.y, pos.z);
+        platform.castShadow = true;
+        platform.receiveShadow = true;
+        scene.add(platform);
+    });
+
+    // Decoraciones (torres de luz)
+    for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const radius = 15;
+        
+        const towerGeom = new THREE.CylinderGeometry(0.3, 0.5, 8, 8);
+        const towerMat = new THREE.MeshStandardMaterial({ 
+            color: 0x0f3460,
+            emissive: 0x001133,
+            emissiveIntensity: 0.2
+        });
+        const tower = new THREE.Mesh(towerGeom, towerMat);
+        tower.position.set(
+            Math.cos(angle) * radius,
+            4,
+            Math.sin(angle) * radius
+        );
+        tower.castShadow = true;
+        scene.add(tower);
+
+        // Luz en la torre
+        const towerLight = new THREE.PointLight(0x00d4ff, 0.5, 8);
+        towerLight.position.set(
+            Math.cos(angle) * radius,
+            8,
+            Math.sin(angle) * radius
+        );
+        scene.add(towerLight);
+    }
+}
+
+function createPlayer() {
+    // Jugador (esfera brillante)
+    const playerGeom = new THREE.SphereGeometry(0.5, 32, 32);
+    const playerMat = new THREE.MeshStandardMaterial({ 
+        color: 0xe94560,
+        emissive: 0xe94560,
+        emissiveIntensity: 0.3,
+        metalness: 0.8,
+        roughness: 0.2
+    });
+    player = new THREE.Mesh(playerGeom, playerMat);
+    player.position.set(0, 1, 0);
+    player.castShadow = true;
+    scene.add(player);
+
+    // Luz del jugador
+    const playerLight = new THREE.PointLight(0xe94560, 1, 5);
+    player.add(playerLight);
+}
+
+function createCollectibles() {
+    const positions = [
+        { x: 5, y: 3.5, z: 0 },
+        { x: -5, y: 4.5, z: -5 },
+        { x: 0, y: 5.5, z: -10 },
+        { x: 8, y: 4, z: -8 },
+        { x: -8, y: 5, z: 5 },
+        { x: 3, y: 1.5, z: 3 },
+        { x: -3, y: 1.5, z: -3 }
+    ];
+
+    positions.forEach((pos, i) => {
+        const gemGeom = new THREE.OctahedronGeometry(0.4);
+        const gemMat = new THREE.MeshStandardMaterial({ 
+            color: 0x00ff88,
+            emissive: 0x00ff88,
+            emissiveIntensity: 0.5,
+            metalness: 1,
+            roughness: 0
+        });
+        const gem = new THREE.Mesh(gemGeom, gemMat);
+        gem.position.set(pos.x, pos.y, pos.z);
+        gem.userData.collected = false;
+        collectibles.push(gem);
+        scene.add(gem);
+    });
+}
+
+function setupEvents() {
+    // Teclado
+    document.addEventListener('keydown', (e) => {
+        switch(e.code) {
+            case 'KeyW': case 'ArrowUp': moveForward = true; break;
+            case 'KeyS': case 'ArrowDown': moveBackward = true; break;
+            case 'KeyA': case 'ArrowLeft': moveLeft = true; break;
+            case 'KeyD': case 'ArrowRight': moveRight = true; break;
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        switch(e.code) {
+            case 'KeyW': case 'ArrowUp': moveForward = false; break;
+            case 'KeyS': case 'ArrowDown': moveBackward = false; break;
+            case 'KeyA': case 'ArrowLeft': moveLeft = false; break;
+            case 'KeyD': case 'ArrowRight': moveRight = false; break;
+        }
+    });
+
+    // Resize
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+}
+
+function checkCollisions() {
+    collectibles.forEach(gem => {
+        if (!gem.userData.collected) {
+            const distance = player.position.distanceTo(gem.position);
+            if (distance < 1) {
+                gem.userData.collected = true;
+                gem.visible = false;
+                score += 100;
+                document.getElementById('points').textContent = score;
+                
+                // Efecto visual
+                const flash = new THREE.PointLight(0x00ff88, 3, 10);
+                flash.position.copy(gem.position);
+                scene.add(flash);
+                setTimeout(() => scene.remove(flash), 200);
+            }
+        }
+    });
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    // Movimiento del jugador
+    const speed = 0.15;
+    
+    // Obtener dirección de la cámara
+    const cameraDirection = new THREE.Vector3();
+    camera.getWorldDirection(cameraDirection);
+    cameraDirection.y = 0;
+    cameraDirection.normalize();
+
+    const right = new THREE.Vector3();
+    right.crossVectors(cameraDirection, new THREE.Vector3(0, 1, 0));
+
+    if (moveForward) player.position.add(cameraDirection.clone().multiplyScalar(speed));
+    if (moveBackward) player.position.add(cameraDirection.clone().multiplyScalar(-speed));
+    if (moveLeft) player.position.add(right.clone().multiplyScalar(-speed));
+    if (moveRight) player.position.add(right.clone().multiplyScalar(speed));
+
+    // Mantener jugador sobre el suelo
+    player.position.y = Math.max(player.position.y, 1);
+
+    // Rotación de coleccionables
+    collectibles.forEach(gem => {
+        if (!gem.userData.collected) {
+            gem.rotation.y += 0.02;
+            gem.rotation.x += 0.01;
+        }
+    });
+
+    // Verificar colisiones
+    checkCollisions();
+
+    // Actualizar cámara para seguir al jugador
+    controls.target.copy(player.position);
+    controls.update();
+
+    renderer.render(scene, camera);
+}
+
+// Iniciar
+init();''',
+            "type": "javascript"
+        }
+    ]
+
+
+# Template registry
+TEMPLATES = {
+    "todo": get_todo_app_template,
+    "tasks": get_todo_app_template,
+    "tareas": get_todo_app_template,
+    "ecommerce": get_ecommerce_template,
+    "tienda": get_ecommerce_template,
+    "shop": get_ecommerce_template,
+    "dashboard": get_dashboard_template,
+    "panel": get_dashboard_template,
+    "landing": get_landing_template,
+    "landing_page": get_landing_template,
+    "saas": get_saas_template,
+    "saas_app": get_saas_template,
+    "game2d": get_game2d_template,
+    "juego2d": get_game2d_template,
+    "phaser": get_game2d_template,
+    "game3d": get_game3d_template,
+    "juego3d": get_game3d_template,
+    "threejs": get_game3d_template,
+    "3d": get_game3d_template,
+    "web_app": get_todo_app_template,
+}
+
+
+def get_template_for_intent(intent_type: str, prompt: str = "") -> List[Dict]:
     """Get the best template based on intent type and prompt"""
-    # Check for specific keywords in prompt
     prompt_lower = prompt.lower()
+    
+    # Check for game keywords first
+    if any(word in prompt_lower for word in ["juego 2d", "game 2d", "phaser", "plataformas", "arcade"]):
+        return get_game2d_template()
+    
+    if any(word in prompt_lower for word in ["juego 3d", "game 3d", "three.js", "3d", "webgl", "mundo virtual"]):
+        return get_game3d_template()
     
     if any(word in prompt_lower for word in ["tarea", "todo", "task", "lista"]):
         return get_todo_app_template()
