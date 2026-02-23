@@ -1,11 +1,13 @@
 """
 MelusAI API Gateway - Brain Engine Routes
 New routes for the Brain Engine and template-based generation
+Supports multiple LLM providers: GPT, Claude, Gemini, Sora
 """
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict
+from datetime import datetime, timezone
 import asyncio
 import json
 import logging
