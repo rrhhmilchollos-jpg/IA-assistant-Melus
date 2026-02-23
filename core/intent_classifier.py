@@ -22,6 +22,8 @@ class IntentType(Enum):
     MOBILE_APP = "mobile_app"
     PORTFOLIO = "portfolio"
     BLOG = "blog"
+    GAME_2D = "game2d"
+    GAME_3D = "game3d"
     UNKNOWN = "unknown"
 
 
