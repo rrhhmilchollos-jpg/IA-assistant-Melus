@@ -304,21 +304,20 @@ const AIBuilder = () => {
         projectFiles = filesData.files || [];
       }
 
-
       // Remove thinking message and add response
       setMessages(prev => prev.filter(m => m.id !== thinkingId));
 
-      if (files.length > 0) {
-        setGeneratedFiles(files);
-        setSelectedFile(files[0]);
+      if (projectFiles.length > 0) {
+        setGeneratedFiles(projectFiles);
+        setSelectedFile(projectFiles[0]);
 
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
           type: 'text',
-          content: `✨ ¡Proyecto generado exitosamente!\n\nHe creado ${files.length} archivos para tu aplicación. Puedes ver el código en la pestaña "Archivos" o continuar agregando funcionalidades.\n\n¿Qué más te gustaría añadir?`,
+          content: `✨ ¡Proyecto generado con Brain Engine!\n\n🎯 Tipo: ${intentData.intent_type?.replace('_', ' ')}\n📦 Template: ${intentData.recommended_template}\n📁 Archivos: ${projectFiles.length}\n\nPuedes ver el código en la pestaña "Archivos" o la vista previa.\n\n¿Qué más te gustaría añadir?`,
           isUser: false,
           timestamp: new Date(),
-          files: files
+          files: projectFiles
         }]);
       } else {
         setMessages(prev => [...prev, {
