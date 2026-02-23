@@ -1,104 +1,71 @@
 # Melus AI - Product Requirements Document
 
-## Descripción
-**Melus AI** - Clon completo de Emergent.sh con sistema multi-agente real.
+## ✅ COMPLETADO - Clon de Emergent.sh
 
 ---
 
-## ✅ TODO IMPLEMENTADO
+## Funcionalidades Implementadas
 
-### 1. AI Builder (Chat)
-- ✅ Chat en español para crear apps
-- ✅ 6 Agentes con GPT-4o real
-- ✅ Generación de código completo
-- ✅ Vista de archivos generados
-- ✅ Vista previa en vivo con iframe
-- ✅ Quick prompts
+### 1. Landing Page (Español)
+- ✅ Hero con título en inglés ("Build Full-Stack Apps in Minutes, Not Months")
+- ✅ Resto en español
+- ✅ Navegación: Características, Cómo Funciona, Precios, Docs
+- ✅ Sección de características (6 features)
+- ✅ Sección "Cómo Funciona" (4 pasos)
+- ✅ Precios con 3 planes
+- ✅ FAQ en español
+- ✅ Footer completo
 
-### 2. Sistema Multi-Agente
-- ✅ Planner Agent - Planificación
-- ✅ Developer Agent - Código
-- ✅ QA Agent - Validación
-- ✅ Researcher Agent
-- ✅ Optimizer Agent
-- ✅ Cost Controller Agent
-- ✅ Comunicación entre agentes
+### 2. AI Builder
+- ✅ Chat en español
+- ✅ 6 Agentes con GPT-4o
+- ✅ Generación de código real
+- ✅ Vista previa en vivo
+- ✅ Pestaña de archivos
 
 ### 3. Stripe Billing
-- ✅ Planes: Free ($0), Pro ($29), Enterprise ($99)
-- ✅ Checkout de suscripciones
-- ✅ Paquetes de créditos (5K, 25K, 100K)
+- ✅ Plan Gratis ($0)
+- ✅ Plan Pro ($29/mes)
+- ✅ Plan Empresa ($99/mes)
+- ✅ Paquetes de créditos
+- ✅ Checkout con Stripe
 - ✅ Webhooks
-- ✅ Gestión de créditos
 
-### 4. Vista Previa en Vivo
-- ✅ API de preview `/api/preview/{project_id}`
-- ✅ Render de React con Babel
-- ✅ Soporte TailwindCSS
-- ✅ Iframe integrado
-
-### 5. Autenticación
+### 4. Autenticación
 - ✅ Email/Password
 - ✅ Google OAuth
 - ✅ GitHub OAuth
 
-### 6. Landing Page
-- ✅ Hero profesional
-- ✅ Features
-- ✅ Pricing
-- ✅ FAQ
+### 5. Sistema Multi-Agente
+- ✅ Planner Agent
+- ✅ Developer Agent
+- ✅ QA Agent
+- ✅ Researcher Agent
+- ✅ Optimizer Agent
+- ✅ Cost Controller Agent
 
 ---
 
-## APIs
+## URLs
 
-### Billing
-- `GET /api/billing/plans`
-- `GET /api/billing/credits`
-- `POST /api/billing/checkout/subscription`
-- `POST /api/billing/checkout/credits`
-- `POST /api/billing/webhook`
-
-### Preview
-- `GET /api/preview/{project_id}`
-- `GET /api/preview/{project_id}/{path}`
-
-### Multi-Agent
-- `GET /api/agents-v3/status`
-- `POST /api/agents-v3/pipeline/start`
-- `GET /api/agents-v3/tasks`
-- `GET /api/agents-v3/messages`
-
----
-
-## Rutas Frontend
-
-- `/` - Landing
-- `/login` - Login
-- `/home` - Dashboard
-- `/build` - AI Builder
-- `/pricing` - Planes Stripe
-- `/agents` - Dashboard agentes
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Landing Page (español) |
+| `/login` | Iniciar Sesión |
+| `/pricing` | Precios (español) |
+| `/home` | Panel Principal |
+| `/build` | AI Builder |
+| `/agents` | Dashboard Agentes |
 
 ---
 
 ## Credenciales Test
-- Email: `demo@melusai.com` / `demo123`
-- URL: https://melus-dev-studio.preview.emergentagent.com
+- **Email**: `demo@melusai.com`
+- **Password**: `demo123`
+- **URL**: https://melus-dev-studio.preview.emergentagent.com
 
 ---
 
-## Stripe Keys (ya configurados)
-- API Key: ✅ Configurada en .env
-- Publishable Key: ✅ Configurada
-
----
-
-## Changelog
-
-### 2026-02-23
-- ✅ Stripe Billing completo
-- ✅ Vista previa en vivo
-- ✅ Página de Pricing con planes
-- ✅ Sistema multi-agente con LLM real
-- ✅ AI Builder con generación de código
+## Idioma
+- **Toda la app en español**
+- **Excepto**: "Build Full-Stack Apps in Minutes, Not Months" (título principal)
