@@ -9,24 +9,12 @@ const PricingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(null);
-  const [billingConfig, setBillingConfig] = useState(null);
   const [currentCredits, setCurrentCredits] = useState(1000);
   const token = localStorage.getItem('session_token');
 
   useEffect(() => {
-    fetchBillingConfig();
     if (token) fetchCredits();
   }, [token]);
-
-  const fetchBillingConfig = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/billing/config`);
-      const data = await res.json();
-      setBillingConfig(data);
-    } catch (err) {
-      console.error('Error fetching billing config:', err);
-    }
-  };
 
   const fetchCredits = async () => {
     try {
@@ -112,63 +100,63 @@ const PricingPage = () => {
   const plans = [
     {
       id: 'free',
-      name: 'Free',
+      name: 'Gratis',
       price: '$0',
-      period: 'forever',
-      description: 'Perfect for trying out MelusAI',
+      period: 'para siempre',
+      description: 'Perfecto para probar MelusAI',
       credits: '1,000',
       features: [
-        '1,000 credits/month',
-        'Basic AI models',
-        'Community support',
-        'Export to GitHub',
-        '3 active projects'
+        '1,000 créditos/mes',
+        'Modelos IA básicos',
+        'Soporte comunitario',
+        'Exportar a GitHub',
+        '3 proyectos activos'
       ],
-      cta: 'Get Started',
+      cta: 'Comenzar',
       highlighted: false
     },
     {
       id: 'pro',
       name: 'Pro',
       price: '$29',
-      period: '/month',
-      description: 'For serious builders',
+      period: '/mes',
+      description: 'Para constructores serios',
       credits: '50,000',
       features: [
-        '50,000 credits/month',
-        'GPT-4o & advanced models',
-        'Priority support',
-        'Unlimited projects',
-        'Custom deployments',
-        'API access'
+        '50,000 créditos/mes',
+        'GPT-4o y modelos avanzados',
+        'Soporte prioritario',
+        'Proyectos ilimitados',
+        'Despliegues personalizados',
+        'Acceso API'
       ],
-      cta: 'Upgrade to Pro',
+      cta: 'Actualizar a Pro',
       highlighted: true
     },
     {
       id: 'enterprise',
-      name: 'Enterprise',
+      name: 'Empresa',
       price: '$99',
-      period: '/month',
-      description: 'For teams and agencies',
-      credits: 'Unlimited',
+      period: '/mes',
+      description: 'Para equipos y agencias',
+      credits: 'Ilimitado',
       features: [
-        'Unlimited credits',
-        'Custom AI models',
-        'Dedicated support',
-        'White-label option',
-        'SLA guarantee',
-        'On-premise option'
+        'Créditos ilimitados',
+        'Modelos IA personalizados',
+        'Soporte dedicado',
+        'Opción marca blanca',
+        'Garantía SLA',
+        'Opción on-premise'
       ],
-      cta: 'Contact Sales',
+      cta: 'Contactar Ventas',
       highlighted: false
     }
   ];
 
   const creditPackages = [
-    { id: 'credits_5k', credits: 5000, price: 5, name: '5K Credits' },
-    { id: 'credits_25k', credits: 25000, price: 20, name: '25K Credits', popular: true },
-    { id: 'credits_100k', credits: 100000, price: 75, name: '100K Credits' }
+    { id: 'credits_5k', credits: 5000, price: 5, name: '5K Créditos' },
+    { id: 'credits_25k', credits: 25000, price: 20, name: '25K Créditos', popular: true },
+    { id: 'credits_100k', credits: 100000, price: 75, name: '100K Créditos' }
   ];
 
   return (
@@ -188,14 +176,14 @@ const PricingPage = () => {
           {user && (
             <div className="flex items-center gap-4">
               <div className="px-3 py-1.5 bg-gray-800 rounded-lg text-sm">
-                <span className="text-gray-400">Credits:</span>
+                <span className="text-gray-400">Créditos:</span>
                 <span className="text-cyan-400 font-bold ml-2">{currentCredits.toLocaleString()}</span>
               </div>
               <button 
                 onClick={() => navigate('/home')}
                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg"
               >
-                Dashboard
+                Panel
               </button>
             </div>
           )}
@@ -207,11 +195,11 @@ const PricingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Simple, Transparent
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"> Pricing</span>
+              Precios Simples y
+              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"> Transparentes</span>
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Start free, scale as you grow. No hidden fees.
+              Comienza gratis, escala mientras creces. Sin costos ocultos.
             </p>
           </div>
 
@@ -228,7 +216,7 @@ const PricingPage = () => {
               >
                 {plan.highlighted && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-sm font-medium flex items-center gap-1">
-                    <Star className="w-4 h-4" /> Most Popular
+                    <Star className="w-4 h-4" /> Más Popular
                   </div>
                 )}
                 
@@ -243,7 +231,7 @@ const PricingPage = () => {
 
                 <div className="mb-6 p-4 bg-gray-800/50 rounded-xl text-center">
                   <span className="text-2xl font-bold text-cyan-400">{plan.credits}</span>
-                  <span className="text-gray-400 text-sm block">credits/month</span>
+                  <span className="text-gray-400 text-sm block">créditos/mes</span>
                 </div>
 
                 <ul className="space-y-3 mb-8">
@@ -280,8 +268,8 @@ const PricingPage = () => {
           {/* Credit Packages */}
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">Need More Credits?</h2>
-              <p className="text-gray-400">Buy credit packages anytime, no subscription required</p>
+              <h2 className="text-2xl font-bold mb-2">¿Necesitas Más Créditos?</h2>
+              <p className="text-gray-400">Compra paquetes de créditos cuando quieras, sin suscripción</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
@@ -295,12 +283,12 @@ const PricingPage = () => {
                   }`}
                 >
                   {pkg.popular && (
-                    <span className="text-xs font-medium text-cyan-400 mb-2 block">BEST VALUE</span>
+                    <span className="text-xs font-medium text-cyan-400 mb-2 block">MEJOR VALOR</span>
                   )}
                   <h3 className="text-lg font-semibold mb-1">{pkg.name}</h3>
                   <div className="flex items-baseline gap-1 mb-4">
                     <span className="text-2xl font-bold">${pkg.price}</span>
-                    <span className="text-gray-400 text-sm">one-time</span>
+                    <span className="text-gray-400 text-sm">único pago</span>
                   </div>
                   <button
                     onClick={() => handleBuyCredits(pkg.id)}
@@ -312,7 +300,7 @@ const PricingPage = () => {
                     ) : (
                       <>
                         <CreditCard className="w-4 h-4" />
-                        Buy Now
+                        Comprar
                       </>
                     )}
                   </button>
@@ -326,25 +314,25 @@ const PricingPage = () => {
       {/* FAQ */}
       <section className="py-16 px-4 bg-gray-900/50">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">Preguntas Frecuentes</h2>
           
           <div className="space-y-4">
             {[
               {
-                q: "How do credits work?",
-                a: "Credits are consumed when you generate code, run AI operations, or deploy projects. Simple operations use fewer credits, while complex AI tasks use more."
+                q: "¿Cómo funcionan los créditos?",
+                a: "Los créditos se consumen cuando generas código, ejecutas operaciones IA o despliegas proyectos. Las operaciones simples usan menos créditos, mientras que las tareas IA complejas usan más."
               },
               {
-                q: "Can I upgrade or downgrade anytime?",
-                a: "Yes! You can change your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes apply at the end of your billing period."
+                q: "¿Puedo cambiar de plan cuando quiera?",
+                a: "¡Sí! Puedes cambiar tu plan en cualquier momento. Al actualizar, obtienes acceso inmediato a las nuevas funciones. Al bajar de plan, los cambios aplican al final de tu período de facturación."
               },
               {
-                q: "What happens when I run out of credits?",
-                a: "You can purchase additional credit packages anytime, or upgrade your plan for more monthly credits."
+                q: "¿Qué pasa cuando me quedo sin créditos?",
+                a: "Puedes comprar paquetes de créditos adicionales en cualquier momento, o actualizar tu plan para obtener más créditos mensuales."
               },
               {
-                q: "Do credits roll over?",
-                a: "Monthly subscription credits reset each billing cycle. Purchased credit packages never expire."
+                q: "¿Los créditos se acumulan?",
+                a: "Los créditos de suscripción mensual se reinician cada ciclo de facturación. Los paquetes de créditos comprados nunca expiran."
               }
             ].map((faq, i) => (
               <div key={i} className="p-4 bg-gray-800/50 rounded-xl">
