@@ -296,17 +296,26 @@ Responde en formato JSON con esta estructura:
         plan: Dict
     ) -> List[Dict]:
         """Generate files based on intent type - uses pre-built templates"""
-        # Import templates
+        # Import templates using relative import
         try:
-            from templates import get_template_for_intent
+            from .templates import get_template_for_intent
             
             # Get the best template based on intent and prompt
             files = get_template_for_intent(intent_type.value, prompt)
-            logger.info(f"Using pre-built template for {intent_type.value}")
+            logger.info(f"Using pre-built template for {intent_type.value}, got {len(files)} files")
             return files
             
         except ImportError as e:
-            logger.warning(f"Could not import templates: {e}")
+            logger.warning(f"Could not import templates with relative import: {e}")
+            
+            # Try absolute import
+            try:
+                import templates
+                files = templates.get_template_for_intent(intent_type.value, prompt)
+                logger.info(f"Using pre-built template (absolute) for {intent_type.value}")
+                return files
+            except ImportError as e2:
+                logger.warning(f"Could not import templates: {e2}")
         
         # Fallback: Use default template
         files = [{
