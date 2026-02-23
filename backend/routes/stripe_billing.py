@@ -428,3 +428,198 @@ async def use_credits(request: Request, amount: int = 1):
         "used": amount,
         "remaining": current_credits - amount
     }
+
+
+
+# Additional routes for new Stripe integration
+stripe_router = APIRouter(prefix="/api/stripe", tags=["stripe"])
+
+
+@stripe_router.post("/create-checkout")
+async def create_unified_checkout(checkout_request: CreateCheckoutRequest, request: Request):
+    """
+    Unified checkout endpoint that handles both subscriptions and credit purchases.
+    Supports:
+    - plan: 'pro' or 'team' for subscriptions
+    - credits: amount of credits for one-time purchase
+    - price: price in dollars for credit purchase
+    """
+    user = await get_user_from_token(request)
+    db = request.app.state.db
+    
+    plan_id = checkout_request.plan or checkout_request.plan_id
+    credits = checkout_request.credits
+    price = checkout_request.price
+    
+    try:
+        # Get or create Stripe customer
+        customer_id = user.get("stripe_customer_id")
+        
+        if not customer_id:
+            customer = stripe.Customer.create(
+                email=user.get("email"),
+                name=user.get("name"),
+                metadata={"user_id": user["user_id"]}
+            )
+            customer_id = customer.id
+            
+            await db.users.update_one(
+                {"user_id": user["user_id"]},
+                {"$set": {"stripe_customer_id": customer_id}}
+            )
+        
+        base_url = request.headers.get("origin", "https://multi-llm-platform.preview.emergentagent.com")
+        success_url = checkout_request.success_url or f"{base_url}/success"
+        cancel_url = checkout_request.cancel_url or f"{base_url}/pricing"
+        
+        # Handle subscription checkout
+        if plan_id and plan_id in PLANS and plan_id != "free":
+            plan = PLANS[plan_id]
+            
+            session = stripe.checkout.Session.create(
+                customer=customer_id,
+                payment_method_types=["card"],
+                line_items=[{
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": f"Melus AI {plan['name']} Plan",
+                            "description": f"Monthly subscription - {plan['features'][0]}"
+                        },
+                        "unit_amount": plan["price"],
+                        "recurring": {"interval": "month"}
+                    },
+                    "quantity": 1
+                }],
+                mode="subscription",
+                success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}&plan={plan_id}",
+                cancel_url=cancel_url,
+                metadata={
+                    "user_id": user["user_id"],
+                    "plan_id": plan_id,
+                    "type": "subscription"
+                }
+            )
+            
+            return {
+                "checkout_url": session.url,
+                "session_id": session.id,
+                "type": "subscription"
+            }
+        
+        # Handle credit purchase
+        elif credits and price:
+            price_cents = int(float(price) * 100)
+            
+            session = stripe.checkout.Session.create(
+                customer=customer_id,
+                payment_method_types=["card"],
+                line_items=[{
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": f"{credits:,} Melus AI Credits",
+                            "description": f"One-time purchase of {credits:,} credits"
+                        },
+                        "unit_amount": price_cents
+                    },
+                    "quantity": 1
+                }],
+                mode="payment",
+                success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}&credits={credits}",
+                cancel_url=cancel_url,
+                metadata={
+                    "user_id": user["user_id"],
+                    "credits": str(credits),
+                    "type": "credits"
+                }
+            )
+            
+            return {
+                "checkout_url": session.url,
+                "session_id": session.id,
+                "type": "credits"
+            }
+        
+        else:
+            raise HTTPException(status_code=400, detail="Invalid checkout request. Provide either 'plan' for subscription or 'credits' and 'price' for credit purchase.")
+            
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@stripe_router.get("/verify-session/{session_id}")
+async def verify_checkout_session(session_id: str, request: Request):
+    """Verify a checkout session and process the payment"""
+    user = await get_user_from_token(request)
+    db = request.app.state.db
+    
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        if session.payment_status != "paid":
+            return {
+                "success": False,
+                "status": session.payment_status
+            }
+        
+        metadata = session.metadata
+        
+        # Process based on type
+        if metadata.get("type") == "subscription":
+            plan_id = metadata.get("plan_id")
+            if plan_id and plan_id in PLANS:
+                plan = PLANS[plan_id]
+                
+                await db.users.update_one(
+                    {"user_id": user["user_id"]},
+                    {"$set": {
+                        "plan": plan_id,
+                        "subscription": plan_id,
+                        "subscription_id": session.subscription,
+                        "unlimited_credits": plan["credits"] == -1,
+                        "credits": 999999 if plan["credits"] == -1 else plan["credits"]
+                    }}
+                )
+                
+                return {
+                    "success": True,
+                    "type": "subscription",
+                    "plan": plan_id,
+                    "unlimited": plan["credits"] == -1
+                }
+        
+        elif metadata.get("type") == "credits":
+            credits = int(metadata.get("credits", 0))
+            if credits > 0:
+                await db.users.update_one(
+                    {"user_id": user["user_id"]},
+                    {"$inc": {"credits": credits}}
+                )
+                
+                # Get updated credits
+                updated_user = await db.users.find_one(
+                    {"user_id": user["user_id"]},
+                    {"_id": 0, "credits": 1}
+                )
+                
+                return {
+                    "success": True,
+                    "type": "credits",
+                    "added": credits,
+                    "total": updated_user.get("credits", 0)
+                }
+        
+        return {
+            "success": False,
+            "error": "Unknown payment type"
+        }
+        
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe verification error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# Export the additional router
+router_stripe = stripe_router
