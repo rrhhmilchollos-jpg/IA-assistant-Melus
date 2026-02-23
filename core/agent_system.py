@@ -1,6 +1,7 @@
 """
 MelusAI Multi-Agent System
 Sistema de agentes especializados coordinados por el Orchestrator
+Soporta múltiples proveedores: GPT, Claude, Gemini, Sora
 """
 from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass, field
@@ -22,6 +23,7 @@ class AgentType(Enum):
     DESIGNER = "designer"
     SECURITY = "security"
     DEPLOYER = "deployer"
+    VIDEO = "video"  # New: Sora video agent
     ORCHESTRATOR = "orchestrator"
 
 
@@ -40,6 +42,7 @@ class GenerationPhase(Enum):
     BACKEND = "backend"
     FRONTEND = "frontend"
     INTEGRATIONS = "integrations"
+    VIDEO = "video"
     DEPLOYMENT = "deployment"
 
 
