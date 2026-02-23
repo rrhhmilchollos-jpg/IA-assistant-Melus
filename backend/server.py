@@ -143,7 +143,6 @@ async def root():
             "saas-builder",
             "ecommerce-builder"
         ]
-        ]
     }
 
 
