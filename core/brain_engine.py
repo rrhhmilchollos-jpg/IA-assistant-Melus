@@ -84,16 +84,25 @@ class BrainEngine:
         self._initialize_orchestrator()
     
     def _initialize_llm(self):
-        """Initialize LLM client"""
+        """Initialize LLM client using emergentintegrations"""
         try:
-            from emergentintegrations.llm.openai import OpenAIChat
-            self.llm_client = OpenAIChat(
-                api_key=os.environ.get('EMERGENT_LLM_KEY'),
-                model="gpt-4o"
-            )
-            logger.info("LLM client initialized successfully")
+            from emergentintegrations.llm.chat import LlmChat
+            
+            api_key = os.environ.get('EMERGENT_LLM_KEY')
+            if not api_key:
+                logger.warning("EMERGENT_LLM_KEY not found in environment")
+                return
+            
+            self.llm_client = LlmChat(
+                api_key=api_key,
+                session_id="brain_engine_main",
+                system_message="Eres un experto en desarrollo de software. Generas código limpio, moderno y funcional en React y TailwindCSS."
+            ).with_model("openai", "gpt-4o")
+            
+            logger.info("LLM client (GPT-4o) initialized successfully")
         except Exception as e:
             logger.warning(f"Could not initialize LLM: {e}")
+            self.llm_client = None
     
     def _initialize_orchestrator(self):
         """Initialize the multi-agent orchestrator"""
