@@ -201,12 +201,6 @@ const AIBuilder = () => {
     
     return html;
   };
-  const [generatedFiles, setGeneratedFiles] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('chat'); // chat, files, preview
-  const [projectName, setProjectName] = useState('Mi Proyecto');
-  const messagesEndRef = useRef(null);
-  const token = localStorage.getItem('session_token');
 
   // Scroll to bottom
   useEffect(() => {
