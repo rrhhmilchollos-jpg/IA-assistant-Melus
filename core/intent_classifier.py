@@ -134,6 +134,26 @@ class IntentClassifier:
                 "api rest", "servicio web", "backend api", "microservicio"
             ]
         },
+        IntentType.GAME_2D: {
+            "keywords": [
+                "juego", "game", "2d", "phaser", "arcade", "plataformas",
+                "platformer", "shooter", "puzzle", "sprites", "niveles"
+            ],
+            "phrases": [
+                "juego 2d", "game 2d", "juego de plataformas", "arcade game",
+                "juego retro", "pixel art game"
+            ]
+        },
+        IntentType.GAME_3D: {
+            "keywords": [
+                "3d", "three.js", "threejs", "webgl", "babylon", "unity",
+                "mundo 3d", "experiencia 3d", "realidad virtual", "vr"
+            ],
+            "phrases": [
+                "juego 3d", "game 3d", "experiencia 3d", "mundo virtual",
+                "three js", "escena 3d"
+            ]
+        },
         IntentType.WEB_APP: {
             "keywords": [
                 "app", "aplicación", "application", "web", "sistema",
