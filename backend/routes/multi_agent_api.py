@@ -160,7 +160,6 @@ async def create_task(task_request: TaskRequest, request: Request):
     
     try:
         agent_type = AgentType(task_request.agent_type)
-        priority = TaskPriority(task_request.priority)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
@@ -169,8 +168,7 @@ async def create_task(task_request: TaskRequest, request: Request):
     task = await orchestrator.create_task(
         agent_type=agent_type,
         description=task_request.description,
-        input_data=task_request.input_data or {},
-        priority=priority
+        input_data=task_request.input_data or {}
     )
     
     # Execute task
