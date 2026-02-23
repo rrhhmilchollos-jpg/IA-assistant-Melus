@@ -1,6 +1,7 @@
 """
-Assistant Melus API - Main Server
-Full-stack AI application generator with multi-agent architecture
+MelusAI API Server - Main Server
+Full-stack AI application generator with Brain Engine and multi-agent architecture
+Version 3.0 - Monorepo Architecture
 """
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import JSONResponse
@@ -8,8 +9,14 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import sys
 import logging
 from pathlib import Path
+
+# Add app root to path for imports
+sys.path.insert(0, '/app')
+sys.path.insert(0, '/app/core')
+sys.path.insert(0, '/app/api-gateway')
 
 # Load environment
 ROOT_DIR = Path(__file__).parent
@@ -24,9 +31,9 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
-    title="Assistant Melus API",
-    description="AI-powered application generator with multi-agent architecture",
-    version="2.0.0"
+    title="MelusAI API",
+    description="AI-powered application generator with Brain Engine and multi-agent architecture",
+    version="3.0.0"
 )
 
 # MongoDB connection
