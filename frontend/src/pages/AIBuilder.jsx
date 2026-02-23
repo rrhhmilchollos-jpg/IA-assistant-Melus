@@ -145,6 +145,64 @@ const AIBuilder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedFiles, setGeneratedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [activeTab, setActiveTab] = useState('chat');
+  const [projectName, setProjectName] = useState('Mi Proyecto');
+  const [previewKey, setPreviewKey] = useState(Date.now());
+  const messagesEndRef = useRef(null);
+  const token = localStorage.getItem('session_token');
+
+  // Generate Preview HTML from files
+  const generatePreviewHTML = () => {
+    if (generatedFiles.length === 0) return '';
+    
+    // Find index.html or create one
+    const indexFile = generatedFiles.find(f => f.path === 'index.html' || f.path.endsWith('index.html'));
+    if (indexFile) {
+      return indexFile.content;
+    }
+    
+    // Find JSX/JS and CSS files
+    const jsxFiles = generatedFiles.filter(f => f.path.endsWith('.jsx') || f.path.endsWith('.js'));
+    const cssFiles = generatedFiles.filter(f => f.path.endsWith('.css'));
+    
+    // Build preview HTML
+    let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${projectName}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      ${cssFiles.map(f => f.content).join('\n')}
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+`;
+    
+    // Add each script
+    jsxFiles.forEach(file => {
+      html += `<script type="text/babel">\n${file.content}\n</script>\n`;
+    });
+    
+    // Add render call
+    html += `
+    <script type="text/babel">
+        if (typeof App !== 'undefined') {
+            ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        }
+    </script>
+</body>
+</html>`;
+    
+    return html;
+  };
+  const [generatedFiles, setGeneratedFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [activeTab, setActiveTab] = useState('chat'); // chat, files, preview
   const [projectName, setProjectName] = useState('Mi Proyecto');
   const messagesEndRef = useRef(null);
