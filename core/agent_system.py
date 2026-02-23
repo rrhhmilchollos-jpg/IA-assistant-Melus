@@ -455,6 +455,8 @@ class DesignerAgent(BaseAgent):
             return original_content
         
         try:
+            from emergentintegrations.llm.chat import UserMessage
+            
             customize_prompt = f"""Personaliza este componente React para el siguiente proyecto:
 
 PROYECTO: {prompt}
@@ -465,9 +467,10 @@ CÓDIGO ORIGINAL:
 {original_content[:3000]}
 
 INSTRUCCIONES:
-1. Modifica los textos para que sean relevantes al proyecto
-2. Ajusta colores si es necesario (usa TailwindCSS)
-3. Mantén la estructura funcional
+1. Modifica SOLO los textos para que sean relevantes al proyecto (títulos, descripciones, labels)
+2. Mantén la estructura del código exactamente igual
+3. NO cambies imports, hooks, ni lógica de estado
+4. Responde SOLO con el código modificado, sin explicaciones ni markdown
 4. NO cambies imports ni lógica de estado
 
 Responde SOLO con el código JSX modificado, sin explicaciones:"""
