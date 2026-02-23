@@ -218,6 +218,22 @@ async def get_project_files(project_id: str, request: Request):
     return {"files": []}
 
 
+@router.get("/agents/status")
+async def get_agents_status(request: Request):
+    """Get status of all agents in the multi-agent system"""
+    await get_user_from_request(request)
+    
+    brain = get_brain_engine()
+    
+    if brain.orchestrator:
+        return brain.orchestrator.get_status()
+    
+    return {
+        "status": "orchestrator_not_available",
+        "agents": {}
+    }
+
+
 @router.get("/templates")
 async def list_templates(request: Request, intent_type: Optional[str] = None, complexity: Optional[str] = None):
     """List available templates"""
