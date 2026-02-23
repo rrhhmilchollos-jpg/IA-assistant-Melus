@@ -503,6 +503,79 @@ INSTRUCCIONES:
             return original_content
 
 
+class VideoAgent(BaseAgent):
+    """
+    🎬 Video Agent
+    Generates promotional videos using Sora 2
+    """
+    
+    def __init__(self, llm_client=None):
+        super().__init__(AgentType.VIDEO, llm_client)
+    
+    async def execute(self, task: AgentTask) -> Dict[str, Any]:
+        self.status = AgentStatus.WORKING
+        self.current_task = task
+        task.started_at = datetime.now(timezone.utc)
+        
+        try:
+            prompt = task.input_data.get("prompt", "")
+            video_type = task.input_data.get("video_type", "promo")
+            duration = task.input_data.get("duration", 4)
+            
+            # Generate video
+            video_result = await self._generate_video(prompt, video_type, duration)
+            
+            task.output_data = video_result
+            task.status = AgentStatus.COMPLETED
+            task.completed_at = datetime.now(timezone.utc)
+            self.status = AgentStatus.COMPLETED
+            
+            return video_result
+            
+        except Exception as e:
+            logger.error(f"Video error: {e}")
+            task.error = str(e)
+            task.status = AgentStatus.ERROR
+            self.status = AgentStatus.ERROR
+            return {"error": str(e)}
+    
+    async def _generate_video(self, prompt: str, video_type: str, duration: int) -> Dict:
+        """Generate video using Sora 2"""
+        try:
+            from .llm_manager import get_llm_manager
+            
+            llm_manager = get_llm_manager()
+            
+            # Create video-specific prompt
+            video_prompts = {
+                "promo": f"Professional promotional video: {prompt}. Modern, clean, cinematic style.",
+                "demo": f"Product demonstration video: {prompt}. Clear, focused, showing features.",
+                "intro": f"Introduction video: {prompt}. Engaging, dynamic, captures attention."
+            }
+            
+            video_prompt = video_prompts.get(video_type, video_prompts["promo"])
+            output_path = f"/app/uploads/video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+            
+            result = await llm_manager.generate_video(
+                prompt=video_prompt,
+                model="sora-2",
+                size="1280x720",
+                duration=duration,
+                output_path=output_path
+            )
+            
+            return {
+                "success": result is not None,
+                "video_path": output_path if result else None,
+                "prompt_used": video_prompt,
+                "duration": duration
+            }
+                
+        except Exception as e:
+            logger.error(f"Video generation error: {e}")
+            return {"success": False, "error": str(e)}
+
+
 class SecurityAgent(BaseAgent):
     """
     🔐 Security Agent
