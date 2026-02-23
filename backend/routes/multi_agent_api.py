@@ -11,7 +11,7 @@ import json
 import logging
 
 from multi_agent_system import (
-    get_orchestrator, AgentType, AgentStatus, TaskPriority
+    get_orchestrator, AgentType, AgentStatus
 )
 from utils import get_authenticated_user
 
