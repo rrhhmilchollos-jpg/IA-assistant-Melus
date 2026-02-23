@@ -1,153 +1,141 @@
 <analysis>**original_problem_statement:**
-The user wants to build an AI application generator named Melus AI. The initial goal was to replicate Emergent.sh, but it has evolved into creating a highly advanced, autonomous, multi-agent platform. The current core objective, based on the user's latest detailed instructions, is to build a full-fledged **automated software development orchestrator** that mimics the entire development lifecycle (Plan -> Generate -> Execute -> Validate -> Iterate).
+The user wants to build an AI application generator named Melus AI. The vision has evolved from an Emergent.sh clone to a highly advanced, autonomous, multi-agent SaaS platform for automated software development. The system should follow a complete development lifecycle: Plan -> Generate -> Execute -> Validate -> Iterate.
 
-The most recent user request is to build a **continuous learning system** on top of the existing generation engine. This system should use a persistent vector memory, learn from user interactions, automatically improve its internal prompts, analyze user feedback, and scale as a SaaS application. The user has explicitly stated not to touch or delete any of the existing, working functionality.
+The user's latest and most critical request (Message #274) outlines a new, definitive architecture:
+-   **Monorepo Structure:** A modular design with separate builders for different application types (web, e-commerce, SaaS, etc.).
+-   **Core Brain Engine:** An intelligent core that performs intent classification on user prompts and selects an appropriate, advanced project template. This replaces the previous approach of generating code from scratch.
+-   **Phase-Based Generation:** A multi-agent system (Architect, Coder, Designer, etc.) that works in stages to adapt the selected template.
+-   **Tech Stack:** The backend should use FastAPI, **PostgreSQL** (a change from MongoDB), and Redis. The frontend should be Next.js.
+-   **Infrastructure:** The system must eventually use Docker for sandboxing, have a robust CI/CD pipeline, and be deployed on a cloud provider.
 
-PRODUCT REQUIREMENTS:
-- The system is not a chatbot; it's a project generation and control interface.
-- **Phase 1 (Planning):** Analyze user prompt, detect project type, design architecture, and define dependencies.
-- **Phase 2 (Generation):** Generate a complete, structured codebase with real files and directories.
-- **Phase 3 (Execution):** Install dependencies, run builds, and detect/fix errors automatically.
-- **Phase 4 (Validation):** Test endpoints and verify the application compiles and runs.
-- **Phase 5 (Iteration):** Allow the user to make iterative changes to the generated project via chat commands (e.g., Add Google Auth, Fix this bug).
-- **Continuous Learning:** Implement a system for MelusAI to learn from its outputs and user feedback, using vector memory and performance metrics to improve over time.
+Previous key requests that have been addressed or superseded include fixing Google OAuth, adding a live preview, implementing Stripe, and translating the UI to Spanish.
 
 **User's preferred language**: Spanish
 
 **what currently exists?**
-A full-stack application with a React frontend and a FastAPI backend using MongoDB. The application successfully implements a complete project generation pipeline.
-
--   **Frontend:** The UI is a light-theme replica of Emergent.sh. The  has been transformed into a project control center. When a user submits a prompt, it displays a 5-phase progress bar (Planning, Generation, Execution, Validation, Completed) showing the real-time status of the project build. It also lists previously generated projects for the logged-in user. A  exists for iterative development, but its integration with the new pipeline is incomplete.
--   **Backend:** The backend uses FastAPI and MongoDB. It features a robust, 5-phase pipeline engine () that takes a user prompt and orchestrates the entire project generation process. It uses an LLM (GPT-4o) to generate complete, multi-file projects (e.g., landing pages, React apps) and saves them to disk under . API endpoints () manage the project lifecycle, serve generated files for preview, and package projects for download as ZIP archives.
+A full-stack application (React frontend, FastAPI backend, MongoDB) that is functional but now considered architecturally obsolete based on the user's latest request.
+-   **Authentication:** A fully working, self-hosted system for Email/Password and Google OAuth.
+-   **UI:** A professional, Emergent.sh-style landing page and a functional AI Builder page with a chat interface, file tree, and live preview tab. The entire UI has been translated into Spanish.
+-   **Code Generation:** A multi-agent system that is connected to a code generation pipeline and can produce real code based on a prompt.
+-   **Billing:** A basic Stripe integration is in place with a pricing page and checkout functionality.
 
 **Last working item**:
--   **Last item agent was working:** The agent was implementing and debugging the complete, end-to-end project generation pipeline. The agent successfully fixed a critical bug where project metadata was not being persisted to MongoDB. It also implemented user-project association, ensuring that the  correctly lists only the projects created by the currently authenticated user. The final step was successfully creating a project from the UI and observing the 5-phase progress bar working correctly.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** Y
--   **Which testing method agent to use?** Manual testing. The user has explicitly forbidden the use of the automated testing agent. Backend endpoints must be tested with , and the frontend with screenshots.
+-   **Last item agent was working:** Acknowledging and preparing to implement a massive architectural overhaul based on the user's detailed blueprint in message #274. This new plan redefines the entire application, shifting to a monorepo structure, a Brain Engine for intent classification, template-based generation, and a switch to PostgreSQL.
+-   **Status:** NOT STARTED
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Manual testing (screenshots, curl). The user has forbidden automated testing agents. However, for the upcoming large-scale refactor, it would be wise to propose using the testing agent to ensure stability.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Implement Continuous Learning System (P0)**
-    -   This is the user's new, top-priority request. The current pipeline generates projects but does not learn or improve. This requires a new architecture for memory and feedback.
-    -   **Attempted fixes:** None. This is a new epic.
-    -   **Next debug checklist:**
-        1.  Design the architecture for the learning system as per the user's prompt.
-        2.  Create new backend modules for vector memory, a scoring/feedback mechanism, and a prompt optimization engine.
-        3.  Integrate a vector database (e.g., using a MongoDB-compatible library or service).
-        4.  Modify the pipeline engine to store interaction data and retrieve learned insights during generation.
-    -   **Why fix this issue and what will be achieved with the fix?** This will transform Melus AI from a static generator into a dynamic system that improves its code generation quality over time, fulfilling the user's core vision.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on other issue:** No
+There are no pending bugs. The entire focus is now on the architectural refactor, which is a planned task, not an issue.
 
 **In progress Task List**:
--   **Task 1: Full WorkspacePage Integration (P1)**
-    -   **Where to resume:** The  needs to be fully integrated with the new . The  function was partially updated, but it needs to correctly load a generated project's state, allow the user to send iterative modification prompts, and reflect changes in the file structure and preview.
-    -   **What will be achieved with this?** This will complete the core user workflow, enabling users to not only generate but also modify and refine their projects.
-    -   **Status:** IN PROGRESS
+-   **Task 1: Implement the New Brain Engine and Monorepo Architecture (P0)**
+    -   **Where to resume:** Begin the complete application refactor based on the blueprint in message #274. This is the highest priority. The first steps should be to restructure the project directories to match the  layout (, , ) and start building the  with its .
+    -   **What will be achieved with this?** This will align the project with the user's ultimate vision for a scalable, modular, and intelligent AI SaaS platform. It's a foundational step for all future development.
+    -   **Status:** NOT STARTED
     -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on something:** Blocked by Implement Continuous Learning System due to user priority.
+    -   **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-    - **P0: Implement Vector DB Memory:** Integrate a vector database to store embeddings of user prompts, generated code, and user feedback for long-term memory.
-    - **P1: Implement Automatic Prompt Improvement:** Create a system that analyzes the performance of generated code and automatically refines the internal prompts used to instruct the LLM for future tasks.
-    - **P1: Improve LLM Code Parsing:** The user mentioned mejorar parseo de código LLM, indicating a need for a more robust system to handle and validate the code blocks returned by the language model.
-    - **P1: Implement WebSocket Streaming:** Stream real-time logs from the backend pipeline (e.g., writing file , installing dependencies...) to the frontend for a more detailed and interactive user experience.
+-   **Upcoming Tasks:**
+    -   **P1: Database Migration:** Migrate the application from MongoDB to PostgreSQL, including defining new schemas and moving existing user data.
+    -   **P1: Implement Isolated Code Sandbox:** Integrate Docker to create a secure environment for code execution and the live preview feature, as previously requested.
+    -   **P2: Complete Billing System:** Enhance the Stripe integration to handle webhooks, manage subscription states in the PostgreSQL database, and track user credit usage.
 
-- **Future Tasks:**
-    - **P2:** Implement a full code editor within .
-    - **P2:** Allow regeneration of individual files or components.
-    - **P2:** Integrate with GitHub to export generated projects directly to a repository.
-    - **P2:** Implement an automatic deployment feature for generated projects.
-    - **P2:** Create a library of project templates.
+-   **Future Tasks:**
+    -   Develop the specialized builders within the  directory (e-g., , ).
+    -   Implement a visual file versioning system (diffs, rollbacks).
+    -   Build an admin dashboard for platform management.
+    -   Create an automated deployment service ().
 
 **Completed work in this session**
--   **Full Project Generation Pipeline:** Implemented a complete 5-phase backend engine () and frontend UI () for generating multi-file applications from a single prompt.
--   **Real Code Generation:** Integrated GPT-4o to generate complex, structured projects (React apps, landing pages) and save them to the filesystem.
--   **MongoDB Persistence Fixed:** Successfully diagnosed and resolved a critical bug that prevented project metadata from being saved to the database.
--   **User-Project Association:** Ensured projects are correctly associated with user accounts, so users only see their own projects after logging in.
--   **Project Preview and Download:** Implemented features to show a live preview of generated web applications within an iframe and to download the complete project source code as a ZIP file.
+-   **Google OAuth Fixed:** Successfully debugged and fixed the self-hosted Google login flow, resolving both  and  errors.
+-   **New Landing Page & UI:** Implemented a new professional, multi-section landing page and an AI Builder interface.
+-   **Spanish Translation:** Translated the entire frontend into Spanish as per the user's request.
+-   **Live Preview Feature:** Added an iframe-based live code preview to the AI Builder.
+-   **Stripe Integration (Phase 1):** Created a pricing page and backend endpoints for Stripe checkout.
+-   **Functional Multi-Agent System:** Connected the agent system to the code generation pipeline to produce real code.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Frontend for WebSocket Sandbox**
-    -   The  was never updated to connect to a WebSocket backend to display real-time terminal output. This was deprioritized but remains an unfixed gap for a true IDE-like experience.
-    -   **Debug checklist:** In , implement the client-side WebSocket connection and render incoming messages in a terminal view.
-    -   **Why to solve this issue and what will be achieved with this?** To provide real-time feedback during code execution and iteration, a core feature of an online IDE.
-    -   **Should Test frontend/backend/both after fix:** Frontend
-    -   **Is recurring issue?** N
+-   None. All previously identified issues have been resolved.
 
 **Known issue recurrence from previous fork**
--   None applicable. The previous core issue (timeout) was related to a now-obsolete architecture.
+-   None.
 
 **Code Architecture**
+The application is about to undergo a complete refactor.
+
+**Current Architecture (Legacy):**
+
+
+**Target Architecture (To be implemented):**
 
 
 **Key Technical Concepts**
--   Frontend: React, , , , shadcn/ui
--   Backend: FastAPI, Pydantic, BackgroundTasks
--   Database: **MongoDB**
--   Architecture: Automated 5-Phase Software Development Pipeline, Code Generation as Files, Project Archiving (ZIP).
+-   Frontend: React (to be migrated to Next.js per new spec), TailwindCSS
+-   Backend: FastAPI
+-   Database: Currently MongoDB, with a planned migration to **PostgreSQL**.
+-   Architecture: Moving from a simple client-server model to a **template-driven monorepo** with a core **Brain Engine** for intent classification.
 
 **key DB schema**
--   ** (MongoDB collection):** 
--   ** (MongoDB collection):** 
+A migration to **PostgreSQL** is required. The new schema will need to be designed to support users, projects, billing/subscriptions, and other entities defined in the new architecture.
 
 **changes in tech stack**
--   The initial handoff summary was **incorrect**. The tech stack was **not** migrated to PostgreSQL. The agent identified this and correctly continued development using **MongoDB** as the database.
+-   **Database:** Mandated migration from **MongoDB to PostgreSQL**.
+-   **Frontend Framework:** Mandated migration from **React (CRA) to Next.js**.
+-   **Backend Architecture:** Complete overhaul from a single FastAPI app to a microservices-oriented **monorepo**.
 
 **All files of reference**
--   **New/Key Backend Files:**
-    -   : Contains the core logic for the 5-phase project generation.
-    -   : Provides all API endpoints for creating, monitoring, previewing, and downloading projects.
-    -   : Manages the interaction with the LLM for generating code.
--   **Heavily Modified Frontend Files:**
-    -   : Completely overhauled to serve as the main project generation interface with the 5-phase progress display.
--   **Files for Next Steps:**
-    -   : Needs to be updated for iterative development.
+-   The user's architectural blueprint in **message #274** is the most critical reference document and the source of truth for all upcoming work.
+-   : The current build interface.
+-   : The current agent logic (to be replaced).
+
+**Areas that need refactoring**:
+The **entire application** needs to be refactored to align with the new monorepo architecture, Next.js frontend, and PostgreSQL database specified by the user.
+
+**key api endpoints**
+-   : Google OAuth login.
+-   : Current entry point for code generation (will be replaced).
+-   : Stripe checkout.
 
 **Critical Info for New Agent**
--   **Top Priority:** Your entire focus is on building the **continuous learning system** as described in the user's latest prompt. Build this on top of the existing, working pipeline.
--   **Do Not Delete:** The user has explicitly stated: vale todo lo que hemos creado asta ahora ni lo toques ni lo borres (Okay, don't touch or delete anything we've created so far). All new work must extend the current system.
--   **System Model:** Remember, this is an **automated development orchestrator**, not a chatbot. The goal is to generate and manage full software projects.
--   **User Language:** The user communicates in **Spanish**. You MUST respond in Spanish.
--   **NO TESTING AGENT:** The user has explicitly forbidden the use of the . You must verify your work manually with  for the backend and by taking screenshots of the frontend.
--   **Database is MongoDB:** Disregard any previous mention of PostgreSQL. The application uses MongoDB.
+-   **New Architecture is Priority #1:** Your sole focus must be on implementing the new architecture detailed in message #274. This is a complete rebuild, not an incremental update. Deprecate or refactor existing code as needed to fit the new model.
+-   **Tech Stack Change:** You must manage the migration from MongoDB to PostgreSQL and from React to Next.js.
+-   **Template-Based Generation:** The core logic must shift from LLM-based code generation from scratch to an Intent Classifier that selects and adapts advanced, pre-built templates.
+-   **User Wants Speed:** The user is low on credits and expects rapid implementation without many questions. Be decisive and follow the new plan rigorously.
+-   **Communicate in Spanish:** All user-facing communication must be in Spanish.
 
 **documents and test reports created in this job**
--    (updated multiple times to reflect progress)
+-    (Contains the history of the project's evolution).
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Provides a very long, detailed prompt explaining how Emergent.sh works as an automated development orchestrator (Plan -> Generate -> Execute -> Validate -> Iterate) and that Melus AI should work the same way.
-2.  **Agent:** Acknowledges and starts implementing the full pipeline.
-3.  **User:** Sends 1.
-4.  **Agent:** Continues implementation, creating the backend engine, API, and revamping the  UI.
-5.  **Agent:** Fixes a critical bug where projects were not being saved to MongoDB.
-6.  **Agent:** Successfully tests the full pipeline from the UI, creating a project and observing the 5-phase progress bar.
-7.  **Agent:** Prepares to summarize the work.
-8.  **User:** Provides a new, detailed prompt outlining the requirements for a **continuous learning system** for Melus AI, including vector memory, automatic prompt improvement, feedback analysis, and a scoring system. Mentions upcoming tasks and a backlog.
-9.  **Agent:** Acknowledges the new request.
-10. **User:** Sends 1.
+1.  **User (Msg #206):** Confirmed upcoming tasks: live preview, Docker, Stripe. (Status: Live Preview & Stripe are done, Docker is pending but now lower priority than the refactor).
+2.  **User (Msg #261):** Requested full UI translation to Spanish. (Status: COMPLETED).
+3.  **User (Msg #274):** Sent a detailed, new technical blueprint that changes the entire project architecture. (Status: PENDING - This is the new P0 task that you must start now).
+4.  **Agent (Msg #275):** Acknowledged the new plan.
+5.  **Agent (Msg #276):** Began the process of implementing the new plan.
+
+No pending human messages. Proceed with the architectural refactor.
 
 **Project Health Check:**
--   **Broken:**
-    -   Iterative development in  is not functional with the new pipeline.
--   **Mocked:**
-    -   None. The current features are functional.
--   **Working:**
-    -   The core end-to-end project generation pipeline (from prompt on  to a downloadable ZIP file) is fully functional.
-    -   User authentication and project association with users are working.
-    -   Project previewing in an iframe is working.
+-   **Broken:** The current architecture is now considered broken/legacy in the context of the new requirements.
+-   **Mocked:** None.
+-   **Working:** Authentication (Email, Google), Stripe (Phase 1), Live Preview, Spanish UI.
 
 **3rd Party Integrations**
--   OpenAI GPT-4o (Uses Emergent LLM Key for code generation).
+-   OpenAI GPT-4o (Uses Emergent LLM Key)
+-   Google OAuth (via )
+-   Stripe
 
 **Testing status**
--   **Testing agent used after significant changes:** NO. The user has explicitly forbidden it.
+-   **Testing agent used after significant changes:** NO (user has forbidden it).
 -   **Test files created:** None.
--   **Known regressions:** The original  functionality has been largely superseded by the new pipeline UI on the .
+-   **Known regressions:** None.
+
+**Credentials to test flow:**
+-   Email/password:  / .
+-   Google OAuth is configured and functional.
 
 **What agent forgot to execute**
--   The agent did not implement the WebSocket connection for real-time log streaming in the terminal view on . This was mentioned in the original handoff and aligns with the user's vision for an interactive IDE.</analysis>
+The agent has successfully kept pace with a very demanding and fast-changing set of user requirements. No tasks were forgotten; rather, priorities were completely reshuffled by the user's latest, most ambitious request for a full architectural overhaul. The task of implementing a Docker sandbox is still pending but has been superseded by the P0 refactoring task.</analysis>

@@ -62,7 +62,7 @@
 ## Credenciales Test
 - **Email**: `demo@melusai.com`
 - **Password**: `demo123`
-- **URL**: https://melus-dev-studio.preview.emergentagent.com
+- **URL**: https://melus-ai-dev.preview.emergentagent.com
 
 ---
 
