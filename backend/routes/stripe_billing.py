@@ -23,36 +23,40 @@ PLANS = {
     "free": {
         "name": "Free",
         "price": 0,
-        "credits": 1000,
-        "features": ["1,000 credits/month", "Basic AI models", "Community support", "3 projects"]
+        "credits": 50,
+        "features": ["50 credits/month", "GPT-4o model", "Basic code generation", "3 projects", "Community support"]
     },
     "pro": {
         "name": "Pro",
-        "price_id": "price_pro_monthly",  # Create in Stripe Dashboard
-        "price": 2900,  # $29.00
-        "credits": 50000,
-        "features": ["50,000 credits/month", "GPT-4o access", "Priority support", "Unlimited projects", "API access"]
-    },
-    "enterprise": {
-        "name": "Enterprise",
-        "price_id": "price_enterprise_monthly",
-        "price": 9900,  # $99.00
+        "price_id": "price_pro_monthly",
+        "price": 2000,  # $20.00
         "credits": -1,  # Unlimited
-        "features": ["Unlimited credits", "Custom AI models", "Dedicated support", "White-label", "SLA"]
+        "features": ["Unlimited credits", "All AI models (GPT-5.2, Claude 4.5, etc)", "Advanced code generation", "Unlimited projects", "Priority support", "All agent modes (E1, E1.5, E2)", "GitHub integration", "Custom deployments"]
+    },
+    "team": {
+        "name": "Team",
+        "price_id": "price_team_monthly",
+        "price": 5000,  # $50.00
+        "credits": -1,  # Unlimited
+        "features": ["Everything in Pro", "Up to 5 team members", "Shared projects", "Admin dashboard", "API access", "Custom integrations", "Dedicated support", "SLA guarantee"]
     }
 }
 
-# Credit packages
+# Credit packages for one-time purchase
 CREDIT_PACKAGES = [
-    {"id": "credits_5k", "credits": 5000, "price": 500, "name": "5K Credits"},
-    {"id": "credits_25k", "credits": 25000, "price": 2000, "name": "25K Credits"},
-    {"id": "credits_100k", "credits": 100000, "price": 7500, "name": "100K Credits"},
+    {"id": "credits_100", "credits": 100, "price": 500, "name": "100 Credits"},
+    {"id": "credits_500", "credits": 500, "price": 2000, "name": "500 Credits"},
+    {"id": "credits_1000", "credits": 1000, "price": 3500, "name": "1,000 Credits"},
+    {"id": "credits_5000", "credits": 5000, "price": 15000, "name": "5,000 Credits"},
 ]
 
 
 class CreateCheckoutRequest(BaseModel):
     plan_id: Optional[str] = None
+    plan: Optional[str] = None  # Alias for plan_id
     credit_package_id: Optional[str] = None
+    credits: Optional[int] = None  # Direct credits amount
+    price: Optional[float] = None  # Direct price
     success_url: Optional[str] = None
     cancel_url: Optional[str] = None
 
