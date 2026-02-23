@@ -220,6 +220,7 @@ const AIBuilder = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input.trim();
     setInput('');
     setIsLoading(true);
 
@@ -229,54 +230,80 @@ const AIBuilder = () => {
       setMessages(prev => [...prev, {
         id: thinkingId,
         type: 'text',
-        content: '🤔 Analizando tu solicitud y generando código...',
+        content: '🧠 Brain Engine analizando tu solicitud...',
         isUser: false,
         timestamp: new Date()
       }]);
 
-      // Call the pipeline API
-      const response = await fetch(`${API_BASE}/api/agents-v3/pipeline/start`, {
+      // First, analyze intent using Brain Engine
+      const analyzeRes = await fetch(`${API_BASE}/api/brain/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token
+        },
+        body: JSON.stringify({ prompt: currentInput })
+      });
+      
+      const intentData = await analyzeRes.json();
+      
+      // Update thinking message with intent info
+      setMessages(prev => prev.map(m => 
+        m.id === thinkingId 
+          ? {...m, content: `🧠 Detectado: ${intentData.intent_type?.replace('_', ' ')} (${Math.round(intentData.confidence * 100)}% confianza)\n📦 Template: ${intentData.recommended_template}\n⚙️ Generando código...`}
+          : m
+      ));
+
+      // Call the Brain Engine generate API
+      const response = await fetch(`${API_BASE}/api/brain/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Session-Token': token
         },
         body: JSON.stringify({ 
-          prompt: input.trim(),
+          prompt: currentInput,
           project_name: projectName
         })
       });
 
       const data = await response.json();
+      const projectId = data.project_id;
 
       // Poll for results
       let attempts = 0;
       const maxAttempts = 30;
+      let projectFiles = [];
       
       while (attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const statusRes = await fetch(`${API_BASE}/api/agents-v3/status`, {
+        const statusRes = await fetch(`${API_BASE}/api/brain/project/${projectId}`, {
           headers: { 'X-Session-Token': token }
         });
         const statusData = await statusRes.json();
         
-        if (!statusData.current_project) {
-          // Pipeline completed
+        if (statusData.status === 'complete' || statusData.status === 'completed') {
+          projectFiles = statusData.files || [];
           break;
         }
+        
+        if (statusData.status === 'error') {
+          throw new Error(statusData.errors?.[0] || 'Error en generación');
+        }
+        
         attempts++;
       }
 
-      // Get tasks to find generated code
-      const tasksRes = await fetch(`${API_BASE}/api/agents-v3/tasks`, {
-        headers: { 'X-Session-Token': token }
-      });
-      const tasksData = await tasksRes.json();
+      // If no files from status, try files endpoint
+      if (projectFiles.length === 0) {
+        const filesRes = await fetch(`${API_BASE}/api/brain/project/${projectId}/files`, {
+          headers: { 'X-Session-Token': token }
+        });
+        const filesData = await filesRes.json();
+        projectFiles = filesData.files || [];
+      }
 
-      // Find developer task output
-      const devTask = tasksData.completed.find(t => t.agent_type === 'developer');
-      const files = devTask?.output_data?.files || [];
 
       // Remove thinking message and add response
       setMessages(prev => prev.filter(m => m.id !== thinkingId));
