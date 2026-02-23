@@ -79,7 +79,9 @@ class BrainEngine:
         self.active_contexts: Dict[str, GenerationContext] = {}
         self.update_callbacks: List[Callable] = []
         self.llm_client = None
+        self.orchestrator = None
         self._initialize_llm()
+        self._initialize_orchestrator()
     
     def _initialize_llm(self):
         """Initialize LLM client"""
@@ -92,6 +94,15 @@ class BrainEngine:
             logger.info("LLM client initialized successfully")
         except Exception as e:
             logger.warning(f"Could not initialize LLM: {e}")
+    
+    def _initialize_orchestrator(self):
+        """Initialize the multi-agent orchestrator"""
+        try:
+            from .agent_system import get_orchestrator
+            self.orchestrator = get_orchestrator(self.llm_client)
+            logger.info("Multi-agent orchestrator initialized")
+        except Exception as e:
+            logger.warning(f"Could not initialize orchestrator: {e}")
     
     def on_update(self, callback: Callable):
         """Register callback for progress updates"""
@@ -112,7 +123,8 @@ class BrainEngine:
         self,
         prompt: str,
         project_id: str,
-        user_id: str
+        user_id: str,
+        use_multi_agent: bool = True
     ) -> GenerationContext:
         """
         Main entry point for processing a user prompt
