@@ -39,22 +39,22 @@ const Navigation = ({ onGetStarted }) => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-gray-300 hover:text-white transition-colors">Features</a>
-            <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">How it Works</a>
-            <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">Pricing</a>
+            <a href="#features" className="text-gray-300 hover:text-white transition-colors">Características</a>
+            <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">Cómo Funciona</a>
+            <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">Precios</a>
             <Link to="/docs" className="text-gray-300 hover:text-white transition-colors">Docs</Link>
           </div>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-4">
             <Link to="/login" className="text-gray-300 hover:text-white transition-colors">
-              Sign In
+              Iniciar Sesión
             </Link>
             <button 
               onClick={onGetStarted}
               className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
             >
-              Start Building <ArrowRight className="w-4 h-4" />
+              Comenzar <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -71,17 +71,17 @@ const Navigation = ({ onGetStarted }) => {
         {mobileMenuOpen && (
           <div className="md:hidden bg-gray-900/95 backdrop-blur-md border-t border-gray-800">
             <div className="px-4 py-4 space-y-3">
-              <a href="#features" className="block text-gray-300 hover:text-white py-2">Features</a>
-              <a href="#how-it-works" className="block text-gray-300 hover:text-white py-2">How it Works</a>
-              <a href="#pricing" className="block text-gray-300 hover:text-white py-2">Pricing</a>
+              <a href="#features" className="block text-gray-300 hover:text-white py-2">Características</a>
+              <a href="#how-it-works" className="block text-gray-300 hover:text-white py-2">Cómo Funciona</a>
+              <a href="#pricing" className="block text-gray-300 hover:text-white py-2">Precios</a>
               <Link to="/docs" className="block text-gray-300 hover:text-white py-2">Docs</Link>
               <hr className="border-gray-800" />
-              <Link to="/login" className="block text-gray-300 hover:text-white py-2">Sign In</Link>
+              <Link to="/login" className="block text-gray-300 hover:text-white py-2">Iniciar Sesión</Link>
               <button 
                 onClick={onGetStarted}
                 className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full font-medium"
               >
-                Start Building
+                Comenzar
               </button>
             </div>
           </div>
@@ -96,10 +96,10 @@ const HeroSection = ({ onGetStarted }) => {
   const [prompt, setPrompt] = useState('');
   
   const examplePrompts = [
-    "Build a SaaS dashboard with user analytics",
-    "Create an e-commerce store with Stripe payments",
-    "Design a community forum with real-time chat",
-    "Build a project management tool like Trello"
+    "Crea un dashboard SaaS con analíticas",
+    "Construye una tienda online con pagos Stripe",
+    "Diseña un foro comunitario con chat en tiempo real",
+    "Crea una herramienta de gestión de proyectos"
   ];
 
   return (
@@ -115,11 +115,11 @@ const HeroSection = ({ onGetStarted }) => {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-full text-sm text-gray-300 mb-8">
           <Sparkles className="w-4 h-4 text-cyan-400" />
-          <span>AI-Powered Development Platform</span>
-          <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full text-xs font-medium">NEW</span>
+          <span>Plataforma de Desarrollo con IA</span>
+          <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full text-xs font-medium">NUEVO</span>
         </div>
 
-        {/* Main Headline */}
+        {/* Main Headline - KEEP IN ENGLISH */}
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
           Build Full-Stack Apps
           <br />
@@ -129,8 +129,8 @@ const HeroSection = ({ onGetStarted }) => {
         </h1>
 
         <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-          Describe your idea in natural language. Our multi-agent AI system builds complete 
-          web and mobile applications with frontend, backend, database, and deployment.
+          Describe tu idea en lenguaje natural. Nuestro sistema multi-agente de IA construye 
+          aplicaciones web y móviles completas con frontend, backend, base de datos y despliegue.
         </p>
 
         {/* Prompt Input */}
@@ -139,20 +139,20 @@ const HeroSection = ({ onGetStarted }) => {
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe your app idea... e.g., 'Build a task management app with teams and real-time updates'"
+              placeholder="Describe tu idea de app... ej: 'Crea una app de gestión de tareas con equipos y actualizaciones en tiempo real'"
               className="w-full bg-transparent text-white placeholder-gray-500 px-4 py-3 resize-none focus:outline-none text-lg"
               rows={2}
             />
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <Cpu className="w-4 h-4" />
-                <span>Powered by GPT-4o</span>
+                <span>Impulsado por GPT-4o</span>
               </div>
               <button 
                 onClick={onGetStarted}
                 className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
               >
-                <Play className="w-4 h-4" /> Start Building
+                <Play className="w-4 h-4" /> Comenzar
               </button>
             </div>
           </div>
@@ -174,10 +174,10 @@ const HeroSection = ({ onGetStarted }) => {
         {/* Stats */}
         <div className="flex flex-wrap justify-center gap-8 md:gap-16">
           {[
-            { value: '50K+', label: 'Apps Built' },
-            { value: '10x', label: 'Faster Development' },
+            { value: '50K+', label: 'Apps Creadas' },
+            { value: '10x', label: 'Más Rápido' },
             { value: '99%', label: 'Uptime' },
-            { value: '4.9', label: 'User Rating', icon: Star }
+            { value: '4.9', label: 'Valoración', icon: Star }
           ].map((stat, i) => (
             <div key={i} className="text-center">
               <div className="text-3xl font-bold text-white flex items-center justify-center gap-1">
@@ -203,38 +203,38 @@ const FeaturesSection = () => {
   const features = [
     {
       icon: Bot,
-      title: 'Multi-Agent AI System',
-      description: '6 specialized AI agents work together: Planner, Researcher, Developer, QA, Optimizer, and Cost Controller.',
+      title: 'Sistema Multi-Agente IA',
+      description: '6 agentes de IA especializados trabajan juntos: Planificador, Investigador, Desarrollador, QA, Optimizador y Control de Costos.',
       color: 'cyan'
     },
     {
       icon: Code2,
-      title: 'Full-Stack Generation',
-      description: 'Complete frontend (React/Vue), backend (FastAPI/Node), database schemas, and API integrations.',
+      title: 'Generación Full-Stack',
+      description: 'Frontend completo (React/Vue), backend (FastAPI/Node), esquemas de base de datos e integraciones API.',
       color: 'blue'
     },
     {
       icon: Layers,
-      title: 'Live Preview & Iteration',
-      description: 'See your app as it builds. Iterate with natural language commands to refine the output.',
+      title: 'Vista Previa en Vivo',
+      description: 'Ve tu app mientras se construye. Itera con comandos en lenguaje natural para refinar el resultado.',
       color: 'purple'
     },
     {
       icon: Database,
-      title: 'Database & APIs',
-      description: 'Automatic database design, migrations, and connections to external APIs like Stripe, Auth, etc.',
+      title: 'Base de Datos y APIs',
+      description: 'Diseño automático de base de datos, migraciones y conexiones a APIs externas como Stripe, Auth, etc.',
       color: 'green'
     },
     {
       icon: Rocket,
-      title: 'One-Click Deploy',
-      description: 'Deploy instantly to cloud hosting with SSL, CDN, and auto-scaling included.',
+      title: 'Despliegue en Un Clic',
+      description: 'Despliega instantáneamente a hosting en la nube con SSL, CDN y auto-escalado incluido.',
       color: 'orange'
     },
     {
       icon: Shield,
-      title: 'Enterprise Security',
-      description: 'Built-in security best practices, rate limiting, and data protection compliance.',
+      title: 'Seguridad Empresarial',
+      description: 'Mejores prácticas de seguridad integradas, limitación de velocidad y cumplimiento de protección de datos.',
       color: 'red'
     }
   ];
@@ -253,10 +253,10 @@ const FeaturesSection = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Everything You Need to Build
+            Todo lo que Necesitas para Construir
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            From idea to production in minutes. Our AI handles the complexity so you can focus on what matters.
+            De la idea a producción en minutos. Nuestra IA maneja la complejidad para que te enfoques en lo que importa.
           </p>
         </div>
 
@@ -284,26 +284,26 @@ const HowItWorksSection = () => {
   const steps = [
     {
       number: '01',
-      title: 'Describe Your Idea',
-      description: 'Tell our AI what you want to build in plain English. Be as detailed or brief as you like.',
+      title: 'Describe Tu Idea',
+      description: 'Dile a nuestra IA qué quieres construir en español simple. Sé tan detallado o breve como quieras.',
       visual: 'prompt'
     },
     {
       number: '02',
-      title: 'AI Plans & Builds',
-      description: 'Our multi-agent system analyzes requirements, designs architecture, and generates code.',
+      title: 'La IA Planifica y Construye',
+      description: 'Nuestro sistema multi-agente analiza requisitos, diseña arquitectura y genera código.',
       visual: 'agents'
     },
     {
       number: '03',
-      title: 'Review & Iterate',
-      description: 'Preview your app in real-time. Request changes and refinements through conversation.',
+      title: 'Revisa e Itera',
+      description: 'Previsualiza tu app en tiempo real. Solicita cambios y refinamientos a través de conversación.',
       visual: 'preview'
     },
     {
       number: '04',
-      title: 'Deploy & Scale',
-      description: 'One click to deploy. Your app goes live with hosting, SSL, and scaling handled.',
+      title: 'Despliega y Escala',
+      description: 'Un clic para desplegar. Tu app sale en vivo con hosting, SSL y escalado gestionado.',
       visual: 'deploy'
     }
   ];
@@ -313,10 +313,10 @@ const HowItWorksSection = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">
-            How It Works
+            Cómo Funciona
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            From concept to production in four simple steps
+            Del concepto a producción en cuatro simples pasos
           </p>
         </div>
 
@@ -345,53 +345,53 @@ const HowItWorksSection = () => {
 const PricingSection = ({ onGetStarted }) => {
   const plans = [
     {
-      name: 'Free',
+      name: 'Gratis',
       price: '$0',
-      period: 'forever',
-      description: 'Perfect for trying out MelusAI',
+      period: 'para siempre',
+      description: 'Perfecto para probar MelusAI',
       credits: '1,000',
       features: [
-        '1,000 credits/month',
-        'Basic AI models',
-        'Community support',
-        'Export to GitHub',
-        '3 active projects'
+        '1,000 créditos/mes',
+        'Modelos IA básicos',
+        'Soporte comunitario',
+        'Exportar a GitHub',
+        '3 proyectos activos'
       ],
-      cta: 'Get Started',
+      cta: 'Comenzar Gratis',
       highlighted: false
     },
     {
       name: 'Pro',
       price: '$29',
-      period: '/month',
-      description: 'For serious builders and teams',
+      period: '/mes',
+      description: 'Para constructores serios',
       credits: '50,000',
       features: [
-        '50,000 credits/month',
-        'GPT-4o & advanced models',
-        'Priority support',
-        'Unlimited projects',
-        'Custom deployments',
-        'API access'
+        '50,000 créditos/mes',
+        'GPT-4o y modelos avanzados',
+        'Soporte prioritario',
+        'Proyectos ilimitados',
+        'Despliegues personalizados',
+        'Acceso API'
       ],
-      cta: 'Start Pro Trial',
+      cta: 'Prueba Pro Gratis',
       highlighted: true
     },
     {
-      name: 'Enterprise',
-      price: 'Custom',
+      name: 'Empresa',
+      price: 'Personalizado',
       period: '',
-      description: 'For organizations at scale',
-      credits: 'Unlimited',
+      description: 'Para organizaciones a escala',
+      credits: 'Ilimitado',
       features: [
-        'Unlimited credits',
-        'Custom AI models',
-        'Dedicated support',
-        'White-label option',
-        'SLA guarantee',
-        'On-premise deployment'
+        'Créditos ilimitados',
+        'Modelos IA personalizados',
+        'Soporte dedicado',
+        'Opción marca blanca',
+        'Garantía SLA',
+        'Despliegue on-premise'
       ],
-      cta: 'Contact Sales',
+      cta: 'Contactar Ventas',
       highlighted: false
     }
   ];
@@ -401,10 +401,10 @@ const PricingSection = ({ onGetStarted }) => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Simple, Transparent Pricing
+            Precios Simples y Transparentes
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Start free, scale as you grow. No hidden fees.
+            Comienza gratis, escala mientras creces. Sin costos ocultos.
           </p>
         </div>
 
@@ -420,7 +420,7 @@ const PricingSection = ({ onGetStarted }) => {
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-sm font-medium text-white">
-                  Most Popular
+                  Más Popular
                 </div>
               )}
               
@@ -435,7 +435,7 @@ const PricingSection = ({ onGetStarted }) => {
 
               <div className="mb-6 p-4 bg-gray-800/50 rounded-xl text-center">
                 <span className="text-2xl font-bold text-cyan-400">{plan.credits}</span>
-                <span className="text-gray-400 text-sm block">credits/month</span>
+                <span className="text-gray-400 text-sm block">créditos/mes</span>
               </div>
 
               <ul className="space-y-3 mb-8">
@@ -471,28 +471,28 @@ const FAQSection = () => {
   
   const faqs = [
     {
-      question: 'What can I build with MelusAI?',
-      answer: 'You can build virtually any web or mobile application: SaaS platforms, e-commerce stores, dashboards, community sites, APIs, and more. Our AI handles frontend, backend, database, and integrations.'
+      question: '¿Qué puedo construir con MelusAI?',
+      answer: 'Puedes construir virtualmente cualquier aplicación web o móvil: plataformas SaaS, tiendas e-commerce, dashboards, sitios comunitarios, APIs y más. Nuestra IA maneja frontend, backend, base de datos e integraciones.'
     },
     {
-      question: 'Do I need coding experience?',
-      answer: 'No coding experience required! Simply describe what you want in plain language. However, developers can also use MelusAI to accelerate their workflow and get more complex projects done faster.'
+      question: '¿Necesito experiencia en programación?',
+      answer: '¡No se requiere experiencia en código! Simplemente describe lo que quieres en lenguaje simple. Sin embargo, los desarrolladores también pueden usar MelusAI para acelerar su flujo de trabajo y completar proyectos más complejos más rápido.'
     },
     {
-      question: 'How do credits work?',
-      answer: 'Credits are consumed based on the complexity of operations. Simple tasks use fewer credits, while complex AI operations use more. You can see credit usage in real-time in your dashboard.'
+      question: '¿Cómo funcionan los créditos?',
+      answer: 'Los créditos se consumen según la complejidad de las operaciones. Las tareas simples usan menos créditos, mientras que las operaciones IA complejas usan más. Puedes ver el uso de créditos en tiempo real en tu panel.'
     },
     {
-      question: 'Can I export my code?',
-      answer: 'Yes! You own 100% of the code generated. Export to GitHub, download as a ZIP, or deploy directly to your own infrastructure.'
+      question: '¿Puedo exportar mi código?',
+      answer: '¡Sí! Eres dueño del 100% del código generado. Exporta a GitHub, descarga como ZIP o despliega directamente a tu propia infraestructura.'
     },
     {
-      question: 'What AI models do you use?',
-      answer: 'We use a multi-model approach including GPT-4o for complex reasoning, with automatic fallbacks and cost optimization. Enterprise users can also bring their own models.'
+      question: '¿Qué modelos de IA usan?',
+      answer: 'Usamos un enfoque multi-modelo incluyendo GPT-4o para razonamiento complejo, con fallbacks automáticos y optimización de costos. Los usuarios empresariales también pueden traer sus propios modelos.'
     },
     {
-      question: 'Is my data secure?',
-      answer: 'Absolutely. We follow industry best practices including encryption at rest and in transit, SOC 2 compliance, and we never train on your data without explicit consent.'
+      question: '¿Mis datos están seguros?',
+      answer: 'Absolutamente. Seguimos las mejores prácticas de la industria incluyendo cifrado en reposo y en tránsito, cumplimiento SOC 2, y nunca entrenamos con tus datos sin consentimiento explícito.'
     }
   ];
 
@@ -501,10 +501,10 @@ const FAQSection = () => {
       <div className="max-w-3xl mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Frequently Asked Questions
+            Preguntas Frecuentes
           </h2>
           <p className="text-xl text-gray-400">
-            Everything you need to know about MelusAI
+            Todo lo que necesitas saber sobre MelusAI
           </p>
         </div>
 
@@ -540,28 +540,28 @@ const CTASection = ({ onGetStarted }) => {
     <section className="py-24 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
       <div className="max-w-4xl mx-auto px-4 text-center">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-          Ready to Build Your Next
+          ¿Listo para Construir Tu Próxima
           <br />
           <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Big Idea?
+            Gran Idea?
           </span>
         </h2>
         <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-          Join thousands of builders who are shipping products faster with MelusAI.
-          Start for free, no credit card required.
+          Únete a miles de constructores que están enviando productos más rápido con MelusAI.
+          Comienza gratis, sin tarjeta de crédito requerida.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button 
             onClick={onGetStarted}
             className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full font-medium text-lg hover:opacity-90 transition-opacity flex items-center gap-2"
           >
-            Start Building for Free <ArrowRight className="w-5 h-5" />
+            Comenzar Gratis <ArrowRight className="w-5 h-5" />
           </button>
           <Link 
             to="/docs"
             className="px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-medium text-lg transition-colors"
           >
-            Read Documentation
+            Leer Documentación
           </Link>
         </div>
       </div>
@@ -572,10 +572,10 @@ const CTASection = ({ onGetStarted }) => {
 // Footer
 const Footer = () => {
   const links = {
-    Product: ['Features', 'Pricing', 'Integrations', 'Changelog', 'Roadmap'],
-    Resources: ['Documentation', 'Tutorials', 'Blog', 'Case Studies', 'API Reference'],
-    Company: ['About', 'Careers', 'Press', 'Contact', 'Partners'],
-    Legal: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Security']
+    Producto: ['Características', 'Precios', 'Integraciones', 'Changelog', 'Roadmap'],
+    Recursos: ['Documentación', 'Tutoriales', 'Blog', 'Casos de Éxito', 'Referencia API'],
+    Empresa: ['Nosotros', 'Carreras', 'Prensa', 'Contacto', 'Socios'],
+    Legal: ['Política de Privacidad', 'Términos de Servicio', 'Cookies', 'Seguridad']
   };
 
   return (
@@ -593,8 +593,8 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-gray-400 mb-4">
-              Build full-stack applications in minutes with AI. 
-              From idea to production, faster than ever.
+              Construye aplicaciones full-stack en minutos con IA. 
+              De la idea a producción, más rápido que nunca.
             </p>
             <div className="flex gap-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
@@ -626,12 +626,12 @@ const Footer = () => {
         {/* Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-gray-800">
           <p className="text-gray-500 text-sm">
-            © 2024 MelusAI. All rights reserved.
+            © 2024 MelusAI. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <span className="flex items-center gap-2 text-gray-500 text-sm">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              All systems operational
+              Todos los sistemas operativos
             </span>
           </div>
         </div>
