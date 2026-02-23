@@ -445,22 +445,52 @@ const AIBuilder = () => {
         )}
 
         {activeTab === 'preview' && (
-          <div className="flex-1 flex flex-col items-center justify-center bg-gray-900 p-8">
-            <div className="text-center max-w-md">
-              <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Monitor className="w-8 h-8 text-gray-500" />
+          <div className="flex-1 flex flex-col bg-gray-900">
+            {/* Preview Header */}
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                </div>
+                <span className="text-sm text-gray-400 ml-2">Live Preview</span>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Vista Previa</h3>
-              <p className="text-gray-400 mb-6">
-                La vista previa en vivo estará disponible próximamente. Por ahora puedes ver el código generado en la pestaña "Archivos".
-              </p>
-              <button
-                onClick={() => setActiveTab('files')}
-                className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors"
-              >
-                Ver Archivos
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPreviewKey(Date.now())}
+                  className="p-1.5 hover:bg-gray-700 rounded"
+                  title="Refresh"
+                >
+                  <RefreshCw className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
             </div>
+            
+            {/* Preview Content */}
+            {generatedFiles.length > 0 ? (
+              <div className="flex-1 bg-white">
+                <iframe
+                  key={previewKey}
+                  srcDoc={generatePreviewHTML()}
+                  className="w-full h-full border-0"
+                  title="Live Preview"
+                  sandbox="allow-scripts"
+                />
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center max-w-md">
+                  <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Monitor className="w-8 h-8 text-gray-500" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Vista Previa</h3>
+                  <p className="text-gray-400">
+                    Genera un proyecto primero para ver la vista previa en vivo
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
