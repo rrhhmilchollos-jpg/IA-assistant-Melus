@@ -245,6 +245,8 @@ class ArchitectAgent(BaseAgent):
         # Enhance with LLM if available
         if self.llm_client:
             try:
+                from emergentintegrations.llm.chat import UserMessage
+                
                 llm_prompt = f"""Analiza este proyecto y mejora la arquitectura:
 
 Descripción: {prompt}
@@ -260,7 +262,8 @@ Responde SOLO con JSON mejorado con:
 3. Configuraciones especiales
 
 JSON:"""
-                response = await self.llm_client.chat(llm_prompt)
+                user_message = UserMessage(text=llm_prompt)
+                response = await self.llm_client.send_message(user_message)
                 
                 # Try to parse enhanced architecture
                 json_start = response.find('{')
