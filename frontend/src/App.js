@@ -9,8 +9,8 @@ import Register from "./pages/Register";
 import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./pages/HomePage";
-import LandingPage from "./pages/LandingPageNew";
-import PricingPage from "./pages/PricingPage";
+import LandingPage from "./pages/LandingPageEmergent";
+import PricingPage from "./pages/PricingPageNew";
 import Success from "./pages/Success";
 import AdminPanel from "./pages/AdminPanel";
 import WorkspacePage from "./pages/WorkspacePage";
@@ -19,6 +19,7 @@ import OrchestratorPage from "./pages/OrchestratorPage";
 import LearningDashboard from "./pages/LearningDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import AIBuilder from "./pages/AIBuilder";
+import BuilderPage from "./pages/BuilderPage";
 
 // Landing page route - shows landing for unauthenticated, redirects to home for authenticated
 function LandingPageRoute() {
@@ -100,6 +101,12 @@ function AppRouter() {
       <Route path="/build" element={
         <ProtectedRoute>
           <AIBuilder />
+        </ProtectedRoute>
+      } />
+      {/* Builder - New Emergent-style interface */}
+      <Route path="/builder" element={
+        <ProtectedRoute>
+          <BuilderPage />
         </ProtectedRoute>
       } />
       {/* Agent Dashboard */}
