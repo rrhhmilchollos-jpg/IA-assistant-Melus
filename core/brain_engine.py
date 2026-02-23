@@ -311,37 +311,6 @@ Responde en formato JSON con esta estructura:
         }]
         
         return files
-3. Estilos CSS si es necesario
-4. Archivos de utilidad
-
-El código debe ser funcional, moderno y usar TailwindCSS para estilos."""
-
-            try:
-                response = await self.llm_client.chat(generation_prompt)
-                
-                # Parse JSON response
-                json_start = response.find('{')
-                json_end = response.rfind('}') + 1
-                if json_start >= 0 and json_end > json_start:
-                    result = json.loads(response[json_start:json_end])
-                    files = result.get("files", [])
-            except Exception as e:
-                logger.error(f"Code generation error: {e}")
-                # Return default file
-                files = [{
-                    "path": "App.jsx",
-                    "content": self._get_default_template(intent_type),
-                    "type": "component"
-                }]
-        else:
-            # No LLM available, use default template
-            files = [{
-                "path": "App.jsx",
-                "content": self._get_default_template(intent_type),
-                "type": "component"
-            }]
-        
-        return files
     
     def _get_default_template(self, intent_type: IntentType) -> str:
         """Get default template for an intent type"""
