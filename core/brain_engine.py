@@ -298,7 +298,7 @@ Responde en formato JSON con esta estructura:
         """Generate files based on intent type - uses pre-built templates"""
         # Import templates using relative import
         try:
-            from .templates import get_template_for_intent
+            from .code_templates import get_template_for_intent
             
             # Get the best template based on intent and prompt
             files = get_template_for_intent(intent_type.value, prompt)
@@ -306,16 +306,7 @@ Responde en formato JSON con esta estructura:
             return files
             
         except ImportError as e:
-            logger.warning(f"Could not import templates with relative import: {e}")
-            
-            # Try absolute import
-            try:
-                import templates
-                files = templates.get_template_for_intent(intent_type.value, prompt)
-                logger.info(f"Using pre-built template (absolute) for {intent_type.value}")
-                return files
-            except ImportError as e2:
-                logger.warning(f"Could not import templates: {e2}")
+            logger.warning(f"Could not import code_templates: {e}")
         
         # Fallback: Use default template
         files = [{
