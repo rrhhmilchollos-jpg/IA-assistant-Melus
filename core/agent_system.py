@@ -826,22 +826,46 @@ class Orchestrator:
     """
     🎯 Orchestrator
     Coordinates all agents and manages the generation pipeline
+    Supports multiple LLM providers and agent modes
     """
     
-    def __init__(self, llm_client=None):
+    def __init__(self, llm_client=None, mode: str = "e1"):
         self.llm_client = llm_client
+        self.mode = mode
         self.agents: Dict[AgentType, BaseAgent] = {
             AgentType.ARCHITECT: ArchitectAgent(llm_client),
             AgentType.CODER: CoderAgent(llm_client),
             AgentType.DESIGNER: DesignerAgent(llm_client),
             AgentType.SECURITY: SecurityAgent(llm_client),
-            AgentType.DEPLOYER: DeployerAgent(llm_client)
+            AgentType.DEPLOYER: DeployerAgent(llm_client),
+            AgentType.VIDEO: VideoAgent(llm_client)  # New: Sora video agent
         }
         self.task_queue: List[AgentTask] = []
         self.completed_tasks: List[AgentTask] = []
         self.message_bus: List[AgentMessage] = []
         self.update_callbacks: List[Callable] = []
         self.current_project_id: Optional[str] = None
+        self._llm_manager = None
+    
+    def set_mode(self, mode: str):
+        """Set the agent mode (e1, e1.5, e2, pro, prototype, mobile)"""
+        from .llm_manager import get_agent_mode_config, get_llm_manager
+        
+        config = get_agent_mode_config(mode)
+        if config:
+            self.mode = mode
+            # Update LLM manager with new default model
+            llm_manager = get_llm_manager()
+            llm_manager.set_default_model(config.default_model)
+            logger.info(f"Agent mode set to {mode} with model {config.default_model}")
+    
+    def set_model(self, model_key: str):
+        """Set the model to use for all agents"""
+        from .llm_manager import get_llm_manager
+        
+        llm_manager = get_llm_manager()
+        llm_manager.set_default_model(model_key)
+        logger.info(f"Model set to {model_key}")
     
     def on_update(self, callback: Callable):
         """Register callback for updates"""
@@ -863,7 +887,8 @@ class Orchestrator:
         prompt: str,
         project_id: str,
         intent_type: str,
-        features: List[str]
+        features: List[str],
+        generate_video: bool = False
     ) -> Dict[str, Any]:
         """
         Run the complete generation pipeline through all phases
@@ -873,7 +898,8 @@ class Orchestrator:
             "project_id": project_id,
             "phases": {},
             "files": [],
-            "errors": []
+            "errors": [],
+            "mode": self.mode
         }
         
         try:
