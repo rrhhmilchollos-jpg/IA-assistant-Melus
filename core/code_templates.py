@@ -742,12 +742,11 @@ TEMPLATES = {
     "landing_page": get_landing_template,
     "saas": get_saas_template,
     "saas_app": get_saas_template,
-    "web_app": get_todo_app_template,  # Default to todo for generic web apps
+    "web_app": get_todo_app_template,
 }
 
 
-def get_template_for_intent(intent_type: str, prompt: str = "") -> List[Dict]:
-    def get_game2d_template() -> List[Dict]:
+def get_game2d_template() -> List[Dict]:
     """Get template for a 2D game using Phaser.js"""
     return [
         {
