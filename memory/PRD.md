@@ -1,7 +1,7 @@
 # Melus AI - Product Requirements Document
 
 ## Descripción
-**Melus AI** es una plataforma SaaS de generación de aplicaciones con IA, similar a Emergent.sh. Sistema multi-agente autónomo para desarrollo de software completo.
+**Melus AI** es una plataforma SaaS de generación de aplicaciones con IA, similar a Emergent.sh/Base44. Sistema multi-agente autónomo para desarrollo de software completo.
 
 **Idioma del usuario**: Español
 
@@ -9,166 +9,103 @@
 
 ## ✅ IMPLEMENTADO
 
-### Sistema de Autenticación (FASE 1 Completada)
+### Sistema de Autenticación
 - ✅ Login con Email/Password
 - ✅ Login con Google OAuth (autoalojado)
 - ✅ Login con GitHub OAuth
 - ✅ Sistema de sesiones con tokens
-- ✅ Logout funcional
 
-### Landing Page Profesional (NUEVA)
+### Landing Page Profesional
 - ✅ Hero con prompt input
-- ✅ Sección de características (6 features)
-- ✅ Sección "How It Works" (4 pasos)
-- ✅ Planes de precios (Free/Pro/Enterprise)
+- ✅ Sección de características
+- ✅ Planes de precios
 - ✅ FAQ interactivo
 - ✅ Footer completo
-- ✅ Navegación responsive
 
-### Sistema Multi-Agente (NUEVO - FASE 1)
-- ✅ 6 Agentes especializados:
-  - Planner Agent (planificación)
-  - Researcher Agent (investigación)
-  - Developer Agent (desarrollo)
-  - QA Agent (testing)
-  - Optimizer Agent (optimización)
-  - Cost Controller Agent (control de costos)
+### AI Builder (NUEVO)
+- ✅ Chat interactivo para crear apps en lenguaje natural
+- ✅ Generación de código con LLM
+- ✅ Vista de archivos generados
+- ✅ Quick prompts predefinidos
+- ✅ Pestañas: Chat, Archivos, Vista Previa
+
+### Sistema Multi-Agente
+- ✅ 6 Agentes con LLM integrado:
+  - Planner Agent (GPT-4o)
+  - Researcher Agent (GPT-4o)
+  - Developer Agent (GPT-4o)
+  - QA Agent
+  - Optimizer Agent
+  - Cost Controller Agent
 - ✅ Orchestrator central
-- ✅ Sistema de tareas y mensajes
-- ✅ API REST para interacción
-- ✅ WebSocket para actualizaciones en tiempo real
+- ✅ API REST + WebSocket
 
 ### Pipeline de Generación
 - ✅ 5 fases: Planning → Generation → Execution → Validation → Completed
 - ✅ WebSocket streaming de logs
 - ✅ Monaco Editor con syntax highlighting
-- ✅ Regeneración de archivos individuales
 
-### Sistema de Aprendizaje Continuo
+### Sistema de Aprendizaje
 - ✅ Vector Memory Store
 - ✅ OpenAI embeddings
-- ✅ Feedback System
-- ✅ Metrics Tracker
 - ✅ Learning Dashboard
 
 ---
 
-## Arquitectura Actual
+## Rutas Disponibles
 
-```
-/app
-├── backend/
-│   ├── server.py                    # FastAPI server
-│   ├── multi_agent_system.py        # NUEVO: Sistema multi-agente
-│   ├── pipeline_engine.py
-│   ├── websocket_manager.py
-│   ├── learning/
-│   └── routes/
-│       ├── auth_oauth.py            # Auth autoalojado
-│       ├── multi_agent_api.py       # NUEVO: API multi-agente
-│       ├── pipeline_api.py
-│       └── learning_api.py
-├── frontend/
-│   └── src/
-│       ├── App.js
-│       ├── pages/
-│       │   ├── LandingPageNew.jsx   # NUEVO: Landing profesional
-│       │   ├── Login.jsx            # Actualizado con OAuth
-│       │   ├── HomePage.jsx
-│       │   └── WorkspacePage.jsx
-│       └── context/
-│           └── AuthContext.jsx
-└── memory/PRD.md
-```
+- `/` - Landing Page
+- `/login` - Login con email/Google/GitHub
+- `/register` - Registro
+- `/home` - Dashboard principal
+- `/build` - **AI Builder** (Chat para crear apps)
+- `/workspace` - Editor de código con Monaco
+- `/orchestrator` - Panel de orquestador
+- `/agents` - Dashboard de agentes
+- `/learning` - Dashboard de aprendizaje
 
 ---
 
-## Stack Tecnológico
-
-- **Frontend**: React, TailwindCSS, Monaco Editor, shadcn/ui
-- **Backend**: FastAPI, WebSocket, Multi-Agent System
-- **LLM**: OpenAI GPT-4o via Emergent
-- **Database**: MongoDB
-- **Auth**: OAuth 2.0 (Google, GitHub) autoalojado
-
----
-
-## APIs Implementadas
+## APIs
 
 ### Auth
-- `POST /api/auth/register` - Registro con email
-- `POST /api/auth/login` - Login con email
-- `GET /api/auth/google` - Iniciar OAuth Google
-- `GET /api/auth/google/callback` - Callback Google
-- `GET /api/auth/me` - Usuario actual
-- `POST /api/auth/logout` - Cerrar sesión
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/google`
+- `GET /api/auth/me`
 
-### Multi-Agent System (NUEVO)
-- `GET /api/agents-v3/status` - Estado del sistema
-- `GET /api/agents-v3/agents` - Lista de agentes
-- `GET /api/agents-v3/agents/{type}` - Estado de un agente
-- `POST /api/agents-v3/pipeline/start` - Iniciar pipeline
-- `POST /api/agents-v3/task` - Crear tarea
-- `GET /api/agents-v3/tasks` - Listar tareas
-- `GET /api/agents-v3/messages` - Mensajes entre agentes
-- `GET /api/agents-v3/costs` - Tracking de costos
-- `WS /api/agents-v3/ws/{project_id}` - WebSocket updates
-
----
-
-## PRÓXIMAS TAREAS
-
-### P1 - En Progreso
-- [ ] Integrar LLM real en los agentes (actualmente skeleton)
-- [ ] Dashboard visual de agentes en tiempo real
-- [ ] Conectar multi-agente con pipeline existente
-
-### P2 - Próximo
-- [ ] Sandbox aislado con Docker
-- [ ] Deploy automático
-- [ ] Sistema de versionado (diffs, rollbacks)
-
-### P3 - Futuro
-- [ ] Billing con Stripe (planes)
-- [ ] API keys para B2B
-- [ ] Templates predefinidos
-- [ ] Blog auto-generado (SEO)
+### Multi-Agent
+- `GET /api/agents-v3/status`
+- `POST /api/agents-v3/pipeline/start`
+- `GET /api/agents-v3/tasks`
 
 ---
 
 ## Changelog
 
-### 2026-02-21 (Sesión Actual)
-- ✅ Google OAuth funcionando (autoalojado)
-- ✅ Nueva Landing Page profesional estilo Emergent
-- ✅ Sistema Multi-Agente base (6 agentes + orchestrator)
-- ✅ API REST para multi-agente
-- ✅ Login page actualizada con OAuth buttons
-- ✅ Página de login con Google y GitHub
+### 2026-02-23
+- ✅ AI Builder completo con chat
+- ✅ LLM integrado en agentes (Planner, Researcher, Developer)
+- ✅ Agent Dashboard
+- ✅ Quick prompts en español
 
-### 2026-02-20
-- ✅ Monaco Editor con syntax highlighting
-- ✅ Regeneración de archivos individuales
-- ✅ Sistema de aprendizaje continuo
-- ✅ WebSocket streaming
+### 2026-02-21
+- ✅ Google OAuth funcionando
+- ✅ Nueva Landing Page
+- ✅ Sistema Multi-Agente base
 
 ---
 
 ## Testing
 
-### Credenciales
 - Email: `demo@melusai.com` / `demo123`
-- Preview URL: https://melus-dev-studio.preview.emergentagent.com
-
-### Endpoints de prueba
-- Health: `/api/health`
-- Auth status: `/api/auth/status`
-- Agents: `/api/agents-v3/status`
+- URL: https://melus-dev-studio.preview.emergentagent.com
 
 ---
 
-## Notas Importantes
+## PRÓXIMAS TAREAS
 
-1. **Google OAuth**: Requiere que el usuario añada la URI de callback en Google Cloud Console
-2. **Multi-Agente**: Sistema base implementado, falta integrar LLM real
-3. **Sin Facebook**: Usuario decidió no implementar Facebook OAuth
+- [ ] Vista previa en vivo del código
+- [ ] Sandbox Docker para ejecución
+- [ ] Sistema de billing con Stripe
+- [ ] Deploy automático
