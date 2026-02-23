@@ -314,6 +314,16 @@ const HomePage = () => {
             <span className="font-medium">Orchestrator</span>
           </button>
           
+          {/* AI Builder Button */}
+          <button
+            onClick={() => navigate('/build')}
+            className="w-full flex items-center gap-2 px-4 py-2.5 mt-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200 rounded-lg transition-colors text-green-700"
+            data-testid="ai-builder-btn"
+          >
+            <Zap size={18} />
+            <span className="font-medium">AI Builder</span>
+          </button>
+          
           {/* Learning Dashboard Button */}
           <button
             onClick={() => navigate('/learning')}
