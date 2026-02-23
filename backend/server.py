@@ -65,6 +65,15 @@ from routes.multi_agent_api import router as multi_agent_router
 from routes.preview_api import router as preview_router
 from routes.stripe_billing import router as stripe_router
 
+# Import Brain Engine routes (new architecture)
+try:
+    from brain_routes import router as brain_router
+    BRAIN_ENGINE_AVAILABLE = True
+    logger.info("Brain Engine routes loaded successfully")
+except ImportError as e:
+    logger.warning(f"Brain Engine not available: {e}")
+    BRAIN_ENGINE_AVAILABLE = False
+
 # Import WebSocket manager
 from websocket_manager import websocket_endpoint, ws_manager
 
