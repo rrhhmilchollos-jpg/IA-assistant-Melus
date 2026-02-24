@@ -89,17 +89,22 @@ async def get_user_projects(request: Request):
     pipeline = DevelopmentPipeline(db)
     projects = await pipeline.get_user_projects(user_id)
     
-    # Return summary info only
-    return [{
-        "id": p["id"],
-        "prompt": p["prompt"][:100] + "..." if len(p["prompt"]) > 100 else p["prompt"],
-        "phase": p["phase"],
-        "status": p["status"],
-        "plan": p.get("plan", {}),
-        "preview_url": p.get("preview_url"),
-        "files_count": len(p.get("files", {})),
-        "created_at": p["created_at"]
-    } for p in projects]
+    # Return summary info only - filter out invalid projects
+    result = []
+    for p in projects:
+        if not p.get("id"):
+            continue
+        result.append({
+            "id": p["id"],
+            "prompt": p.get("prompt", "")[:100] + "..." if len(p.get("prompt", "")) > 100 else p.get("prompt", ""),
+            "phase": p.get("phase", "unknown"),
+            "status": p.get("status", "unknown"),
+            "plan": p.get("plan", {}),
+            "preview_url": p.get("preview_url"),
+            "files_count": len(p.get("files", {})),
+            "created_at": p.get("created_at")
+        })
+    return result
 
 @router.get("/projects/{project_id}")
 async def get_project(project_id: str, request: Request):
