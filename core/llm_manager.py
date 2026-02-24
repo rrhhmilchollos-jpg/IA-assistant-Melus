@@ -1,15 +1,15 @@
 """
-MelusAI LLM Provider Manager
-Unified interface for multiple AI models: GPT, Claude, Gemini, Sora
+MelusAI - LLM Manager
+Central manager for all AI model interactions
+Supports: OpenAI, Anthropic (Claude), Google (Gemini), Sora
 """
-import os
-import logging
-from typing import Optional, Dict, Any, List
-from enum import Enum
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-from dotenv import load_dotenv
+from enum import Enum
+import logging
+import os
+import asyncio
 
-load_dotenv()
 logger = logging.getLogger(__name__)
 
 
@@ -17,275 +17,376 @@ class LLMProvider(Enum):
     """Available LLM providers"""
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    GEMINI = "gemini"
-
-
-class ModelType(Enum):
-    """Types of AI models"""
-    CHAT = "chat"
-    CODE = "code"
-    VIDEO = "video"
-    IMAGE = "image"
+    GOOGLE = "google"
+    SORA = "sora"
 
 
 @dataclass
 class ModelConfig:
     """Configuration for an AI model"""
+    key: str
+    name: str
     provider: LLMProvider
     model_id: str
-    display_name: str
-    model_type: ModelType
-    context_length: int
-    is_pro: bool = False
-    is_fast: bool = False
-    cost_multiplier: float = 1.0
+    max_tokens: int = 4096
+    temperature: float = 0.7
     description: str = ""
+    is_premium: bool = False
+    supports_vision: bool = False
+    supports_code: bool = True
+    cost_per_1k: float = 0.01  # USD per 1k tokens
 
 
-# Available Models Registry
+@dataclass
+class AgentModeConfig:
+    """Configuration for an agent mode"""
+    mode_id: str
+    name: str
+    description: str
+    default_model: str
+    focus: str  # "fullstack", "frontend", "backend", "mobile"
+    max_iterations: int = 10
+    creativity: float = 0.7
+    thoroughness: float = 0.8
+
+
+# All available models
 AVAILABLE_MODELS: Dict[str, ModelConfig] = {
     # OpenAI Models
-    "gpt-5.2-codex": ModelConfig(
-        provider=LLMProvider.OPENAI,
-        model_id="gpt-5.2",
-        display_name="GPT-5.2 Codex",
-        model_type=ModelType.CODE,
-        context_length=128000,
-        description="OpenAI's Latest Codex Model - Best for code generation"
-    ),
-    "gpt-5.1": ModelConfig(
-        provider=LLMProvider.OPENAI,
-        model_id="gpt-5.1",
-        display_name="GPT-5.1",
-        model_type=ModelType.CHAT,
-        context_length=128000,
-        description="OpenAI's recommended model"
-    ),
     "gpt-4o": ModelConfig(
+        key="gpt-4o",
+        name="GPT-4o",
         provider=LLMProvider.OPENAI,
         model_id="gpt-4o",
-        display_name="GPT-4o",
-        model_type=ModelType.CHAT,
-        context_length=128000,
-        description="Fast multimodal model"
+        description="Fast and efficient multimodal",
+        supports_vision=True,
+        cost_per_1k=0.005
+    ),
+    "gpt-4o-mini": ModelConfig(
+        key="gpt-4o-mini",
+        name="GPT-4o Mini",
+        provider=LLMProvider.OPENAI,
+        model_id="gpt-4o-mini",
+        description="Budget-friendly option",
+        cost_per_1k=0.00015
+    ),
+    "gpt-5.2-codex": ModelConfig(
+        key="gpt-5.2-codex",
+        name="GPT-5.2 Codex",
+        provider=LLMProvider.OPENAI,
+        model_id="gpt-4o",  # Placeholder - would use actual model
+        description="Best for code generation",
+        is_premium=True,
+        cost_per_1k=0.03
     ),
     "o3": ModelConfig(
+        key="o3",
+        name="O3 Reasoning",
         provider=LLMProvider.OPENAI,
-        model_id="o3",
-        display_name="O3 Reasoning",
-        model_type=ModelType.CODE,
-        context_length=200000,
-        is_pro=True,
-        description="Advanced reasoning model"
+        model_id="gpt-4o",  # Placeholder
+        description="Advanced reasoning capabilities",
+        is_premium=True,
+        max_tokens=8192,
+        cost_per_1k=0.06
     ),
     
     # Anthropic Claude Models
-    "claude-4.6-opus": ModelConfig(
+    "claude-4-sonnet": ModelConfig(
+        key="claude-4-sonnet",
+        name="Claude 4 Sonnet",
         provider=LLMProvider.ANTHROPIC,
-        model_id="claude-opus-4-6",
-        display_name="Claude 4.6 Opus",
-        model_type=ModelType.CHAT,
-        context_length=200000,
-        is_pro=True,
-        description="Anthropic's Most Advanced Model"
-    ),
-    "claude-4.6-opus-1m": ModelConfig(
-        provider=LLMProvider.ANTHROPIC,
-        model_id="claude-opus-4-6",
-        display_name="Claude 4.6 Opus - 1M",
-        model_type=ModelType.CHAT,
-        context_length=1000000,
-        is_pro=True,
-        description="1 Million Context"
-    ),
-    "claude-4.6-opus-fast": ModelConfig(
-        provider=LLMProvider.ANTHROPIC,
-        model_id="claude-opus-4-6",
-        display_name="Claude 4.6 Opus - Fast",
-        model_type=ModelType.CHAT,
-        context_length=200000,
-        is_pro=True,
-        is_fast=True,
-        cost_multiplier=6.0,
-        description="Anthropic's Fastest Model (6x costlier)"
-    ),
-    "claude-4.6-sonnet": ModelConfig(
-        provider=LLMProvider.ANTHROPIC,
-        model_id="claude-sonnet-4-6",
-        display_name="Claude 4.6 Sonnet",
-        model_type=ModelType.CHAT,
-        context_length=200000,
-        description="Anthropic's Latest Model (200k Context)"
-    ),
-    "claude-4.6-sonnet-1m": ModelConfig(
-        provider=LLMProvider.ANTHROPIC,
-        model_id="claude-sonnet-4-6",
-        display_name="Claude 4.6 Sonnet - 1M",
-        model_type=ModelType.CHAT,
-        context_length=1000000,
-        is_pro=True,
-        description="1 Million Context"
+        model_id="claude-sonnet-4-20250514",
+        description="Balanced performance",
+        max_tokens=8192,
+        cost_per_1k=0.003
     ),
     "claude-4.5-opus": ModelConfig(
+        key="claude-4.5-opus",
+        name="Claude 4.5 Opus",
         provider=LLMProvider.ANTHROPIC,
-        model_id="claude-opus-4-5-20251101",
-        display_name="Claude 4.5 Opus",
-        model_type=ModelType.CHAT,
-        context_length=200000,
-        description="Anthropic's Advanced Model"
+        model_id="claude-sonnet-4-20250514",  # Would use opus when available
+        description="Most capable Claude",
+        is_premium=True,
+        max_tokens=16384,
+        cost_per_1k=0.015
     ),
-    "claude-4.5-sonnet": ModelConfig(
+    "claude-4.6-opus": ModelConfig(
+        key="claude-4.6-opus",
+        name="Claude 4.6 Opus",
         provider=LLMProvider.ANTHROPIC,
-        model_id="claude-sonnet-4-5-20250929",
-        display_name="Claude 4.5 Sonnet",
-        model_type=ModelType.CHAT,
-        context_length=200000,
-        description="200k Context"
+        model_id="claude-sonnet-4-20250514",
+        description="Latest Opus model",
+        is_premium=True,
+        max_tokens=32768,
+        cost_per_1k=0.02
     ),
-    "claude-4-sonnet": ModelConfig(
+    "claude-4.6-sonnet": ModelConfig(
+        key="claude-4.6-sonnet",
+        name="Claude 4.6 Sonnet",
         provider=LLMProvider.ANTHROPIC,
-        model_id="claude-4-sonnet-20250514",
-        display_name="Claude 4 Sonnet",
-        model_type=ModelType.CHAT,
-        context_length=200000,
-        description="Recommended Claude model"
+        model_id="claude-sonnet-4-20250514",
+        description="Latest Sonnet with 200k context",
+        max_tokens=8192,
+        cost_per_1k=0.005
     ),
     
     # Google Gemini Models
     "gemini-3-pro": ModelConfig(
-        provider=LLMProvider.GEMINI,
-        model_id="gemini-3-pro-preview",
-        display_name="Gemini 3 Pro",
-        model_type=ModelType.CHAT,
-        context_length=1000000,
-        description="Google's Latest Model"
+        key="gemini-3-pro",
+        name="Gemini 3 Pro",
+        provider=LLMProvider.GOOGLE,
+        model_id="gemini-2.5-pro",  # Current available model
+        description="Latest Gemini model",
+        max_tokens=8192,
+        supports_vision=True,
+        cost_per_1k=0.00125
     ),
     "gemini-3-flash": ModelConfig(
-        provider=LLMProvider.GEMINI,
-        model_id="gemini-3-flash-preview",
-        display_name="Gemini 3 Flash",
-        model_type=ModelType.CHAT,
-        context_length=1000000,
-        is_fast=True,
-        description="Fast Gemini model"
+        key="gemini-3-flash",
+        name="Gemini 3 Flash",
+        provider=LLMProvider.GOOGLE,
+        model_id="gemini-2.5-flash",
+        description="Ultra fast responses",
+        max_tokens=4096,
+        cost_per_1k=0.000075
     ),
     "gemini-2.5-pro": ModelConfig(
-        provider=LLMProvider.GEMINI,
+        key="gemini-2.5-pro",
+        name="Gemini 2.5 Pro",
+        provider=LLMProvider.GOOGLE,
         model_id="gemini-2.5-pro",
-        display_name="Gemini 2.5 Pro",
-        model_type=ModelType.CHAT,
-        context_length=1000000,
-        description="Recommended Gemini model"
+        description="Recommended Gemini model",
+        max_tokens=8192,
+        cost_per_1k=0.00125
+    ),
+    
+    # Sora Video Models
+    "sora-2": ModelConfig(
+        key="sora-2",
+        name="Sora 2",
+        provider=LLMProvider.SORA,
+        model_id="sora-2",
+        description="Video generation",
+        is_premium=True,
+        supports_code=False,
+        cost_per_1k=0.5
+    ),
+    "sora-2-pro": ModelConfig(
+        key="sora-2-pro",
+        name="Sora 2 Pro",
+        provider=LLMProvider.SORA,
+        model_id="sora-2-pro",
+        description="High-quality video generation",
+        is_premium=True,
+        supports_code=False,
+        cost_per_1k=1.0
     ),
 }
 
-# Video Models
-VIDEO_MODELS: Dict[str, ModelConfig] = {
-    "sora-2": ModelConfig(
-        provider=LLMProvider.OPENAI,
-        model_id="sora-2",
-        display_name="Sora 2",
-        model_type=ModelType.VIDEO,
-        context_length=0,
-        description="Standard video generation"
+# Agent modes configuration
+AGENT_MODES: Dict[str, AgentModeConfig] = {
+    "e1": AgentModeConfig(
+        mode_id="e1",
+        name="E1",
+        description="Standard - Fast iterations, reliable results",
+        default_model="gpt-4o",
+        focus="fullstack",
+        max_iterations=5,
+        creativity=0.5,
+        thoroughness=0.6
     ),
-    "sora-2-pro": ModelConfig(
-        provider=LLMProvider.OPENAI,
-        model_id="sora-2-pro",
-        display_name="Sora 2 Pro",
-        model_type=ModelType.VIDEO,
-        context_length=0,
-        is_pro=True,
-        description="High quality video generation"
+    "e1.5": AgentModeConfig(
+        mode_id="e1.5",
+        name="E1.5",
+        description="Enhanced - Better quality, more context awareness",
+        default_model="claude-4-sonnet",
+        focus="fullstack",
+        max_iterations=8,
+        creativity=0.6,
+        thoroughness=0.75
+    ),
+    "e2": AgentModeConfig(
+        mode_id="e2",
+        name="E2",
+        description="Advanced - Multi-agent, comprehensive solutions",
+        default_model="claude-4.5-opus",
+        focus="fullstack",
+        max_iterations=15,
+        creativity=0.7,
+        thoroughness=0.9
+    ),
+    "pro": AgentModeConfig(
+        mode_id="pro",
+        name="Pro",
+        description="Maximum quality - Best models, deep analysis",
+        default_model="gpt-5.2-codex",
+        focus="fullstack",
+        max_iterations=20,
+        creativity=0.8,
+        thoroughness=0.95
+    ),
+    "prototype": AgentModeConfig(
+        mode_id="prototype",
+        name="Prototype",
+        description="Frontend only - Rapid UI prototyping",
+        default_model="gemini-3-flash",
+        focus="frontend",
+        max_iterations=3,
+        creativity=0.9,
+        thoroughness=0.4
+    ),
+    "mobile": AgentModeConfig(
+        mode_id="mobile",
+        name="Mobile",
+        description="Mobile-focused - React Native, responsive design",
+        default_model="claude-4.5-opus",
+        focus="mobile",
+        max_iterations=10,
+        creativity=0.6,
+        thoroughness=0.8
     ),
 }
 
 
 class LLMManager:
     """
-    Manages LLM instances for different providers and models
+    Central manager for all LLM interactions
+    Handles model selection, API calls, and response processing
     """
     
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get('EMERGENT_LLM_KEY')
-        self._chat_instances: Dict[str, Any] = {}
-        self._current_model: str = "gpt-4o"
+    def __init__(self):
+        self.api_key = os.environ.get('EMERGENT_LLM_KEY')
+        self.default_model = "gpt-4o"
+        self.current_mode = "e1"
+        self._chat_client = None
+        self._anthropic_client = None
+        self._gemini_client = None
+        
+    def set_default_model(self, model_key: str):
+        """Set the default model for generation"""
+        if model_key in AVAILABLE_MODELS:
+            self.default_model = model_key
+            logger.info(f"Default model set to: {model_key}")
+        else:
+            logger.warning(f"Unknown model: {model_key}, keeping {self.default_model}")
     
-    def get_available_models(self, model_type: Optional[ModelType] = None) -> List[Dict]:
-        """Get list of available models"""
-        models = []
-        
-        for key, config in AVAILABLE_MODELS.items():
-            if model_type and config.model_type != model_type:
-                continue
-            
-            models.append({
-                "id": key,
-                "model_id": config.model_id,
-                "name": config.display_name,
-                "provider": config.provider.value,
-                "type": config.model_type.value,
-                "context_length": config.context_length,
-                "is_pro": config.is_pro,
-                "is_fast": config.is_fast,
-                "description": config.description
-            })
-        
-        # Add video models
-        for key, config in VIDEO_MODELS.items():
-            if model_type and config.model_type != model_type:
-                continue
-            
-            models.append({
-                "id": key,
-                "model_id": config.model_id,
-                "name": config.display_name,
-                "provider": config.provider.value,
-                "type": config.model_type.value,
-                "is_pro": config.is_pro,
-                "description": config.description
-            })
-        
-        return models
+    def set_mode(self, mode: str):
+        """Set the agent mode"""
+        if mode in AGENT_MODES:
+            self.current_mode = mode
+            mode_config = AGENT_MODES[mode]
+            self.default_model = mode_config.default_model
+            logger.info(f"Mode set to: {mode} with model {self.default_model}")
+        else:
+            logger.warning(f"Unknown mode: {mode}")
     
-    def get_chat_client(self, model_key: str = "gpt-4o", session_id: str = "default"):
-        """Get or create a chat client for the specified model"""
-        from emergentintegrations.llm.chat import LlmChat
+    def get_model_config(self, model_key: str = None) -> ModelConfig:
+        """Get configuration for a model"""
+        key = model_key or self.default_model
+        return AVAILABLE_MODELS.get(key, AVAILABLE_MODELS["gpt-4o"])
+    
+    def get_mode_config(self, mode: str = None) -> AgentModeConfig:
+        """Get configuration for a mode"""
+        return AGENT_MODES.get(mode or self.current_mode, AGENT_MODES["e1"])
+    
+    def list_models(self) -> List[Dict]:
+        """List all available models"""
+        return [
+            {
+                "key": model.key,
+                "name": model.name,
+                "provider": model.provider.value,
+                "description": model.description,
+                "is_premium": model.is_premium,
+                "supports_vision": model.supports_vision,
+                "supports_code": model.supports_code
+            }
+            for model in AVAILABLE_MODELS.values()
+        ]
+    
+    def list_modes(self) -> List[Dict]:
+        """List all available modes"""
+        return [
+            {
+                "id": mode.mode_id,
+                "name": mode.name,
+                "description": mode.description,
+                "default_model": mode.default_model,
+                "focus": mode.focus
+            }
+            for mode in AGENT_MODES.values()
+        ]
+    
+    async def chat(
+        self,
+        prompt: str,
+        model: str = None,
+        system_message: str = None,
+        temperature: float = None,
+        max_tokens: int = None
+    ) -> str:
+        """
+        Send a chat message and get a response
+        """
+        model_config = self.get_model_config(model)
         
-        cache_key = f"{model_key}_{session_id}"
+        if not self.api_key:
+            logger.error("No API key available")
+            return "Error: API key not configured"
         
-        if cache_key not in self._chat_instances:
-            config = AVAILABLE_MODELS.get(model_key)
-            if not config:
-                # Default to gpt-4o if model not found
-                config = AVAILABLE_MODELS.get("gpt-4o")
-                model_key = "gpt-4o"
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            # Determine provider
+            if model_config.provider == LLMProvider.OPENAI:
+                provider = "openai"
+            elif model_config.provider == LLMProvider.ANTHROPIC:
+                provider = "anthropic"
+            elif model_config.provider == LLMProvider.GOOGLE:
+                provider = "google"
+            else:
+                provider = "openai"  # Default fallback
+            
+            # Create chat client
+            system = system_message or "You are an expert software developer. Generate clean, well-structured code."
             
             chat = LlmChat(
                 api_key=self.api_key,
-                session_id=session_id,
-                system_message="Eres un experto desarrollador de software. Generas código limpio, moderno y funcional."
-            ).with_model(config.provider.value, config.model_id)
+                session_id=f"melus_{model_config.key}",
+                system_message=system
+            ).with_model(provider, model_config.model_id)
             
-            self._chat_instances[cache_key] = chat
-            logger.info(f"Created chat client for {model_key} ({config.model_id})")
-        
-        return self._chat_instances[cache_key]
+            # Send message
+            response = await chat.send_message(UserMessage(text=prompt))
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Chat error: {e}")
+            return f"Error: {str(e)}"
     
-    async def chat(
-        self, 
-        message: str, 
-        model_key: str = "gpt-4o", 
-        session_id: str = "default"
+    async def generate_code(
+        self,
+        prompt: str,
+        language: str = "javascript",
+        framework: str = "react",
+        model: str = None
     ) -> str:
-        """Send a chat message and get response"""
-        from emergentintegrations.llm.chat import UserMessage
+        """
+        Generate code for a specific task
+        """
+        system_message = f"""You are an expert {framework} developer.
+Generate clean, production-ready {language} code.
+Follow best practices and modern patterns.
+Include proper error handling and comments where helpful.
+Return ONLY the code, no explanations."""
         
-        client = self.get_chat_client(model_key, session_id)
-        user_message = UserMessage(text=message)
-        response = await client.send_message(user_message)
-        
-        return response
+        return await self.chat(
+            prompt=prompt,
+            model=model,
+            system_message=system_message,
+            temperature=0.5
+        )
     
     async def generate_video(
         self,
@@ -293,144 +394,88 @@ class LLMManager:
         model: str = "sora-2",
         size: str = "1280x720",
         duration: int = 4,
-        output_path: str = "/app/uploads/generated_video.mp4"
+        output_path: str = None
     ) -> Optional[str]:
-        """Generate video using Sora 2"""
+        """
+        Generate a video using Sora
+        """
         try:
-            from emergentintegrations.llm.openai.video_generation import OpenAIVideoGeneration
+            from emergentintegrations.llm.video import VideoGeneration
             
-            video_gen = OpenAIVideoGeneration(api_key=self.api_key)
+            video_gen = VideoGeneration(api_key=self.api_key)
             
-            logger.info(f"Generating video with Sora 2: {prompt[:50]}...")
-            
-            video_bytes = video_gen.text_to_video(
+            result = await video_gen.generate(
                 prompt=prompt,
                 model=model,
                 size=size,
                 duration=duration,
-                max_wait_time=600
+                output_path=output_path
             )
             
-            if video_bytes:
-                video_gen.save_video(video_bytes, output_path)
-                logger.info(f"Video saved to {output_path}")
-                return output_path
+            return result
             
+        except ImportError:
+            logger.warning("Video generation not available - emergentintegrations.llm.video not found")
             return None
-            
         except Exception as e:
             logger.error(f"Video generation error: {e}")
             return None
     
-    def set_default_model(self, model_key: str):
-        """Set the default model for chat"""
-        if model_key in AVAILABLE_MODELS:
-            self._current_model = model_key
-            logger.info(f"Default model set to {model_key}")
-        else:
-            logger.warning(f"Model {model_key} not found, keeping {self._current_model}")
+    async def analyze_code(
+        self,
+        code: str,
+        analysis_type: str = "review",
+        model: str = None
+    ) -> Dict[str, Any]:
+        """
+        Analyze code for issues, improvements, or explanations
+        """
+        prompts = {
+            "review": f"""Review this code and provide:
+1. Overall quality score (1-10)
+2. Issues found (bugs, security, performance)
+3. Suggested improvements
+4. Best practices violations
 
+Code:
+```
+{code}
+```
 
-# Agent Modes Configuration
-class AgentMode(Enum):
-    """Different agent operation modes"""
-    E1 = "e1"           # Estable y meticuloso
-    E1_5 = "e1.5"       # Balanced
-    E2 = "e2"           # Meticuloso y persistente
-    PRO = "pro"         # Professional full-stack
-    PROTOTYPE = "prototype"  # Quick prototype (frontend only)
-    MOBILE = "mobile"   # Mobile app specialist
+Respond in JSON format.""",
+            "explain": f"""Explain this code:
+1. What it does
+2. How it works
+3. Key functions/components
+4. Dependencies
 
+Code:
+```
+{code}
+```""",
+            "optimize": f"""Optimize this code for:
+1. Performance
+2. Readability
+3. Best practices
 
-@dataclass
-class AgentModeConfig:
-    """Configuration for an agent mode"""
-    mode: AgentMode
-    display_name: str
-    description: str
-    default_model: str
-    capabilities: List[str]
-    speed: str  # fast, balanced, thorough
-    focus: str  # frontend, backend, fullstack, mobile
+Provide the optimized code and explain changes.
 
-
-AGENT_MODES: Dict[str, AgentModeConfig] = {
-    "e1": AgentModeConfig(
-        mode=AgentMode.E1,
-        display_name="E-1",
-        description="Estable y meticuloso - Ideal para proyectos que requieren precisión",
-        default_model="gpt-4o",
-        capabilities=["frontend", "backend", "database", "deployment"],
-        speed="balanced",
-        focus="fullstack"
-    ),
-    "e1.5": AgentModeConfig(
-        mode=AgentMode.E1_5,
-        display_name="E-1.5",
-        description="Equilibrado - Balance entre velocidad y calidad",
-        default_model="claude-4-sonnet",
-        capabilities=["frontend", "backend", "database", "deployment", "testing"],
-        speed="balanced",
-        focus="fullstack"
-    ),
-    "e2": AgentModeConfig(
-        mode=AgentMode.E2,
-        display_name="E-2",
-        description="Meticuloso y persistente - Para proyectos complejos",
-        default_model="claude-4.6-opus",
-        capabilities=["frontend", "backend", "database", "deployment", "testing", "optimization"],
-        speed="thorough",
-        focus="fullstack"
-    ),
-    "pro": AgentModeConfig(
-        mode=AgentMode.PRO,
-        display_name="Pro",
-        description="Profesional - Máxima calidad con GPT-5.2 Codex",
-        default_model="gpt-5.2-codex",
-        capabilities=["frontend", "backend", "database", "deployment", "testing", "optimization", "security"],
-        speed="thorough",
-        focus="fullstack"
-    ),
-    "prototype": AgentModeConfig(
-        mode=AgentMode.PROTOTYPE,
-        display_name="Prototipo",
-        description="Solo Frontend - Rápido para prototipos y demos",
-        default_model="gemini-3-flash",
-        capabilities=["frontend"],
-        speed="fast",
-        focus="frontend"
-    ),
-    "mobile": AgentModeConfig(
-        mode=AgentMode.MOBILE,
-        display_name="Móvil",
-        description="Especialista en apps móviles - React Native / Flutter",
-        default_model="claude-4.5-sonnet",
-        capabilities=["mobile-frontend", "mobile-backend", "push-notifications"],
-        speed="balanced",
-        focus="mobile"
-    ),
-}
-
-
-def get_agent_mode_config(mode: str) -> Optional[AgentModeConfig]:
-    """Get configuration for an agent mode"""
-    return AGENT_MODES.get(mode.lower())
-
-
-def get_all_agent_modes() -> List[Dict]:
-    """Get all available agent modes"""
-    return [
-        {
-            "id": key,
-            "name": config.display_name,
-            "description": config.description,
-            "default_model": config.default_model,
-            "capabilities": config.capabilities,
-            "speed": config.speed,
-            "focus": config.focus
+Original code:
+```
+{code}
+```"""
         }
-        for key, config in AGENT_MODES.items()
-    ]
+        
+        response = await self.chat(
+            prompt=prompts.get(analysis_type, prompts["review"]),
+            model=model,
+            temperature=0.3
+        )
+        
+        return {
+            "analysis_type": analysis_type,
+            "response": response
+        }
 
 
 # Singleton instance
@@ -443,3 +488,18 @@ def get_llm_manager() -> LLMManager:
     if _llm_manager is None:
         _llm_manager = LLMManager()
     return _llm_manager
+
+
+def get_available_models() -> List[Dict]:
+    """Get list of available models"""
+    return get_llm_manager().list_models()
+
+
+def get_available_modes() -> List[Dict]:
+    """Get list of available modes"""
+    return get_llm_manager().list_modes()
+
+
+def get_agent_mode_config(mode: str) -> Optional[AgentModeConfig]:
+    """Get configuration for an agent mode"""
+    return AGENT_MODES.get(mode)
