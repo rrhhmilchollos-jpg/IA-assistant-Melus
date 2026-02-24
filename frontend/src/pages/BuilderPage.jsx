@@ -69,9 +69,12 @@ const WS_BASE = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://
 // Available AI Models
 const AI_MODELS = [
   { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', description: 'Fast & efficient', icon: '⚡' },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', description: 'Budget friendly', icon: '💡' },
   { id: 'gpt-5.2-codex', name: 'GPT-5.2 Codex', provider: 'OpenAI', description: 'Best for code', icon: '🚀', premium: true },
+  { id: 'o3', name: 'O3 Reasoning', provider: 'OpenAI', description: 'Advanced reasoning', icon: '🧠', premium: true },
   { id: 'claude-4-sonnet', name: 'Claude 4 Sonnet', provider: 'Anthropic', description: 'Balanced', icon: '🎯' },
   { id: 'claude-4.5-opus', name: 'Claude 4.5 Opus', provider: 'Anthropic', description: 'Most capable', icon: '👑', premium: true },
+  { id: 'claude-4.6-opus', name: 'Claude 4.6 Opus', provider: 'Anthropic', description: 'Latest Opus', icon: '🔮', premium: true },
   { id: 'gemini-3-pro', name: 'Gemini 3 Pro', provider: 'Google', description: 'Multimodal', icon: '✨' },
   { id: 'gemini-3-flash', name: 'Gemini 3 Flash', provider: 'Google', description: 'Ultra fast', icon: '💨' },
 ];
@@ -81,6 +84,7 @@ const AGENT_MODES = [
   { id: 'e1', name: 'E1', description: 'Standard - Fast iterations' },
   { id: 'e1.5', name: 'E1.5', description: 'Enhanced - Better quality' },
   { id: 'e2', name: 'E2', description: 'Advanced - Multi-agent system' },
+  { id: 'pro', name: 'Pro', description: 'Maximum quality' },
 ];
 
 // File icon helper
