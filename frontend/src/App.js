@@ -34,7 +34,7 @@ function LandingPageRoute() {
     );
   }
   
-  return isAuthenticated ? <Navigate to="/home" replace /> : <LandingPage />;
+  return isAuthenticated ? <Navigate to="/builder" replace /> : <LandingPage />;
 }
 
 // AppRouter component to handle session_id detection
