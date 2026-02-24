@@ -1,0 +1,11 @@
+{
+  "name": "messenger-chat-app_proj_413",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-router-dom": "5.2.0",
+    "socket.io-client": "4.1.3",
+    "tailwindcss": "2.2.19"
+  }
+}
