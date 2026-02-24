@@ -323,13 +323,18 @@ const BuilderPage = () => {
     loadProjects();
   }, []);
 
-  // Load project if ID provided
+  // Load project if ID provided in URL
   useEffect(() => {
-    if (projectId && !hasInitialized.current) {
-      hasInitialized.current = true;
-      loadProject(projectId);
+    const urlProjectId = searchParams.get('project');
+    if (urlProjectId && urlProjectId !== projectId) {
+      setProjectId(urlProjectId);
     }
-  }, [projectId]);
+    
+    if (urlProjectId && !hasInitialized.current) {
+      hasInitialized.current = true;
+      loadProject(urlProjectId);
+    }
+  }, [searchParams]);
 
   // Auto-scroll messages
   useEffect(() => {
