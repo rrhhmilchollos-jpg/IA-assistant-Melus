@@ -63,10 +63,21 @@ function AppRouter() {
           <HomePage />
         </ProtectedRoute>
       } />
-      {/* Dashboard - Chat interface */}
-      <Route path="/dashboard" element={
+      {/* Dashboard - Old Chat interface */}
+      <Route path="/chat" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      {/* Projects Dashboard - New projects list */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <DashboardPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/projects" element={
+        <ProtectedRoute>
+          <DashboardPage />
         </ProtectedRoute>
       } />
       {/* Workspace - New IDE interface */}
