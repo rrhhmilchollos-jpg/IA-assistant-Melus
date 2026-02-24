@@ -321,20 +321,17 @@ const BuilderPage = () => {
   // Load projects on mount
   useEffect(() => {
     loadProjects();
-  }, []);
-
-  // Load project if ID provided in URL
-  useEffect(() => {
-    const urlProjectId = searchParams.get('project');
-    if (urlProjectId && urlProjectId !== projectId) {
-      setProjectId(urlProjectId);
-    }
     
-    if (urlProjectId && !hasInitialized.current) {
-      hasInitialized.current = true;
+    // Check URL for project ID on mount
+    const urlProjectId = searchParams.get('project');
+    if (urlProjectId) {
+      console.log('Loading project from URL:', urlProjectId);
+      setProjectId(urlProjectId);
       loadProject(urlProjectId);
     }
-  }, [searchParams]);
+  }, []); // Only run on mount
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // Auto-scroll messages
   useEffect(() => {
