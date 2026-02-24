@@ -320,17 +320,25 @@ const BuilderPage = () => {
 
   // Load projects on mount and check URL for project
   useEffect(() => {
-    loadProjects();
+    const initializeBuilder = async () => {
+      await loadProjects();
+      
+      // Check URL for project ID using window.location
+      const params = new URLSearchParams(window.location.search);
+      const urlProjectId = params.get('project');
+      
+      if (urlProjectId) {
+        console.log('🚀 Loading project from URL:', urlProjectId);
+        setProjectId(urlProjectId);
+        
+        // Load project with a small delay to ensure state is ready
+        setTimeout(() => {
+          loadProject(urlProjectId);
+        }, 100);
+      }
+    };
     
-    // Check URL for project ID using window.location
-    const params = new URLSearchParams(window.location.search);
-    const urlProjectId = params.get('project');
-    
-    if (urlProjectId) {
-      console.log('Loading project from URL:', urlProjectId);
-      setProjectId(urlProjectId);
-      loadProject(urlProjectId);
-    }
+    initializeBuilder();
   }, []); // Only run on mount
 
   // Auto-scroll messages
