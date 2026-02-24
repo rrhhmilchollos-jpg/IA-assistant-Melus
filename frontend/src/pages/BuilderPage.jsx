@@ -472,6 +472,7 @@ const BuilderPage = () => {
 
         if (response.ok) {
           addMessage('assistant', `Working on your request...\n\n${data.message || ''}`);
+          setTerminalLogs(prev => [...prev, `$ ${data.type || 'Processing'}: ${data.message || userMsg}`]);
 
           // Poll for completion
           await pollProjectStatus(projectId);
@@ -479,11 +480,14 @@ const BuilderPage = () => {
           throw new Error(data.error || 'Request failed');
         }
       } else {
-        // Create new project
-        setCurrentPhase('Planning...');
+        // Create new project using Brain API
+        setCurrentPhase('Analyzing intent...');
         setTerminalLogs(prev => [...prev, '$ Creating project...']);
+        setTerminalLogs(prev => [...prev, `$ Model: ${selectedModel}`]);
+        setTerminalLogs(prev => [...prev, `$ Mode: ${agentMode}`]);
 
-        const response = await fetch(`${API_BASE}/api/pipeline/projects`, {
+        // Use the new Brain API for project creation
+        const response = await fetch(`${API_BASE}/api/brain/create-task`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -499,12 +503,23 @@ const BuilderPage = () => {
         const data = await response.json();
 
         if (response.ok) {
-          setProjectId(data.project_id);
-          window.history.replaceState(null, '', `/builder?project=${data.project_id}`);
+          const newProjectId = data.project_id;
+          setProjectId(newProjectId);
+          window.history.replaceState(null, '', `/builder?project=${newProjectId}`);
           toast.info('Building your project...');
+          
+          setTerminalLogs(prev => [...prev, `$ Project ID: ${newProjectId}`]);
+          addMessage('assistant', `Starting project generation...\n\n🧠 Model: ${selectedModel}\n⚡ Mode: ${agentMode}\n📋 Analyzing your request...`);
 
-          connectWebSocket(data.project_id);
-          await pollProjectStatus(data.project_id);
+          // Try to connect WebSocket
+          try {
+            connectWebSocket(newProjectId);
+          } catch (e) {
+            console.log('WebSocket not available, using polling');
+          }
+          
+          // Poll for completion using Brain API
+          await pollBrainTaskStatus(newProjectId);
         } else {
           throw new Error(data.error || 'Failed to create project');
         }
@@ -516,6 +531,76 @@ const BuilderPage = () => {
     } finally {
       setIsGenerating(false);
       setCurrentPhase('');
+    }
+  };
+
+  // Poll brain task status
+  const pollBrainTaskStatus = async (taskId) => {
+    const token = localStorage.getItem('session_token');
+    let attempts = 0;
+
+    while (attempts < 60) {
+      await new Promise(r => setTimeout(r, 2000));
+      attempts++;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/brain/task/${taskId}`, {
+          headers: { 'X-Session-Token': token }
+        });
+
+        if (response.ok) {
+          const status = await response.json();
+          setCurrentPhase(status.status || status.phase);
+          setTerminalLogs(prev => [...prev, `$ Phase: ${status.phase}`]);
+
+          if (status.phase === 'complete' || status.phase === 'completed') {
+            // Load the project files
+            await loadProjectFromPipeline(taskId);
+            loadProjects();
+            
+            const filesCount = status.files_count || 0;
+            addMessage('assistant', `✅ Project generated successfully!\n\n📁 ${filesCount} files created\n🎯 Intent: ${status.intent?.type || 'web_app'}\n\nYou can now preview your app or edit the code.`);
+            toast.success('Project ready!');
+            return;
+          } else if (status.phase === 'error') {
+            throw new Error('Generation failed: ' + (status.errors?.join(', ') || 'Unknown error'));
+          }
+        }
+      } catch (error) {
+        console.error('Poll error:', error);
+        if (attempts > 5) {
+          addMessage('assistant', `Error checking status: ${error.message}`);
+          return;
+        }
+      }
+    }
+    
+    addMessage('assistant', 'Generation is taking longer than expected. Please check back in a moment.');
+  };
+
+  // Load project from pipeline API
+  const loadProjectFromPipeline = async (projId) => {
+    const token = localStorage.getItem('session_token');
+    try {
+      const response = await fetch(`${API_BASE}/api/pipeline/projects/${projId}`, {
+        headers: { 'X-Session-Token': token }
+      });
+
+      if (response.ok) {
+        const project = await response.json();
+        setProjectName(project.plan?.project_name || 'My Project');
+        setFiles(project.files || {});
+
+        // Select first file
+        const fileNames = Object.keys(project.files || {});
+        if (fileNames.length > 0) {
+          setSelectedFile(fileNames[0]);
+        }
+        
+        setTerminalLogs(prev => [...prev, `$ Loaded ${fileNames.length} files`]);
+      }
+    } catch (error) {
+      console.error('Failed to load project:', error);
     }
   };
 
