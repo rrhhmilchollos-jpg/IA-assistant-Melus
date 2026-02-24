@@ -121,12 +121,6 @@ function AppRouter() {
           <BuilderPage />
         </ProtectedRoute>
       } />
-      {/* Dashboard - Projects list */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardPage />
-        </ProtectedRoute>
-      } />
       {/* Agent Dashboard */}
       <Route path="/agents" element={
         <ProtectedRoute>
