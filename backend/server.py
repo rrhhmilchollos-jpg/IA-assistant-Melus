@@ -65,6 +65,7 @@ from routes.multi_agent_api import router as multi_agent_router
 from routes.preview_api import router as preview_router
 from routes.stripe_billing import router as stripe_router
 from routes.stripe_billing import router_stripe as stripe_router_v2
+from routes.brain_api import router as brain_api_router
 
 # Import Brain Engine routes (new architecture)
 try:
@@ -99,6 +100,7 @@ app.include_router(multi_agent_router)
 app.include_router(preview_router)
 app.include_router(stripe_router)
 app.include_router(stripe_router_v2)
+app.include_router(brain_api_router)  # New brain API routes
 
 # Include Brain Engine routes if available
 if BRAIN_ENGINE_AVAILABLE:
