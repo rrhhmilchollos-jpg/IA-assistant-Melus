@@ -20,6 +20,7 @@ import LearningDashboard from "./pages/LearningDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import AIBuilder from "./pages/AIBuilder";
 import BuilderPage from "./pages/BuilderPage";
+import DashboardPage from "./pages/DashboardPage";
 
 // Landing page route - shows landing for unauthenticated, redirects to home for authenticated
 function LandingPageRoute() {
